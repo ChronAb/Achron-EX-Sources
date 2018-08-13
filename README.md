@@ -6,7 +6,7 @@ These are the guts of the Achron, EX Mod; pulled out and rearranged into a forma
 
 **Incidentally... it seems like Github does not like when I try to bring in a folder with hundreds of files in it, so for now I will include them as zip files >> until someone explains to me the proper wway to handle such things. :)
 
-Within each folder, each of the important units gets its own little xml notebook where most of the magic happens. There’s also a sub folder for ais… and models… and structures’ xmls, because the top folder was too crowded. Hopefully that makes sense.
+Within each folder, each of the important units gets its own little xml notebook where most of the magic happens. There’s also a sub folder for ais… and models (except the file sizes are too big there so I am leaving them out)… and structures’ xmls, because the top folder was too crowded. Hopefully that makes sense.
 
 If you want to make changes and test them live, you’ll need to paste the xml bits back into the Achron.ocs.xml file and the ais bits into the ais_src folder, then recompile. Sorry it’s so inefficient, but I fear I have a strong allergy to professionalism.
 

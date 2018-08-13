@@ -4,7 +4,7 @@ Achron, EX mod, Source files
 
 These are the guts of the Achron, EX Mod; pulled out and rearranged into a format that makes them slightly more intuitive for a subpar modder (namely me, Chron) to navigate. Hopefully it will make sense to other people too. All the Grekim stuff is in the Grekim folder, all the Human stuff is in the human folder. Stuff that both Grekim and Humans use is mostly in the Common folder... mostly….
 
-**Incidentally... it seems like Github does not like when I try to bring in a folder with hundreds of files in it, so for now I will post them as zip files >> until someone explains to me the proper wway to handle such things.
+**Incidentally... it seems like Github does not like when I try to bring in a folder with hundreds of files in it, so for now I will include them as zip files >> until someone explains to me the proper wway to handle such things. :)
 
 Within each folder, each of the important units gets its own little xml notebook where most of the magic happens. There’s also a sub folder for ais… and models… and structures’ xmls, because the top folder was too crowded. Hopefully that makes sense.
 

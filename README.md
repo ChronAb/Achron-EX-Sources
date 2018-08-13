@@ -2,7 +2,6 @@
 Achron, EX mod, Source files
 
 
-What is this stuff:
 These are the guts of the Achron, EX Mod; pulled out and rearranged into a format that makes them slightly more intuitive for a subpar modder (namely me, Chron) to navigate. Hopefully it will make sense to other people too. All the Grekim stuff is in the Grekim folder, all the Human stuff is in the human folder. Stuff that both Grekim and Humans use is mostly in the Common folder... mostly….
 
 Within each folder, each of the important units gets its own little xml notebook where most of the magic happens. There’s also a sub folder for ais… and models… and structures’ xmls, because the top folder was too crowded. Hopefully that makes sense.
@@ -12,7 +11,7 @@ If you want to make changes and test them live, you’ll need to paste the xml b
 There are a few other source documents in addition to these that I shall refrain from posting until someone can present a good case for needing them. E.g. a folder for Vecgir, a folder for a 4th race, and a lot of half arsed, outdated design documentation. I do this because I think without proper context they would cause much more confusion than they would resolve.
 
 
-So you want to contribute... What can you do to help:
+So if you want to contribute... What can you do to help:
 1. Take a look at the mod in action, make sure you have the sense of what it is trying to accomplish. (Focus on Grekim first, as they are the model I’m trying to work to with CESO.)
 2. Start with the low hanging fruit.
 3. Tell me what information or resources you need, if you can’t find it in here. I have a feeling I am forgetting some stuff in this repository.

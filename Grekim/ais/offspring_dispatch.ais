@@ -1,0 +1,24 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+
+//checks to see if it was just created, and if so, set the objective parameters to the spot the creator assigned to it go and completes the unit's progen routine
+
+if (unit->Action==$EVENT_CREATED) { //was just created
+	object creator = unit->Parent;
+	
+	object myCommander = creator->Commander;		
+	if (myCommander->IsAlive==1 && myCommander->Class==$ARCTICUS_CLASS) {
+		PERFORM $ACTION_CHANGE_COMMANDER myCommander;						
+	}
+	//else {
+	//	PERFORM $ACTION_CHANGE_COMMANDER 0;
+	//}
+}
+
+
+int location = unit->ObjectiveParameters;
+PERFORM SET_PARAM location;
+PERFORM SET_OBJECTIVE $OBJECTIVE_ATTACKING;
+

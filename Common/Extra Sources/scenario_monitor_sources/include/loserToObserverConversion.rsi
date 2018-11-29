@@ -1,0 +1,14 @@
+/**********************
+* Script snippet to convert losers to observers
+*
+* Global vars used: obs
+*                   nonPlayer
+**********************/
+
+obs = obs | (1<<p);
+target = $OBS_AF; PERFORM SET_ACHRONAL_FIELD obs;
+PERFORM GET_ACHRONAL_FIELD $OBS_AF; 
+nonPlayer = nonPlayer | (1<<p);
+target = $NONPLAYER_AF; PERFORM SET_ACHRONAL_FIELD nonPlayer; 
+PERFORM GET_ACHRONAL_FIELD $NONPLAYER_AF; 
+PERFORM PLAYER_ENABLE_TIMELINE_CONTROLS (1 << p); //restore player p controls

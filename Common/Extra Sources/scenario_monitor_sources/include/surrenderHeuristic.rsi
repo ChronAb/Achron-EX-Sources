@@ -1,0 +1,186 @@
+//the surrender heuristic that is executed by active computer players to figure out when to give up
+//when they have no chance of winning
+//store players' 0-15 info every 100 ticks, one player-per-tick and then run the heuristic on the 16th tick
+if (current % 100 <= 15 && current <= present  ) { 
+	
+	PERFORM GET_UNPLAYABLE_PAST_DURATION;
+	int unplayable = perf_ret;
+	PERFORM GET_TIME_WINDOW_START;
+	int windowStart = perf_ret;
+	PERFORM GET_TIME_WINDOW_DURATION;
+	int duration = perf_ret;
+	
+	//for levels with an unplayable past, the boundary will be 10 seconds into the unplayable section
+	//otherwise it'll be in the furthest-past 12th of the timeline (i.e., 30sec mark in a  6min timewindow)
+	int boundary = (windowStart + unplayable - 15 * $TPS) |> ( windowStart + duration / 12 );
+
+	//this way the surrender heuristic is only run by timewaves at the point at the boundary 
+	//and only after at least half the time window has been played through
+	if (current >= boundary && current < boundary + 120 && present > duration/2) {
+		int p = current % 100; 
+		
+		int runHeuristic = 0;
+		if (p==14) { //on the last player, so store the timestamp to run the heuristic into the achronal field
+			target = 47; PERFORM SET_ACHRONAL_FIELD current;
+		}
+		
+		if (p==15) { //time to check the the heuristic
+			PERFORM GET_ACHRONAL_FIELD 47;	
+			if (current - 1 == perf_ret) {
+				runHeuristic = 1;
+				target = 47; PERFORM SET_ACHRONAL_FIELD 0;
+			}
+		}
+		
+		if (p < 15 && (( enabled >> p) & 1) == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+			if (((active&(~nonPlayer) >> p) & 1) == 1) { //active players who are currently still alive
+
+				player = p;
+				//achronal fields to store player's info; player 0 will start 15 + 2, p1 at 15 + 4, etc.
+				//giving each player 2 achronal fields to store their info
+				int ac = (p + 1) * 2 + 15; 
+				
+				int rank = 0;
+				//get all non-building units (ignore Gargantuan explicitly since it's not attack-capable)
+				int playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == p && (rank = query.Rank) >= $BUILDINGS_RANK && 
+																			query->Class != $GARGANTUAN_CLASS && !(query->IsStop) ];
+				
+				int playerUnits = QUERY VALUE [unit] SUM [1] WHERE [query->Owner == p && (rank = query.Rank) >= $BUILDINGS_RANK && 
+																	query->Class != $GARGANTUAN_CLASS && !(query->IsStop) ];
+			
+				//^^^ core buildings, (ignore turrets - rank of 90, RPs - rank of 10 and foundations - rank of 25)
+				//^^^ int core_buildings  = QUERY VALUE [unit] SUM [1] WHERE [query->Owner == p && (rank = query.Rank) > 20 && rank < 100 && rank!=90 && !(query->IsStop)];
+				
+				//producing buildings, (ignore turrets, rank of 90)
+				int factories = QUERY VALUE [unit] SUM [1] WHERE [query->Owner == p && (rank = query.Rank) >= $FACTORY_RANK && rank < $BUILDINGS_RANK && rank!=$TURRET_RANK && !(query->IsStop)];
+				
+				//player has production buildings, so adjust number of units and health based on resources
+				//since the ability to create more units should count
+				if (factories > 0) {
+					int playerResources = player->$LCrystals +  1.25 * (player->$QPlasma) + 28 * player->$ReserveSoldiers;
+					//average unit costs 150 total resources
+					//pad the number of units by the number of virtual units player can make
+					int virtualUnits = playerResources / 300;  //pad by half the actual amount
+					playerUnits = playerUnits + virtualUnits;
+					
+					//average unit has 275 hp 
+					//pad the total health by number of virtual units times 275 hp per unit 
+					playerHealth = playerHealth + virtualUnits * 140; //pad by half the actual amount
+				}
+				
+				if (playerUnits > 65535) { playerUnits = 65535; } //max number of units to fit in 16 bits
+				playerUnits[16,16] = factories; //store the number of factories into the upper 16 bits
+				
+				target = ac; PERFORM SET_ACHRONAL_FIELD playerHealth;
+				target = ac + 1; PERFORM SET_ACHRONAL_FIELD playerUnits;
+
+//print current/18, "> p:", p , "  h: ", playerHealth , " u: ", playerUnits[0,16] , " b: ", playerUnits[16,16],"\n";
+			}
+		}
+
+		//only run the heuristic after all the players' values have been stored
+		if (runHeuristic) {
+			int maxHealth = 0;
+			int maxUnits = 0;
+			int maxPlayer = 0;
+			int maxBuildings = 0;
+			for (p=0;p<=14;p=p+1) { //check all players 
+				if ((( enabled >> p) & 1) == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+					 if ((((active&(~nonPlayer)) >> p) & 1) == 1) { //active players who are currently still alive
+						player = p;
+						int ac = (p + 1) * 2 + 15; 
+						int playerHealth = 0;
+						int playerUnits = 0;
+						int playerBuildings = 0;
+						
+						PERFORM GET_ACHRONAL_FIELD ac;
+						playerHealth = perf_ret;
+						PERFORM GET_ACHRONAL_FIELD (ac + 1);
+						playerUnits = perf_ret[0,16];
+						playerBuildings = perf_ret[16,16];
+						
+						if (playerHealth >= maxHealth && playerUnits >= maxUnits) {
+							maxHealth = playerHealth;
+							maxUnits = playerUnits;
+							maxBuildings = playerBuildings;
+							maxPlayer = p;
+						}
+						
+						//HUERUSTIC LOGIC IS HERE
+						//only computer gives up, and only if it's not allied to the max player
+						if (p != maxPlayer && player->IsComputerPlayer==1 && ((player->Allies >> maxPlayer)&1)!=1) { 
+							
+							int surrenderMyself = 0;
+//player = 0;
+//say current/18, "> h: ", playerHealth, "-", maxHealth, " u: ", playerUnits, "-", maxUnits, " b: ", playerBuildings, "-", maxBuildings;
+							
+							//<20% of health and < 20% of units and <33% of buildings
+							if (playerHealth*5 < maxHealth && playerUnits*5 < maxUnits && (playerBuildings*3 < maxBuildings || playerBuildings==0 ) ) {
+								surrenderMyself = 1;
+							}
+							
+							//<33% of health and < 10% of units and <33% of buildings
+							if (playerHealth*3 < maxHealth && playerUnits*10 < maxUnits && (playerBuildings*3 < maxBuildings || playerBuildings==0) ) {
+								surrenderMyself = 1;
+							}
+							
+							
+							//<6% of health and < 6% of units , ignore the buildings since the difference in units is so huge
+							if (playerHealth*16 < maxHealth && playerUnits*16 < maxUnits ) {
+								surrenderMyself = 1;
+							}
+							
+							//player has important buildings left, so check if any of those buildings are under attack
+							if (surrenderMyself && playerBuildings > 0) {
+								int rank = 0;
+								//must have at least one building that's currently under attack
+								int buildingsUnderAttack = QUERY VALUE [unit] SUM [1] WHERE [query->Owner == p  && (rank = query.Rank) > 20 && rank < $BUILDINGS_RANK && rank!=$TURRET_RANK && query->LastAttackedVDirection>0 && !(query->IsStop)];
+								
+								//do NOT surrender if the player has important buildings but none of them are under attack
+								if (buildingsUnderAttack==0) {
+									surrenderMyself = 0;
+								}
+							}
+							
+							
+							
+							if (surrenderMyself) {
+								PERFORM PLAYER_LOST (1 << p); //player p lost
+								LOSER = 1;			
+								af2 = af2 | ( 1 << (p + 15));
+								target = 1; PERFORM SET_ACHRONAL_FIELD af2; //update the af2 bit for the surrendered player
+								
+								int TIME_OF_DEFEAT = current; //store the time of defeat into this player's achronal field
+								TIME_OF_DEFEAT[31]=1; //most sig bit fakes that this player was already notified
+								target = p+2;
+								PERFORM SET_ACHRONAL_FIELD TIME_OF_DEFEAT; //store the current time as this player's loss time
+								
+								af1[0,28] = current; //store the lost time 
+								target = 0; PERFORM SET_ACHRONAL_FIELD  af1;
+								
+								
+								int x =0;
+								PERFORM RAND;
+								int saying = perf_ret;
+								for (x=0;x<=15;x=x+1) { //notify other players of this player's surrender //"I've been temporarily temporally untempered";
+									if ( ( enabled >> x) & 1 == 1 ) {  
+										player = x;
+										if (saying < 5000) 			{ say "UPDATE:  Player ", p+1, " surrendered";  say_to_var ""; say "Good game, maybe next time..."; }
+										else if (saying < 10000)	{ say "UPDATE:  Player ", p+1, " surrendered";  say_to_var ""; say "Alright, alright, I give up. "; }
+										else if ( saying < 15000 ) 	{ say "UPDATE:  Player ", p+1, " surrendered";  say_to_var ""; say "I don't think I can win this one."; }
+										else if ( saying < 20000 )  { say "UPDATE:  Player ", p+1, " surrendered";  say_to_var ""; say "This timeline isn't worth my time."; }
+										else if (saying < 25000)	{ say "UPDATE:  Player ", p+1, " surrendered";  say_to_var ""; say "Why can't we all be winners? "; }
+										else 						{ say "UPDATE:  gg  (Player ", p+1, " surrendered)"; }
+									}
+								}
+							}
+							
+							
+						}
+					}
+				}
+			}
+		}
+		
+	}
+}

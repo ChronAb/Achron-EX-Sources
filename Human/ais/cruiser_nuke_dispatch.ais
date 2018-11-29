@@ -1,0 +1,48 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+//Have ammo?
+if (unit->Ammo == 0) {
+  $SAY_PAYLOAD
+  PERFORM $ACTION_ERROR1;
+  PERFORM SET_OBJECTIVE 0;
+  PERFORM NOTHING;
+}
+
+int dir = 0; 
+int dispatch = unit->ObjectiveParameters;  //get dispatch coordinates
+
+//Is target area in range?
+//nuke range is h: 40^2=1600, v: 96^2=9216 ; old h^2= 144
+if (dispatch <_> unit <= 1600 && dispatch <^> unit <= 9216) {
+	
+	//Is rotation correct?
+    target = dispatch;
+	PERFORM IS_POSITION_WITHIN_ACTION_ANGLE $ACTION_DROP_NUKE;
+    if (perf_ret == 0) {  //not rotated to nuke it
+        PERFORM GET_BEST_POSITION_ATTACK_DIRECTION dispatch;
+        PERFORM $ACTION_ROTATE perf_ret; //corrective rotation
+        PERFORM NOTHING;
+    }
+	else{ //Ready to fire the nuke
+		PERFORM $ACTION_DROP_NUKE dispatch;
+	}
+}
+else { //Not in range yet, so move closer
+	dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [dispatch <_> query ] WHERE [1];
+    if (dir==0) {
+        PERFORM NOTHING;
+    }
+    else {
+        PERFORM RAND;
+        if (perf_ret < $LAD_CLEAR) {
+            PERFORM CLEAR_LAST_ATTACKED_DIRECTION; 
+        }
+        PERFORM $ACTION_MOVE dir;
+        PERFORM NOTHING;
+    }
+}
+
+//Back to idle after firing
+PERFORM SET_OBJECTIVE 0; 

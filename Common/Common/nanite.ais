@@ -1,0 +1,103 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.ais
+
+int energy = 50; //heavy tank
+if (uclass==$TANK2_CLASS) {
+	if (!player->Advancements[$HUMAN_ADV_EXTRAS]) { 
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	}
+}
+if (uclass==$OCTOLIGO_CLASS) { 
+	if (!player->Advancements[$GREKIM_ADV_EXTRAS]) { 
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	}
+	energy = 20; 
+} 
+if (uclass==$HALCYON_S_CLASS) { 
+	if (!player->Advancements[$VECGIR_ADV_EXTRAS]) { 
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	}
+	energy = 100; 
+}
+
+
+target = unit->ObjectiveParameters;
+
+//check if scenario constraint to not allow naniting of allies is set
+if ( target->IsAlly==1 && (player.ScenarioConstraints)[0] ) { 
+	say "Target an enemy to infect";
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM NOTHING;
+}
+
+
+if (target->IsAlive==1) {
+
+	if (unit->Energy >= energy){ //&& !(target->IsStasis)) {
+		if (target->IsVisible && target<^>unit <= 961 && target<_>unit<=1764) { //max nanite range is 42(-2), 31
+
+			PERFORM $ACTION_INFECT target; 
+			PERFORM SET_OBJECTIVE 0;
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+		}
+		else {
+			PERFORM RAND;
+			if (perf_ret < $LAD_CLEAR) {
+				PERFORM CLEAR_LAST_ATTACKED_DIRECTION; 
+			}
+		    
+			int counter = unit->AdditionalParameters2; //move counter to move in the same direction
+			if (counter>0) {           //more than 0 means already moving in a direction
+				counter = counter - 1; //decrease the counter
+				PERFORM SET_ADDITIONAL_PARAMS2 counter;
+				int rot = unit->Rotation; //get the unit's current rotation
+				$DIR_FROM_ROT             //set the dir to move to based on that unit's rotation
+			}
+			else {  //no move counter stored, so query where to move to next
+				 //air unit will only move vertically if within horizontal range
+
+				 ignore_collision_with_unit = target;
+				if (uclass==$HALCYON_S_CLASS) {
+					if (target<_>unit <= 1764 ) {
+						dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ (target <=> query) * 2 ]  WHERE [1];    
+					} else {
+						dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ (target <_> query) * 2 ]  WHERE [1];    
+					}
+				} 
+				else {
+					dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ (target <_> query) * 1.2 ]  WHERE [1];    
+				}
+				
+				if (dir[0,8] >= 16) { counter = 0; } //moving up or down, so don't store counter
+				else {
+					counter = dir[16,8]; 			  //the counter is stored in the 3rd byte of dir
+					if (counter > 7) { counter = 7; } //cap it at 7 since AdditionalParameters2 only has 3 bits
+				}
+				PERFORM SET_ADDITIONAL_PARAMS2 counter;
+			}
+
+			dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+			if (dir && dir != $QUERY_EXHAUSTED) {
+				PERFORM $ACTION_MOVE dir; 
+				if ( perf_ret!=1) { 
+					PERFORM SET_ADDITIONAL_PARAMS2 0;
+				}
+			}	
+			PERFORM NOTHING;
+		}
+	}
+	else {
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM SET_OBJECTIVE 0;
+		$SAY_ENOUGH
+		if (unit->Energy < energy) $SAY_ENOUGHE
+		//else if (player->$QPlasma < 1000) $SAY_ENOUGHR
+		else $SAY_TSSED
+		PERFORM $ACTION_ERROR2;
+	}
+}

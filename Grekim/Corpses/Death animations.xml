@@ -1,0 +1,199 @@
+Octo
+time 14
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>7</AnimationNum>
+                    <Sound>Sound17</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Pharo
+time 14
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>7</AnimationNum>
+                    <Sound>Sound17</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+
+OCTOPOD
+time 20
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>8</AnimationNum>
+                    <Sound>Sound18</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Sepipod
+time 20
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>6</AnimationNum>
+                    <Sound>Sound18</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Pharopod
+time 20
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>3</AnimationNum>
+                    <Sound>Sound18</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Sligo
+time 27
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>2</AnimationNum>
+                    <Sound>Sound71</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Pligo
+time 27
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>3</AnimationNum>
+                    <Sound>Sound71</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Reaph
+time 63
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>3</AnimationNum>
+                    <Sound>Sound113</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Dome
+time45
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>8</AnimationNum>
+                    <Sound>Sound111</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+								
+Beam Dome
+time45
+                <Animation>
+                    <Identifier>ACTION_DESTROY</Identifier>
+                    <AnimationNum>3</AnimationNum>
+                    <Sound>Sound111</Sound>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>0</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>1</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>1</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>

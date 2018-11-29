@@ -1,0 +1,59 @@
+
+//*** CHRONOPORT ALERTS
+int alertPlayer = current % 23;
+if (alertPlayer <= 14) {
+	PERFORM IS_REPLAY;
+	int is_replay = perf_ret;
+	//Should be sent if it is enabled, if this is the observer we are checking, or if it is a replay
+	if (pre_game_settings[$MP_CHRONOPORT_ALERTS]||(((obs&connected)>>alertPlayer)&1)|is_replay) {		
+		if ((( enabled >> alertPlayer) & 1) == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+			if (((active >> alertPlayer) & 1) == 1) { //active players who are currently still alive
+				PERFORM GET_PLAYER_TIME alertPlayer;
+				if (current==perf_ret) {	//only alert the player during their timewave
+					PERFORM GET_ACHRONAL_FIELD (50 + alertPlayer);
+					int lastDepartureAlert = perf_ret;
+					PERFORM GET_ACHRONAL_FIELD (65 + alertPlayer);
+					int lastArrivalAlert = perf_ret;
+					int boundary = present - 54; //don't alert more often than every 3 seconds
+					if (lastDepartureAlert < boundary || lastArrivalAlert < boundary ) {
+						if (lastDepartureAlert < boundary) {						
+							target = $GET_UNIT [ query->Action == $EVENT_TIME_TRAVEL_DEPART ];
+							if (target>0) {
+								player = alertPlayer; 
+								if (((obs&connected)>>alertPlayer)&1|is_replay) {
+									int pos = target->Position;
+									_x = pos[$Xpos];
+									_y = pos[$Ypos];
+									say_to_var "SMLookAtX"; say _x;
+									say_to_var "SMLookAtY"; say _y;
+									say_to_var "SMAlertLookAt"; say "1";
+									say_to_var "";
+								}
+								$UI_MSG "Alert: chronoport DEPARTURE detected"; 
+								target = (50 + alertPlayer); PERFORM SET_ACHRONAL_FIELD present;
+								
+							}
+						}
+						if (lastArrivalAlert < boundary) {						
+							target = $GET_UNIT [ query->Action == $EVENT_TIME_TRAVEL_ARRIVE ];
+							if (target>0) {
+								player = alertPlayer; 
+								if (((obs&connected)>>alertPlayer)&1|is_replay) {
+									int pos = target->Position;
+									_x = pos[$Xpos];
+									_y = pos[$Ypos];
+									say_to_var "SMLookAtX"; say _x;
+									say_to_var "SMLookAtY"; say _y;
+									say_to_var "SMAlertLookAt"; say "1";
+									say_to_var "";
+								}
+								$UI_MSG "Alert: chronoport ARRIVAL detected"; 
+								target = (65 + alertPlayer); PERFORM SET_ACHRONAL_FIELD present;
+							}
+						}
+					}				
+				}
+			}
+		}
+	}
+}

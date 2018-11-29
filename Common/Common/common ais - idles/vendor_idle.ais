@@ -1,0 +1,80 @@
+
+#include common/include/unit_common_header.aih
+
+//Periodically sets the unit's owner to match nearby units
+// changes owner to neutral if ownership is contested
+
+//Units must have aproppriate actions enabled for changing teams
+
+PERFORM GET_CUR_TIME;
+int curtime = perf_ret;
+int uclass = unit->Class;
+
+//Automatic actions for AI players
+if(curtime%109==0 && player < 8 && $AUTOPILOT){
+    if(uclass==$CIV_RP_AB_CLASS){ //Civilian RPs and Dead Amplifiers automatically upgrade
+        PERFORM $ACTION_SELF_UPGRADE;
+        PERFORM NOTHING;
+    }
+}
+
+if(curtime%19==0) { //every second
+query_vis_distance = 12; // limit the search to only look for units within 12 spaces 
+
+	/*If left alone switch to neutral
+	int nearbyUnits = QUERY VALUE [unit] SUM [1] WHERE [query->Owner < 8 && query != 0];
+	// count number of other non-neutral units nearby
+	if (nearbyUnits == 0) {
+		if (player<8){
+			target = unit;
+			PERFORM 10 14; // no units nearby so be neutral
+		}
+	}
+	*/
+
+	//take a tally of how many hostile guys vs how many friendly guys are close by
+	int nearOwner = 0;
+	//same team tally
+	int tallyS = 0;
+	if(player < 8) {
+        tallyS = QUERY VALUE [unit] SUM [1] WHERE [query->Owner == player &&
+            query->Class < 3000 && query != 0];
+    }
+	//allied tally
+	int tallyA = QUERY VALUE [unit] SUM [1] WHERE [query->IsAlly && query->Owner < 8 
+		&& query->Class < 3000 && query != 0];
+	//enemy tally
+	int tallyE = QUERY VALUE [unit] SUM [1] WHERE [!(query->IsAlly) && query->Owner < 8 
+		&& query->Class < 3000 && query != 0];
+	
+	object nearbyUnit = 0;
+	target = unit; 
+	if(player == 14){
+		//we are neutral and people have arrived, time to make friends 
+		nearbyUnit = QUERY UNIT [unit] MAX [ |/(unit <_> query) * query->HP] 
+			WHERE [query->Class < 3000 && query->Owner < 8];
+			//find the closest biggest badass, to join their team
+	}
+	else{if(tallyE > tallyA){
+		//Enemies outnumber allies so it's time to defect
+		//find a nearby enemy and switch to their team
+		nearbyUnit = QUERY UNIT [unit] MAX [ |/(unit <_> query) * query->HP] 
+			WHERE [!(query->IsAlly) && query->Class < 3000 && query->Owner < 8];
+			//find the closest biggest enemy badass
+	}
+	else{ if(tallyA > 2*tallyS+1){
+		//no need to defect, but our owner is deserting us
+		//find a nearby ally and switch to their team
+		nearbyUnit = QUERY UNIT [unit] MAX [ |/(unit <_> query) * query->HP] 
+			WHERE [query->IsAlly && query->Class < 3000 && query->Owner < 8];
+			//find the closest biggest friendly badass
+	}}}
+	
+	if(nearbyUnit != 0){
+		target = nearbyUnit; 
+		int nearbyOwner = nearbyUnit->Owner;
+		PERFORM 10 nearbyOwner; //join team
+	}
+	
+	query_vis_distance = -1; //reset the query radius range
+}

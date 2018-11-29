@@ -1,0 +1,75 @@
+                <Animation>
+                    <Identifier>ACTION_CHANGE_PHARO</Identifier>
+                    <AnimationNum>0</AnimationNum>
+                    <Sound>Sound0</Sound>
+                    <VertShaderEffect>XZ_PLANE_CLAMPED_VERT_SCALE</VertShaderEffect>
+                    <FragShaderEffect>TELEPORT_BUILD</FragShaderEffect>
+                    <AnimationTime>0</AnimationTime>
+                    <ShowProgress>1</ShowProgress>
+                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <RenderModelExplode>0</RenderModelExplode>
+                    <Conditions>
+                        <Condition>
+                            <Resource>U_ACTION</Resource>
+                            <Comparison>EQUAL</Comparison>
+                            <Value>17</Value>
+                        </Condition>
+                    </Conditions>
+                </Animation>
+
+                <Action>
+                    <ActionNumber>17</ActionNumber>
+                    <Identifier>ACTION_CHANGE_PHARO</Identifier>
+                    <TimeTaken>90</TimeTaken>
+                    <ForceObjectAction>0</ForceObjectAction>
+                    <InterruptCurrentAction>0</InterruptCurrentAction>
+                    <MutexAction>0</MutexAction>
+                    <FailOnInvalidTarget>0</FailOnInvalidTarget>
+                    <PreserveParameter>1</PreserveParameter>
+                    <AIScriptCanRun>0</AIScriptCanRun>
+                    <SetParamZeroTicks>0</SetParamZeroTicks>
+                    <AllowActionWhenStopped>0</AllowActionWhenStopped>
+                    <LobProjectilePath>0</LobProjectilePath>
+                    <Conditions />
+                    <Steps>
+                        <Step>
+                            <PrimitiveAction>CHANGE_CLASS</PrimitiveAction>
+                            <Target>SELF</Target>
+                            <Value>1010</Value>
+                        </Step>
+                    </Steps>
+                </Action>
+								
+                <Objective>
+                    <ObjectiveNumber>13</ObjectiveNumber>
+                    <Script>Script325</Script>
+                    <Name>Morph to Pharo</Name>
+                    <Details> \Morph back into a Pharo</Details>
+                </Objective>
+								
+                <ControlShortcut>
+                    <ControlNumber>1</ControlNumber>
+                    <ControlObjectiveNumber>13</ControlObjectiveNumber>
+                    <ParameterType>NO_PARAMETER</ParameterType>
+                    <Parameter>0</Parameter>
+                    <KeyboardShortcut>$AchronKBPharo</KeyboardShortcut>
+                    <Flags>
+                        <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
+                        <EstTimeConstIsStart>0</EstTimeConstIsStart>
+                        <ButtonDisabled>0</ButtonDisabled>
+                        <UserControlsCustom>0</UserControlsCustom>
+                        <ButtonInvisible>0</ButtonInvisible>
+                        <SelectTarget>0</SelectTarget>
+                    </Flags>
+                    <EstTimeConst>90</EstTimeConst>
+                    <EstTimeDist>0</EstTimeDist>
+                    <Sound>Sound0</Sound>
+                    <ControlConditions>
+                        <ControlCondition>
+                            <Resource>U_OBJECTIVE</Resource>
+                            <Comparison>NOT_EQUAL</Comparison>
+                            <Value>50</Value>
+                        </ControlCondition>
+                    </ControlConditions>
+                </ControlShortcut>

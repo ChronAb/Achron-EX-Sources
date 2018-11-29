@@ -1,0 +1,21 @@
+//Achronal field 116 is used to store observers
+//bits 0-14 obs [0,15] are used to store observers, players without any racepickers or
+//factory type buildings. These can have an AI player to provide visibility sharing.
+//These are primarily used for checks to prevent loss.
+//bits 15-31 unused
+
+#define OBS_AF 116
+PERFORM GET_ACHRONAL_FIELD $OBS_AF;
+int obs = perf_ret;
+
+//Create Obs alliances and vision sharing
+#include include/obsAlliances.rsi
+
+//Tell observers about all resources
+#include include/obsResourceSay.rsi
+
+//IphStich's discontinuity tracker/skipper
+#include include/obsSkipper.rsi
+
+//check to see if the game is over and set tournament win pip, if tournament display is on
+#include include/tournamentWinHandler.rsi

@@ -1,0 +1,60 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+
+
+//used when attacking to find optimal targets to attack based on weapon strength
+
+float wreck_weight = 3.0; //+1 = 4
+float medic_weight = 1.0; //+1 = 2
+float achron_weight = 3.0; //+1 = 4
+
+//attack weight values for units taken from the balance output for any unit that isnt 1-1 ratio
+//the values here are actual weight value minus one, due to the +1 in the actual query
+//that way the multiplier in the query accurately represents the multiplier
+//eg, Frigate has a 2.67 air-ground ratio, so here it's set to 1.67 such that in the query it'll be:* ( 1 + 1.67) 
+
+if ($IS_HUMAN) 
+{ 
+	if (uclass==$SOP_CLASS||uclass==$SOP_RAISED_CLASS) 					{ ground_weight = 20;} 
+	else if (uclass==$HOLLOWAY_CLASS||uclass==$HOLLOWAY_RAISED_CLASS) 	{ ground_weight = 1.77;} 
+	else if (uclass==$MECH_CLASS) 	{ air_weight = 1.5; } 
+	//else if (uclass==$MAR_CLASS) 	{ ground_weight = 9; }
+	else if (uclass==$MAR2_CLASS) 	{ ground_weight = 9; }
+	else if (uclass==$ATHC_CLASS) 			{ ground_weight = 1; }
+	else if (uclass>=$MFB_CLASS && uclass <=$TYR_MFB_CLASS) { ground_weight = 0.11; }
+	//else if (uclass==$LANCER_CLASS) 	{ ground_weight = 0.29; }
+	else if (uclass==$TORNADE_CLASS) 	{ ground_weight = 2.5; }
+	else if (uclass==$FRIGATE_CLASS) 	{ air_weight = 1.93; }
+	else if (uclass==$CARRIER_CLASS) 	{ ground_weight = 0.3; }
+} 
+else if ($IS_GREKIM) 
+{ 
+	if (uclass==$SEPI_CLASS)		 	{ air_weight = 1; }
+	else if (uclass==$PHARO_CLASS) 		{ ground_weight = 5; }
+	else if (uclass==$OCTOPOD_CLASS)	{ ground_weight = 11; }
+	else if (uclass==$SEPIPOD_CLASS) 	{ air_weight = 1; }
+	else if (uclass==$PHAROPOD_CLASS) 	{ ground_weight = 9; }
+	else if (uclass==$OCTOLIGO_CLASS) 	{ ground_weight = 1.5; }
+	else if( uclass==$OCTOLIGO_ANGRY_CLASS)	{ ground_weight = 3; }
+	else if (uclass==$SEPILIGO_CLASS)	{ air_weight = 3; }
+	else if (uclass==$PHAROLIGO_CLASS) 	{ ground_weight = 4; }
+}
+else {
+	if (uclass < 2030) 
+	{ 
+		if (uclass==$VIR_ZAYIN_RAISED_CLASS||uclass==$VIR_ZAYIN_CLASS) 	{ ground_weight = 0.95; }
+		else if (uclass==$VIR_TETH_RAISED_CLASS||uclass==$VIR_TETH_CLASS) 	{ air_weight = 1.18; }
+		else if (uclass==$TERCHER_Z_CLASS) 			{ ground_weight = 0.36; }
+		else if (uclass==$TERCHER_T_CLASS) 			{ air_weight = 1.5; }
+		else if (uclass==$TERCHER_S_CLASS) 			{ ground_weight = 2.67; }
+	} 
+	else 
+	{ 
+		if (uclass==$PULSER_T_CLASS) 		{ air_weight = 1; }
+		else if (uclass==$HALCYON_Z_CLASS) 	{ ground_weight = 2.93; }
+		else if (uclass==$HALCYON_T_CLASS) 	{ air_weight = 1.22; }
+		else if (uclass==$INCEPTER_CLASS) 	{ air_weight = 0.32; }
+	} 
+} 
+
+

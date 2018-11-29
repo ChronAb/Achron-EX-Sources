@@ -1,0 +1,75 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+//if freeze is charged, cycle through and Xfreeze/chronoport all targets, then end script
+if(unit->Status[$CAP_BIT_3]){
+	
+	PERFORM GET_MAX_CHRONOPORT_DISTANCE;
+	int maxDist = perf_ret;
+
+	PERFORM GET_RECHRONOPORT_DELAY;  //get the rechronoport delay in ticks
+	int delay = perf_ret;
+
+	PERFORM GET_CUR_TIME;
+	int current = perf_ret;
+
+	PERFORM RAND;
+	int rand  = perf_ret % 90; //random 0-89 
+
+	int time = current + $TPS * (30 + rand); // 30-119 seconds into future 
+
+	//if maximum chronoport distance is less than destination time, set it to max cport distance
+	if (abs (time - current) >= maxDist) {
+		time = current + maxDist - 7;
+	}
+	
+	int tc = 0;
+	int timeSinceLastChronoport = 0;
+
+	//only look for non stopped enemies that are <=17 spaces and <=30 spaces away
+	query_vis_distance = 17; //instead of query<_>unit<=289
+	target = QUERY UNIT [unit] MIN [ unit <=> query ]
+		WHERE [ !(query->IsAlly) && query->Owner<14 && (tc=query->Class)<3999  &&
+			query->Action != $EVENT_TIME_TRAVEL_DEPART && //ignore units already being chronoported
+			( (timeSinceLastChronoport = query->TimeSinceLastChronoport) == -1 || timeSinceLastChronoport > delay ) && //ignore units mid-rechronoport delay
+			!(query->IsStasis) && query<^>unit <= 900 && !(query->IsStop) &&
+			query.Rank!=$ACHRON_RANK// && ! (tc==$HOLLOWAY_CLASS || tc==$HOLLOWAY_RAISED_CLASS || tc==$WINTERS_CLASS || tc==$WINTERS_RAISED_CLASS ||
+			 //tc==$TYR_MFB_CLASS || tc==$TYR_DISABLED_CLASS || tc==$TYR_CARRIER_CLASS || tc==$DJELT_CLASS || tc==$DJELT_RAISED_CLASS || 
+			 //tc==$KILDEN_CLASS || tc==$KILDEN_RAISED_CLASS || tc==$DAMATH_CLASS || tc==$DAMATH_RAISED_CLASS ||
+			 //tc==$OCTOLIGO_GUARD_CLASS || tc==$GUARDIAN_CLASS || tc==$GUARDIAN_ELDER_CLASS || tc==$ELDER_CLASS
+			//)
+		];
+		
+	//if target found fire and look again on next tick
+	if (target->IsAlive==1) {
+		PERFORM $ACTION_STOP time;
+		PERFORM NOTHING;
+	}
+
+	//if no target then go back to idle
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_PARAM 0;
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+
+//ELSE attempt to charge
+if (!player->Advancements[$GREKIM_ADV_EXTRAS]) { 
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+int  energy = 30;
+int  health = 60;
+
+if (unit->Energy < energy || unit->HP <= health) {
+    PERFORM SET_OBJECTIVE 0;
+    $SAY_ENERGY
+    PERFORM $ACTION_ERROR1;
+    PERFORM NOTHING;
+}
+
+//freeze is not charged yet, so charge it
+PERFORM $ACTION_PREP_FREEZE;

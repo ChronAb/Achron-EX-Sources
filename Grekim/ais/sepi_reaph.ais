@@ -1,0 +1,143 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+#include common/include/unit_morph_rechronoport_check.ais
+
+int op = unit->ObjectiveParameters;
+int dist = unit<_>op;
+
+PERFORM POSITION_VISIBLE op;
+int vis = perf_ret;
+
+//Elder: Can plant Reaphs anywhere in a large radius but it costs energy
+if (unit->Class == $GREKIM_ACHRON_CLASS && dist <= 3600 && vis != 0) {
+    //Plant Reaph range is 60 (3600)
+
+	if (player->$LCrystals < $PRI_REAPH_LC || player->$QPlasma < $PRI_REAPH_QP ) {
+		PERFORM SET_OBJECTIVE 0;    
+		$SAY_RESOURCES
+		PERFORM $ACTION_ERROR1;
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM NOTHING;
+	}
+    
+	if (unit->Energy < 20) {
+		PERFORM SET_OBJECTIVE 0;    
+		$SAY_ENERGY
+		PERFORM $ACTION_ERROR1;
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM NOTHING;
+	}
+
+	target = $REAPH_CLASS;
+	PERFORM CAN_CLASS_FIT_AT op;
+	if (perf_ret == 0) { $SAY_OBSTACLE }
+	else {PERFORM $ACTION_MAKE_REAPH op;}
+	
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+//Sepi: if on full energy can plant a reaph
+if (unit->Class == $SEPI_CLASS && unit->Energy == $REAPH_E 
+	&& dist <= $GREKIM_SPAWN_R && vis != 0) { //range is 15 (225)
+	//check if there are sufficient resources
+	if (player->$LCrystals >= $REAPH_LC && player->$QPlasma >= $REAPH_QP ) {
+		target = $REAPH_CLASS;
+		PERFORM CAN_CLASS_FIT_AT op; //check if the structure will fit
+		if (perf_ret==255 && dist > 9) {
+			//Everything checks out. So make structure and go to idle
+			PERFORM $ACTION_MAKE_REAPH op;
+			PERFORM SET_OBJECTIVE 0;
+			PERFORM NOTHING;
+		} else {
+			$SAY_OBSTACLE
+		}
+	} else {
+		$SAY_RESOURCES
+	}
+	PERFORM SET_OBJECTIVE 0;    
+	PERFORM $ACTION_ERROR1;
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM NOTHING;
+}
+
+//Otherwise will have to morph
+if (unit->Position == op) {
+	if (player->$LCrystals >= $REAPH_LC && player->$QPlasma >= $REAPH_QP ) {
+		//buildings must be oriented south
+		if (unit->Rotation != $ROT_S ) {
+			PERFORM $ACTION_ROTATE $ROT_S;
+			if (perf_ret!=1) { //failed to rotate
+				$SAY_MORPH 
+				PERFORM SET_OBJECTIVE 0;
+				PERFORM SET_ADDITIONAL_PARAMS 0;
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+				PERFORM $ACTION_ERROR1;
+			}
+			PERFORM NOTHING;
+		}
+		
+		//check if the structure will fit
+		target = $REAPH_CLASS;
+		PERFORM CAN_CLASS_FIT_AT op;
+		if (perf_ret[$ROT_S]) {
+			//Everything checks out. So make structure and go to idle
+			PERFORM $ACTION_CHANGE_COMMANDER 0;
+			PERFORM $ACTION_CHANGE $SEPI_CLASS;
+			PERFORM SET_OBJECTIVE 0;
+			PERFORM NOTHING;
+		} else {
+			$SAY_MORPH
+		}
+	} else {
+		$SAY_RESOURCES
+	}
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM $ACTION_ERROR1;
+    PERFORM NOTHING;
+}
+
+//if out of range move to target
+int qp = 0;
+int dir = 0;
+int obstacle = 0;
+//once within 3 spaces of destination, make sure to move to the exact position the player selected 
+if (unit<_>op <= 16) {
+	target = $REAPH_CLASS;
+	PERFORM CAN_CLASS_FIT_AT op;
+	if (!perf_ret[$ROT_S]) {
+		dir = 0;
+		obstacle = 1;
+	}
+	else {
+
+		int opx = op[$Xpos];
+		int opy = op[$Ypos];
+		int _qy = 0;
+		int _qx = 0;		
+		//adjust for tOP left corner of the 2x2 grek unit
+		dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ 
+						((_qx=((qp=query->Position)[$Xpos])) - opx) * (_qx - opx) +
+							((_qy=qp[$Ypos]) - opy) * (_qy - opy) 		
+						] WHERE [1];
+	}
+} else {
+	dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ query <_> op ] WHERE [1];
+}
+
+if(dir==0 || dir==$QUERY_EXHAUSTED ) { 
+	//can't get to where we need to go, so give up!
+	if (obstacle) { $SAY_MORPH }
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM SET_OBJECTIVE 0;
+} else {
+	PERFORM $ACTION_MOVE dir;
+}

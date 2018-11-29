@@ -1,0 +1,32 @@
+//Contibuted by Dallas "ChronAberant" Joder
+
+//This script sets the timeline speed to 0.5 (because EX multiplayer is really busy)
+
+PERFORM GET_PRESENT_TIME_WAVE_TIME_RATE;
+int presentRate = perf_ret_float;
+	
+if(presentRate >0.5) {
+	perf_ret_float=0.5;
+	PERFORM SET_PRESENT_TIME_WAVE_TIME_RATE;
+}
+	
+    
+//Also causes the timeline to stop just as the UPP edge enters the left edge of the timeline
+//Applies to Assassin mode only; Currently disabled
+
+/*if(pre_game_settings[$MP_ASSASSIN_MODE] && presentRate > 0){
+	PERFORM GET_META_TIME;
+	int metaTimeNow = perf_ret;
+	
+	PERFORM GET_PRESENT_TIME_WAVE_FIXED_TIME;
+	int pastLength = perf_ret;
+
+	PERFORM GET_UNPLAYABLE_PAST_DURATION;
+	int uppLength = perf_ret;
+
+	if(metaTimeNow == pastLength-uppLength){
+		perf_ret_float=0.0;
+		PERFORM SET_PRESENT_TIME_WAVE_TIME_RATE;
+	}
+}
+*/

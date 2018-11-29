@@ -1,0 +1,591 @@
+#include include/monitorHeader.rsh
+
+#define PLAYER 0
+
+PERFORM GET_CUR_TIME;
+int current = perf_ret;
+
+PERFORM GET_PRESENT_TIME;
+int present = perf_ret;    
+
+PERFORM GET_PLAYER_TIME 0;
+int player1time = perf_ret;
+if (player1time != present) {
+	player = 0;
+	PERFORM SET_PLAYER_TIME present + 1;
+	PERFORM NOTHING;
+}
+
+if (current!=player1time) {
+	PERFORM NOTHING;
+}
+
+if(current != present) { 
+	PERFORM NOTHING;    
+}
+
+int objective = unit->Objective;
+
+player = 0;
+
+
+_uclass = $UNITCREATOR_CLASS; _uowner = 1; $INITIALIZE_UNIT_CREATOR_AND_UI
+
+if (present==1 ) { //create athc
+	_create_action = $UC_CREATE_ATHC; $UNIT_CREATOR_CREATE_UNIT
+}
+if (present==4 ) { //create teleporter
+	_create_action = $UC_CREATE_TELEPORTER; $UNIT_CREATOR_CREATE_UNIT
+}
+
+if (present==7) { _create_action = $UC_CREATE_WAYPOINT; $UNIT_CREATOR_CREATE_UNIT }
+
+if (objective==0) {
+    //PERFORM SET_OBJECTIVE 5;
+    //PERFORM SET_ADDITIONAL_PARAMS 0;
+    //PERFORM NOTHING;
+
+    if (present == 1$seconds) {
+        say_to_var "SMtutorialTextWindow"; 
+		say "The mouse wheel zooms in and out (keyboard: "; say_from_config "AchronUICameraUp"; 	say "/"; 	say_from_config "AchronUICameraDown"; say ")\n \nTo pan the view you can either use arrows or simply move the mouse to the edge of the screen.";
+        PERFORM SET_ADDITIONAL_PARAMS 0;
+	}
+	if (present == 1$seconds + 9) {
+        say_to_var "SMtutorialTextWindow"; 	
+		say "The mini-map on the bottom left shows you the map of the entire level.\n \nIn addition to clicking the mini-map to look around, you can use it to issue location-based orders such as move.\n \nThe '"; say_from_config "AchronUIToggleMap"; say "' key toggles a maximized version of the mini-map.";
+	} else if ( present == 2 $seconds) {
+		object mech = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==10 && query->Owner==0 ];
+        player = 0;
+		PERFORM UI_SELECT_UNIT 0;
+        PERFORM UI_SELECT_UNIT mech;
+		say_to_var "SMUnitDescriptionText";
+		say "The Collective Earth Security Organization(CESO) mech is a fully autonomous attack-capable unit.  Though not very strong, it is good against aerospace targets.";
+		say_to_var "SMRotateAroundUnit";
+        say 1;	
+		PERFORM DISABLE_PLAYER_CHRONAL_INPUT; PERFORM DISABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+        say 1;	
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";	
+	} else if (present == 2 $seconds + 9) {
+		PERFORM ENABLE_PLAYER_CHRONAL_INPUT; PERFORM ENABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+        say 0;	
+	} else if (present == 3 $seconds) {
+		say_to_var "SMtutorialTextWindow"; 
+		say "LEFT Click on any unit to select it.\n \nLEFT Click and drag on the screen to select multiple units.\n \n";  say_from_config "AchronUISelectAdditional"; say "-LEFT Click on individual units to deselect or select more.";
+	} else if (present == 4 $seconds ) {  
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 1;
+    }
+}
+
+
+else if (objective==1) {    
+    int sec = unit->AdditionalParameters;
+    int mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==10 && query->Owner==0 && query->Objective==5 ];
+    if (mechs==0) {
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "nextStepText";
+		say "To continue, move the Mechs:\n \nSelect a Mech and move it with the MOVE control ("; say_from_config "AchronKBMove"; say").\nLEFT Click the Move control, then LEFT Click on the ground.\nOr simply RIGHT click on the ground.";
+    } else {
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 2;
+		say_to_var "hidenextstepPopup";
+		say 1;
+    }
+}    
+else if (objective==2) {    
+    int sec = unit->AdditionalParameters;
+	if (present == (sec + 1) $seconds) {
+		config_property_int "hideQuickControls"; if (!perf_ret) {
+			say_to_var "SMtutorialTextWindow"; 
+			say "The radial controls that appear by the mouse are the unit's Quick Controls.\n \nThese buttons allow quick access to the most commonly used controls.\n \nYou can enable or disable these Quick Controls via the Settings Menu.";
+		}
+	}	
+	if (present == (sec + 2) $seconds) {
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "nextStepText";
+		say "To continue, destroy a disabled (dark) Mech:\n \nSelect your Mech and attack with the ATTACK control ("; say_from_config "AchronKBAttack"; say ").\nLEFT Click the Attack control, then LEFT Click on the target.";
+		say_to_var "playSaySound";
+		say 1;
+	}
+
+	//find an attacking-unit mech
+	int mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==10 && query->Owner==0 && query->Objective==54 && query->AdditionalParameters[5] ];
+    if (mechs==0) {
+	
+		if ( present > (sec+10) $seconds + 2) {
+			mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class == 14 && query->Owner==15 ];
+			if (mechs ==0) {
+				say "Getting ahead of the instructions, eh?";
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+				int sec = present / $TPS;
+				PERFORM SET_ADDITIONAL_PARAMS sec;
+				PERFORM SET_OBJECTIVE 4;
+				PERFORM NOTHING;
+			}
+		}
+    }
+ 	else {
+	
+		say_to_var "nextStepText";
+		say "New Objective:\n \nDestroy the remaining disabled Mechs in the middle of the road.";
+		say_to_var "playSaySound";
+		say 1;	
+		say_to_var "hidecontrolPopup";
+		say 1;
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 3;
+	}
+}
+else if (objective==3) {
+    int sec = unit->AdditionalParameters;
+    int mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class == 14 && query->Owner==15 ];
+    if (mechs ==0) {
+        say "Good job.";
+		say_to_var "hidenextstepPopup";
+		say 1;
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 4;
+    } 
+}
+else if (objective==4) {
+    int sec = unit->AdditionalParameters;		
+    if (present == (sec+1) $seconds) {
+		say_to_var "SMtutorialTextWindow"; 
+		say "If you attack a point on the ground, all selected units will move there and automatically attack any enemy targets they encounter along the way.  This is called an ATTACK-MOVE.\n \nATTACK-MOVE does not ignore enemies encountered on the way to the destination, so it is a good idea to ATTACK-MOVE when directing units into unknown territory";
+	} else if (present == (sec+1) $seconds + 9) {
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "nextStepText";
+        say "To continue, ATTACK-MOVE your mechs going North along the road:\n \nSelect your Mechs, LEFT click the ATTACK control (";say_from_config "AchronKBAttack"; say "),\nthen LEFT Click on the GROUND.";
+		say_to_var "tutorialTextWhite";
+        say "";
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";
+	} 
+	else if (present >= (sec+5) $seconds + 3) {
+		int mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==10 && query->Owner==0 && query->Objective==6 && query->AdditionalParameters[5]==0 ];
+		if (mechs>0) {	
+			say "Good, keep attack-moving your mechs North along the road";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";  
+			sec = present / $TPS;
+			PERFORM SET_ADDITIONAL_PARAMS sec;
+			PERFORM SET_OBJECTIVE 5;
+		
+		}
+		
+		mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class == 14 && query->Owner==1 ];
+		if (mechs==0) {
+			say "You're trying to skip through this tutorial, aren't you?";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+			say_to_var "hidenextstepPopup";
+			say 1;
+	        sec = present / $TPS;
+			PERFORM SET_ADDITIONAL_PARAMS sec;
+			PERFORM SET_OBJECTIVE 6;
+		}
+    }
+}
+
+else if (objective==5) {
+    int sec = unit->AdditionalParameters;
+
+	if (present >= sec$seconds) {
+	    int mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class == 14 && query->Owner==1 ];
+		if (mechs==0) {
+			say "Great job! Objective completed.";
+			say_to_var "hidenextstepPopup";
+			say 1;
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+	        sec = present / $TPS;
+			PERFORM SET_ADDITIONAL_PARAMS sec;
+			PERFORM SET_OBJECTIVE 6;
+		}
+	}
+}
+else if (objective==6) {	
+	int sec = unit->AdditionalParameters;
+	if (present==(sec + 1) $seconds + 5) {
+		_change_owner = 1;
+		_owner = 0;
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 40;
+		_dest[$Ypos] = 40;		
+		$UNIT_CREATOR_RELEASE_UNIT
+	}
+	else if (present == (sec + 2) $seconds) {
+        say_to_var "tutorialText";
+        say "";
+        object athc = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==45 && query->Owner==0 ];
+        player = 0;
+		PERFORM UI_SELECT_UNIT 0;
+        PERFORM UI_SELECT_UNIT athc;
+        say_to_var "SMUnitDescriptionText";
+		say "The All-Terrain Hover Craft (ATHC) is a fast CESO\nland-based unit.  This is a fast, well-rounded lightweight tank.";
+		say_to_var "SMRotateAroundUnit";
+		say 1;
+		PERFORM DISABLE_PLAYER_CHRONAL_INPUT; PERFORM DISABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+        say 1;	
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";		
+    } else if ( present == (sec + 2) $seconds + 9) {
+        PERFORM ENABLE_PLAYER_CHRONAL_INPUT; PERFORM ENABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+        say 0;
+		say_to_var "tutObj1";
+		say 1;
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";		
+		sec = present / $TPS;
+		PERFORM SET_ADDITIONAL_PARAMS sec;
+		PERFORM SET_OBJECTIVE 7;
+	}
+    
+}
+else if (objective==7) {
+	int sec = unit->AdditionalParameters;
+	if ( present == (sec + 1) $seconds) { //only say this once
+		say_to_var "SMtutorialTextWindow"; 
+		say "Effectively commanding a large body of units is easier if you organize them into hierarchies.\n \nSelect ALL your Mechs and make the ATHC their commander:\n \nLEFT click the Hierarchy CHANGE COMMANDER control ("; say_from_config "AchronKBChangeCommander"; say ") then LEFT click on the ATHC, or simply RIGHT click on the ATHC.";
+	}
+	else if ( present == (sec + 2) $seconds) { //only say this once
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "nextStepText";
+		say "When you are ready to continue:\n \nSelect ALL the Mechs and set the ATHC as their commander.";
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";
+	}
+    object athc = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==45 ]; //athc
+    int non = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==10 && query->Owner==0 && query->Commander!=athc ];
+    if (non > 0) { }
+    else {
+        sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 8;
+		say_to_var "hidenextstepPopup";
+		say 1;
+		say_to_var "tutObj2";
+		say 1;
+		say_to_var "playObjSound";
+		say 1;
+		say_to_var "SMtutorialTextWindow"; 
+		say "The blue circle underneath the ATHC indicates that it is now a top level commander.  It will pass any commands it's given to its subordinates.\n \nSubordinates will follow their commander as closely as they can, and will return to remain nearby when idle.";
+    }
+}
+else if (objective==8) {
+    int sec = unit->AdditionalParameters;
+    if (present == (sec + 1) $seconds) {
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "nextStepText";
+        say "To continue, move only the ATHC and see how the subordinates follow it.";
+        PERFORM SET_OBJECTIVE 9;
+    }
+}
+else if (objective==9) {
+	int obj = 0;
+    int athc = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==45 && ((obj=query->Objective)==5||obj==6) && query->AdditionalParameters[0]]; //athc player-moving
+
+    int mech = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==10 && query->Owner==0 && query->AdditionalParameters[0]]; //mech player-moving
+                                                    
+    if (athc==1 && mech==0) { //only the ATHC is moving via a player-issued move
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 10;
+    }
+
+}
+else if (objective==10) {
+	int sec = unit->AdditionalParameters;
+
+	if ( present == (sec + 5) $seconds) { //only say this once
+		say_to_var "nextStepText";
+		say "To continue, Move one or more Mechs further away from the ATHC.\n \nIf you move a Mech far away from the ATHC it will return on its own.";
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";
+	}
+	
+    int mech = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==10 && query->Owner==0 &&
+                                                    query->Objective==5 && query->AdditionalParameters[0]]; //mech moving
+    if (mech > 0) {
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 11;
+    }
+
+}
+else if (objective==11) {
+    int sec = unit->AdditionalParameters;   
+	if (present == (sec + 6) $seconds) {
+		say_to_var "SMtutorialTextWindow"; 
+		say "Hierarchy groups will attempt to move at the same speed, making faster units slow down.\n \nForce all units in a hierarchy to move at their top speed:\n \nSelect the commander while the commander is moving then click the PRIORITY control ("; say_from_config "AchronKBPriority"; say").";		
+		say_to_var "playObjSound";
+		say 1;
+		say_to_var "tutObj3";
+		say 1;
+		say_to_var "hidenextstepPopup";
+		say 1;
+        sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 12;
+    }
+}
+else if (objective==12) {
+	int sec = unit->AdditionalParameters;
+	if (present == (sec + 1) $seconds) { 
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "nextStepText";
+		say "To continue, move the ATHC across the map with a Priority dispatch:\n \nWhile the ATHC is moving, select it and click the PRIORITY control ("; say_from_config "AchronKBPriority"; say ")";;
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";
+	}
+    int athc = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==45 && query->Objective!=0 && 
+                                                  (query->AdditionalParameters)[0,4]==13 ]; //not idle and doing priority
+    if (athc > 0) {
+        say "And there it goes full speed, ahead of the Mechs.";
+		say_to_var "playObjSound";
+		say 1;
+		say_to_var "hidenextstepPopup";
+		say 1;
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 13;
+		say_to_var "tutObj4";
+		say 1;
+		say_to_var "";
+    }
+
+}
+else if (objective==13) {
+    int sec = unit->AdditionalParameters;
+    if (present == (sec + 3) $seconds) {
+		say_to_var "SMtutorialTextWindow"; 
+		say "Additional hierarchy controls:\n \nDouble click on a unit to select all units of the same type.\nALT-RIGHT click on a unit to select its commander.\nALT-RIGHT click twice to select the top-level commander of the entire hierarchy.\nALT-LEFT click a commander to select its direct subordinates.";
+    }
+	else if (present == (sec + 3) $seconds + 9) {
+		say_to_var "SMtutorialTextWindow"; 
+		say "To remove any unit from its hierarchy, set it to Individual mode by using the 'Remove from Hierarchy' control (I).\n \nThis will completely disconnect a unit from its hierarchy, both from its commanders and its subordinates.";
+	}
+	else if (present == (sec + 5) $seconds) {
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "nextStepText";
+        say "To continue, remove all units from the ATHC's hierarchy:\n \nSelect the ATHC and click the 'Remove from Hierarchy' control (";say_from_config "AchronKBRemoveFromHierarchy"; say ")\nor Select ALL the Mechs and click the 'Remove from Hierarchy' control.";
+		say_to_var "playSaySound";
+		say 1;		
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 14;
+    }
+}
+else if (objective==14) {
+ 	int sec = unit->AdditionalParameters;
+
+    int comms = QUERY VALUE [unit] SUM [1] WHERE [ query->Owner==0 && (query->Commander)->IsAlive==1 && (query->Commander)!=query && query.Rank>=$RP_RANK];
+	if (comms == 0) {
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 15;
+		say_to_var "hidenextstepPopup";
+		say 1;
+		
+    }
+
+}
+else if (objective==15) {
+    int sec = unit->AdditionalParameters;
+    if (present == (sec+2) $seconds) {
+		say_to_var "tutObj5";
+		say 1;
+		say_to_var "playObjSound";
+		say 1;
+		//create TPORT 55,26,0
+		_change_owner = 1;
+		_owner = 0;
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 55;
+		_dest[$Ypos] = 26;		
+		$UNIT_CREATOR_RELEASE_UNIT
+		
+	}  
+	else if (present==(sec+2)$seconds + 3) { //3 ticks after creating teleporter
+		target = QUERY UNIT [unit] MIN [1] WHERE [query->Class==136 ]; //convert the new teleporter
+		PERFORM SET_UNIT_OWNER 0;
+	}
+	else if (present == (sec + 3) $seconds) {
+		say_to_var "SMtutorialTextWindow"; 
+		say "Contextual controls review for selected units:\n \nRIGHT click on the ground - MOVE there.\n \nRIGHT click an enemy unit - ATTACK it.\n \nRIGHT click a friendly unit - set it as the commander.";
+	}
+	else if (present == (sec + 3) $seconds + 9) {
+		say_to_var "SMtutorialTextWindow"; 
+		say "You can cancel commands before you finish issuing them by RIGHT clicking on the ground.\n \nEXAMPLE:\nTo cancel an ATTACK-MOVE after you clicked ATTACK, but before you selected the location, RIGHT click anywhere on the ground instead of LEFT clicking.";
+	}
+	else if (present == (sec + 5) $seconds) {
+        object tport = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==135 && query->Owner==0 ];
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";
+        player = 0;
+		PERFORM UI_SELECT_UNIT 0;
+        PERFORM UI_SELECT_UNIT tport;
+        say_to_var "SMUnitDescriptionText";
+		say "The field-ready Teleporter gate enables simple and instant relocation of units.  Though its range does not compare with long-range industrial and capital-ship teleporters, it can easily send units across major parts of any battlefield.";
+		say_to_var "SMRotateAroundUnit";
+		say 1;
+		PERFORM DISABLE_PLAYER_CHRONAL_INPUT; PERFORM DISABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+        say 1;	
+        say_to_var "";        
+    } else if ( present == (sec + 6) $seconds) {
+        PERFORM ENABLE_PLAYER_CHRONAL_INPUT; PERFORM ENABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+        say 0; 
+	} else if (present == (sec + 7) $seconds) {
+		say_to_var "SMtutorialTextWindow"; 
+        say "Teleporting is a 3-step process:\n \n1) move the selected units into the gate's active radius\n2) Click the units' TELEPORT control ("; say_from_config "AchronKBTeleport"; say")\n3) LEFT click the destination (or LEFT click on the mini-map)";
+
+    	sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 16;
+    }
+}
+else if (objective==16) {
+	int sec = unit->AdditionalParameters;
+    if (present == (sec + 1 ) $seconds) {
+		_dest[$Xpos] = 84; _dest[$Ypos] = 87; $PLACE_WAYPOINT //place waypoint
+		say_to_var "hidenextstepPopup";
+		say 0;
+		say_to_var "tutorialShow";
+		say 1;
+		say_to_var "tutorialText";
+		say "To use a Teleporter, a unit must be within its action radius.\n \n- Teleporting:\nMove the units within the Teleporter's action radius,\nselect the units' teleport control (keyboard: "; say_from_config "AchronKBTeleport"; say " )\nthen LEFT click on the destination location (or on the minimap)";
+		say_to_var "nextStepText";
+		say "To complete the training, destroy the Southern enemy outpost\nlocated on the bottom right of the map on the dirt road.";
+		say_to_var "playSaySound";
+		say 1;
+    }
+	
+	target = $GET_UNIT [ query->Owner==0 && query->XPosition > 72 && query->YPosition > 72 && query.Rank>=$RP_RANK ] ;
+	if (target->IsAlive==1) { $HIDE_WAYPOINT }
+	
+    int en = QUERY VALUE [unit] SUM [1] WHERE [ query->Owner==1 && query.Rank >= $RP_RANK];
+	
+    if (en > 0) { }        
+    else {
+        int sec = present / $TPS;
+        PERFORM SET_ADDITIONAL_PARAMS sec;
+        PERFORM SET_OBJECTIVE 17;
+		say_to_var "tutObj6";
+		say 1;
+		say_to_var "playObjSound";
+		say 1;
+    }
+}       
+else if (objective==17) {        
+    int sec = unit->AdditionalParameters;
+    if (present == (sec+1) $seconds) {	
+		say_to_var "tutorialShow";
+        say 1;
+        say_to_var "hidenextstepPopup";
+		say 1;
+		say_to_var "tutorialText";
+		say "";
+		say_to_var "tutorialTextWhite";
+        say "Remember the following:\n \n- Use attack-move so your units will automatically target enemies\n \n- You can create multi-level command chains\n \n- Fast units will slow down to move in unison with their commander\n \n- A Priority dispatch makes subordinates move at their full speed";
+        say_to_var "";
+        say "Congratulations, you have completed Basic Training.";
+        PERFORM PLAYER_LOST 2;
+		PERFORM END_SCENARIO;
+    }
+    if (present == (sec+8) $seconds) {
+		
+		PERFORM EXIT_ENGINE;
+    }
+}
+else if (objective==18) {
+    PERFORM SET_OBJECTIVE 19;
+    PERFORM PLAYER_LOST 1;
+    PERFORM END_SCENARIO;
+	PERFORM EXIT_ENGINE;
+}
+
+//make sure player isn't killing his/her own units off... bad student!
+if (present % $TPS == 0) { //check once a second
+    if (objective < 16) { //middle of tutorial
+        if (objective >= 7) {
+            int athc = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==45 ];
+            if (athc==0) {  //killed off own athc
+                say_to_var "tutorialShow";
+                say 0;
+                say_to_var "";
+                say "Your ATHC has been destroyed. Mission Failed!";
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+                PERFORM SET_OBJECTIVE 18;
+            }
+        } else {
+           int mechs = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==10 && query->Owner==0];
+            if (mechs==0) {  //killed off own mechs
+                say_to_var "tutorialShow";
+                say 0;
+                say_to_var "";
+                say "You lost all your Mechs. Mission Failed!";
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+                PERFORM SET_OBJECTIVE 18;
+            }
+        }
+    } else { //hunt down mode (end of level)
+        int units= QUERY VALUE [unit] SUM [1] WHERE [ (query->Class==10 || query->Class==45) && query->Owner==0];
+        if (units==0) {  //lost all units
+            say_to_var "tutorialShow";
+            say 0;
+            say_to_var "";
+            say "You lost all your units. Mission Failed!";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+            PERFORM SET_OBJECTIVE 18;
+        }
+    }
+}
+
+
+
+
+

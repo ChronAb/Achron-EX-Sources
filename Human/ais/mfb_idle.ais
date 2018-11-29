@@ -1,0 +1,94 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.ais
+#include common/include/human_idle.ais
+
+object buddy = 0;
+
+//
+/*
+temp1 = unit->Energy;
+if (temp1 >= 25) {
+    PERFORM RAND; 
+	if (perf_ret > 4096) { 
+		$SET_AP
+		PERFORM NOTHING; 
+	}
+    
+    if (myCommander>0  && (myCommander->HP < myCommander.MaxHP) && !(myCommander->IsStasis)) {
+        buddy = myCommander;
+    }
+    else {
+		int qstatus = 0;
+        buddy =  QUERY UNIT [unit] MIN [ unit <=> query ] WHERE // search an ally that's either commjammed or stopped 
+              [query->IsAlly==1  && ( ((qstatus=query->Status)&$FROZEN_COMMJAM )   ||
+              (query->HP <= (query.MaxHP-5)  && query.Rank >= $RP_RANK ) ) && !qstatus[$TSS_BIT] ]; //is a damaged unit
+    }
+}
+else if (temp1 >= 5) {
+*/
+    PERFORM RAND; 
+	if (perf_ret > 4096) { 
+		$SET_AP
+		PERFORM NOTHING; 
+	}
+    int qstatus = 0;
+    buddy =  QUERY UNIT [unit] MIN [ query->HP ] WHERE 
+			[ query->IsAlly==1  && !(query->IsStasis) && !(query->IsStop) && (query->HP <= (query.MaxHP-5)  && query.Rank >= $RP_RANK )  ];  
+//}
+
+if (!buddy) {
+    if ( unit->HP < unit.MaxHP ) { buddy = unit;  }
+}
+
+    
+if (buddy && player->$Power >= 210) { 
+//found a nearby unit that needs help, and have Power to repair
+
+	int buddyStatus = buddy->Status;
+	if (!buddyStatus[$TSS_BIT]) {
+
+		/*if (( buddyStatus & $FROZEN_COMMJAM) && temp1 >= 25) { //enough energy to recover
+			PERFORM SET_ADDITIONAL_PARAMS 0;
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+			PERFORM SET_PARAM buddy;  //set unit->ObjectiveParameters to the buddy
+			PERFORM SET_OBJECTIVE $RECOVER_UNIT_OBJ;  //15 is recover unit
+			PERFORM NOTHING;		
+		}*/
+
+
+		if (buddy->HP < buddy.MaxHP ) {          //check if it needs repair  		
+			/*if (temp1 < 5) {
+			  PERFORM SET_OBJECTIVE 0;
+			  $SET_AP
+			  PERFORM NOTHING;
+			}*/
+			
+			target = buddy;
+			PERFORM $ACTION_REPAIR target; 
+			PERFORM NOTHING;
+			
+			/*Heal self
+			if (buddy==unit) { 
+				target = unit;
+				PERFORM $ACTION_REPAIR target; 
+				PERFORM NOTHING;
+			}
+			
+			//Set objective to repair buddy
+			ap = 0;
+			ap[$OBJECTIVE] = $REPAIR_UNIT_OBJ;
+			PERFORM SET_ADDITIONAL_PARAMS ap;
+			PERFORM SET_PARAM buddy; //set unit->ObjectiveParameters to the buddy
+			PERFORM SET_OBJECTIVE $REPAIR_UNIT_OBJ; //fix unit
+			PERFORM NOTHING;
+			*/
+
+		}
+	}
+}
+
+
+#include common/include/unit_autopilot.ais
+
+$SET_AP

@@ -1,0 +1,27 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+object o = unit->ObjectiveParameters;
+if ( unit.Rank == $RP_RANK && ( o.Rank == $RESOURCE_RANK || (o.Rank ==$RESOURCE_CELL_RANK && o->Armour<o.MaxArmour) ) ) {
+    target = o;
+		int team= unit->Owner;
+		PERFORM GET_MAX_ACTION_RANGE_RADIUS $ACTION_CHANGE_COMMANDER;
+		int claimable = |/(unit<_>o) <= perf_ret;
+		if( claimable ) PERFORM $ACTION_CHANGE_COMMANDER o;
+		//PERFORM $ACTION_CLAIM_CRATE team; //converts target crate to RP owner's team
+	int uclass = unit->Class;
+    if (uclass==$HUMAN_RP_OFF_CLASS || uclass==$CIV_RP_OFF_CLASS || uclass==$GREKIM_RP_OFF_CLASS || !claimable) { 
+		PERFORM SET_PARAM o->Position;
+        PERFORM SET_OBJECTIVE $OBJ_BLDG_STARTMOVE; //move to it 
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+    } else {
+        PERFORM SET_OBJECTIVE $OBJ_BLDG_PROCESS; //process!! 
+    }
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+  PERFORM NOTHING;
+}
+say "Invalid target for resource processing";
+PERFORM SET_ADDITIONAL_PARAMS 0;
+PERFORM SET_OBJECTIVE 0;
+ 

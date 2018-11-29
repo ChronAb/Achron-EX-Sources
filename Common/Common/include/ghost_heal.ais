@@ -1,0 +1,45 @@
+// Assume Copyright (C) 2002-2011 Hazardous Software Inc.
+
+//Dallas Joder, 2015
+//Achron EX
+//Sub-script of general_idle.ais
+
+object buddy=0;
+query_vis_distance = 26;
+
+/*if (smart) {
+	int hash = 0;
+    int distance=0; int otherdistance=0;
+    int HEAL = $REPAIR_UNIT_OBJ;
+    int UPPER = 1999;;  //upper bound for the class this unit can heal
+    int LOWER = 1000;  //lower bound
+    #include common/include/unit_heal_response.ais
+}*/
+
+PERFORM RAND;
+if (perf_ret > 4096)  { 
+	$SET_AP
+	PERFORM NOTHING;  
+}
+
+//First heal self
+if(unit->HP < unit.MaxHP-5) buddy = unit;
+//heal commander
+if (buddy==0 && myCommander->IsAlive==1 && myCommander->HP < (myCommander.MaxHP-5) && myCommander.Type==$TYPE_BIOLOGICAL && myCommander->Action!=2 && myCommander->Action!=50) {
+    buddy = myCommander;
+}
+//heal other friendlies
+if (buddy==0){
+    buddy =  QUERY UNIT [unit] MIN [ unit <_> query*(query->HP)**2 ]
+        WHERE [query->IsAlly==1 && !(query->IsStasis) && //breaktssed ally
+            query.Type==$TYPE_BIOLOGICAL && query->HP < (query.MaxHP-5) && query->Action!=2 && query->Action!=50];
+						//non-moving biological units only - Type 2
+}
+query_vis_distance = -1;
+
+if (buddy) {
+    PERFORM SET_ADDITIONAL_PARAMS 0;
+    PERFORM SET_PARAM buddy; //set unit->ObjectiveParameters to the buddy
+    PERFORM SET_OBJECTIVE $REPAIR_UNIT_OBJ;
+    PERFORM NOTHING;
+}

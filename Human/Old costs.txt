@@ -1,0 +1,74 @@
+//RS:  1 reserve = 20 qp
+//Health: 1 qp = 6 hp
+//Marine: QP:5 RS:20 H:5 => 30
+#define MARINE_LC 0
+#define MARINE_QP 5
+#define MARINE_HP 30
+//SOP: QP:20 RS:20 H:10 => 50
+#define SOP_LC 0
+#define SOP_QP 20
+#define SOP_HP 60
+//Mech: QP:30 RS:0 H:20 => 50
+#define MECH_LC 0
+#define MECH_QP 30
+#define MECH_HP 120
+//ATHC: QP:50 RS:20 H:30 => 100
+#define ATHC_LC 0
+#define ATHC_QP 50
+#define ATHC_HP 180
+//MAR: QP:80 RS:20 H:50 => 150
+#define MAR_LC 0
+#define MAR_QP 80
+#define MAR_HP 300
+//Tank: QP:120 RS:20 H:60 => 200
+#define TANK_LC 0
+#define TANK_QP 120
+#define TANK_HP 360
+//MFB: QP:300 RS:20 H:30 => 350
+#define MFB_LC 0
+#define MFB_QP 300
+#define MFB_HP 180
+//Lancer: QP:70 RS:20 H:10 => 100
+#define LANCER_LC 0
+#define LANCER_QP 70
+#define LANCER_HP 30
+//Frigate: QP:150 RS:20 H:30 => 200
+#define FRIGATE_LC 0
+#define FRIGATE_QP 150
+#define FRIGATE_HP 180
+//Tornade: QP:200 RS:20 H:80 => 300
+#define TORNADE_LC 0
+#define TORNADE_QP 200
+#define TORNADE_HP 480
+//Cruiser: QP:350 RS:20 H:80 => 450
+#define CRUISER_LC 0
+#define CRUISER_QP 350
+#define CRUISER_HP 480
+//BBird: QP:250 RS:20 H:80 => 350
+#define BLACKBIRD_LC 0
+#define BLACKBIRD_QP 250
+#define BLACKBIRD_HP 480
+
+#define CARRIER_LC 0
+#define CARRIER_QP 550
+
+#define RP_LC 0
+#define RP_QP 150
+#define COMMC_LC 0
+#define COMMC_QP 600
+#define ARMORY_LC 0
+#define ARMORY_QP 50
+#define IMPORTER_LC 0
+#define IMPORTER_QP 150
+#define FACTORY_LC 0
+#define FACTORY_QP 100
+#define MACROFAB_LC 0
+#define MACROFAB_QP 300
+#define TURRET_LC 0
+#define TURRET_QP 150
+#define SLINGSHOT_LC 0
+#define SLINGSHOT_QP 75
+#define TELEPORTER_LC 0 
+#define TELEPORTER_QP 200 
+#define CHRONOPORTER_LC 0
+#define CHRONOPORTER_QP 200

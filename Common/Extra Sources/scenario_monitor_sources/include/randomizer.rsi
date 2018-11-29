@@ -1,0 +1,173 @@
+/****************************************
+* Randomizer code by Shadowfury333
+* This code will randomize who owns which racepicker.
+* It works by giving all pickers to the main observer, and then randomly distributing them
+* to each player. Any distributed units are taken out of the pool with every iteration.
+*
+* Defines: MAX_RAND_AF 115 : Starting point for unit pointer storage
+*		   DO_NOT_WANT_RANDOM (player->ControlFlags)[4]: bit check in player.ControlFlags 
+*                                                              for ensuring no random shuffling for this player
+*
+* Global vars used : None
+*
+* Fields : 115 to 101 : Stores units for the randomization. Bits 0-15 initially store
+*									  the units in descending order, but are overwritten when that
+*									  field is selected by bits 0-15 of the lowest field in the pool.
+*									  Bits 16-32 store the units in descending order, corresponding to
+*									  the player who owns them after the randomization, for consistency.
+*          2048 : Bitmask for which players have had their racepicker autoselected
+*
+* Global vars defined: None
+*****************************************/
+
+//starting AF for storing who owns what
+#define MAX_RAND_AF 115
+#define AUTOSELECT_MASK_AF 2048
+//ControlFlags bit check to ensure player does not get shuffled
+#define DO_NOT_WANT_RANDOM (player->ControlFlags)[4]
+
+if(current == 0){
+	int x = 0;
+	for(x=0;x<15;x = x + 1){
+		target = $GET_UNIT [query.Rank == $RACE_CHOOSER_RANK && query->Owner == x]; 
+		if (target != 0) PERFORM SET_OTHER_OBJECTIVE $OBJECTIVE_IDLE;
+	}
+}
+
+if(current == present && present == 1){
+	int x = 0;
+	int randMax = 0;
+	//Bitmask of all players who have their stuff put into the randomization pool
+	int pool_owners = 0;
+	object currentUnit = 0;
+	
+	//Get each players racepicker and stick it in the randomization pool
+	for(x=0;x<15;x = x + 1){
+		player = x;
+		currentUnit = $GET_UNIT [query.Rank == $RACE_CHOOSER_RANK && query->Owner == x];
+		//If the player has no racepicker then move on.
+		if (currentUnit == 0) {
+			x = x + 1;
+			continue;	
+		}
+		
+		target = currentUnit;	
+		PERFORM SET_OTHER_OBJECTIVE $OBJECTIVE_IDLE;
+		PERFORM SET_OTHER_OBJECTIVE_PARAMS 0;
+		
+		int targetField	= 0;
+		if ($DO_NOT_WANT_RANDOM){
+			//If the player doesn't want to be shuffled, set their racepicker ID into the top 16 bits
+			//at the AF corresponding to their player number
+			targetField = $MAX_RAND_AF - x;
+			PERFORM GET_ACHRONAL_FIELD targetField;
+			target = targetField;
+			perf_ret[16,16] = currentUnit;
+			PERFORM SET_ACHRONAL_FIELD perf_ret;
+			
+			int pos = currentUnit->Position;
+			_x = pos[$Xpos];
+			_y = pos[$Ypos];
+			player = x;
+			$UI_LOOK_AT; 
+		} else {
+			//Store in reverse order, as we don't have space above. Also makes pool shrinking easier.
+			//Ensure that we only replace the bottom 16 bits
+			targetField = $MAX_RAND_AF - randMax;
+			PERFORM GET_ACHRONAL_FIELD targetField;
+			target = targetField; 
+			perf_ret[0,16] = currentUnit;
+			PERFORM SET_ACHRONAL_FIELD perf_ret;
+			
+			//Add this player to the bitmask of players with racepickers in pool;
+			pool_owners = pool_owners | (1<<x);
+			
+			//Increment size counter of random pool
+			randMax = randMax + 1;
+		}
+	}
+
+	randMax = randMax - 1; //Make randMax 0-based
+
+	//Take the racepickers from the pool and distribute to players
+	int currentRand = 0;
+	object replacementUnit = 0; //Store unit to be copied from obsolete field
+	for(x=0;x<15;x = x + 1){	
+		//If there is no player at this position to be shuffled, skip this player number
+		if (((~pool_owners)>>x)&1) {
+			x=x+1;
+			continue;
+		}
+		
+		if(randMax>=0){
+			PERFORM RAND;
+			currentRand = perf_ret%(randMax+1); //Quantize down to [0,randMax]
+			PERFORM GET_ACHRONAL_FIELD $MAX_RAND_AF - currentRand;
+		} else {
+			currentRand = 0;
+			PERFORM GET_ACHRONAL_FIELD $MAX_RAND_AF;
+			break; //We have distributed all of the racepickers, stop the loop.
+		}
+		currentUnit = perf_ret[0,16];
+		
+		//Replace picked field data with data in field to be removed from pool.
+		PERFORM GET_ACHRONAL_FIELD $MAX_RAND_AF - randMax;
+		replacementUnit = perf_ret;
+		target = $MAX_RAND_AF - currentRand;
+		
+		//Get target field data, so that we only replace low 16 bits
+		PERFORM GET_ACHRONAL_FIELD target;
+		perf_ret[0,16] = replacementUnit;
+		PERFORM SET_ACHRONAL_FIELD perf_ret;
+		
+		//Set the top 16 bits of achronal field corresponding to this player to store the
+		//new owner of this unit, for the current == 1 thread.
+		PERFORM GET_ACHRONAL_FIELD $MAX_RAND_AF - x;
+		perf_ret[16,16] = currentUnit;
+		target = $MAX_RAND_AF - x;
+		PERFORM SET_ACHRONAL_FIELD perf_ret;
+		
+		target = currentUnit;
+		PERFORM SET_UNIT_OWNER x; 
+		
+		int pos = currentUnit->Position;
+		_x = pos[$Xpos];
+		_y = pos[$Ypos];
+		player = x;
+		$UI_LOOK_AT; 
+		
+		//Decrement random pool size counter
+		randMax = randMax - 1;
+	}
+}
+
+//Autoselect new racepickers on tick 2, after ownership changes have resolved
+if (current == 2){ //not current == present in case players pause at start
+	int x = 0;
+	for(x = 0; x<15; x = x + 1){
+		PERFORM GET_ACHRONAL_FIELD $AUTOSELECT_MASK_AF;
+		int autoselect_mask = perf_ret;
+		PERFORM GET_PLAYER_TIME x;
+		if (current == perf_ret && ((~nonPlayer)&enabled&(~autoselect_mask))>>x){
+			player = x;
+			PERFORM GET_ACHRONAL_FIELD $MAX_RAND_AF - x;
+			$UI_SELECT_UNIT perf_ret[16,16];
+			autoselect_mask = autoselect_mask | (1<<x);
+			target = $AUTOSELECT_MASK_AF;
+			PERFORM SET_ACHRONAL_FIELD autoselect_mask;
+		}
+	}
+}
+
+//Consistency code for other timewaves
+if (current == 1){	
+	int x = 0;
+	for(x = 0; x<15; x = x + 1){
+		PERFORM GET_ACHRONAL_FIELD $MAX_RAND_AF - x;
+		target = perf_ret[16,16];
+		if (target != 0){
+			PERFORM SET_UNIT_OWNER x;
+			PERFORM SET_OTHER_OBJECTIVE $OBJECTIVE_IDLE;
+		}
+	}
+}

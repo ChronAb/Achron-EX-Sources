@@ -1,0 +1,149 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+int isClosed = $IS_RP_CLOSED;
+
+//Harvest resources if already processing a core
+if ( !isClosed && unit->Energy>0 ) {
+	PERFORM $ACTION_RP_PROCESS;
+	PERFORM NOTHING;
+}
+
+//Otherwise try to find a source to harvest 
+PERFORM RAND;
+int temp_r = perf_ret;
+if (temp_r > 2048 )  { // 1/16 chance to run each tick (saves CPU) 
+  PERFORM NOTHING;
+}
+
+int myStatus = unit->Status;
+int ap = 0;
+
+if (isClosed) {  //moving rp
+	ap = unit->AdditionalParameters;
+	if (myStatus[$CAP_BIT_3]) {
+		PERFORM GET_CUR_TIME;
+		int current = perf_ret[0,14]; //grab first 14 bits of the timestamp
+		if (ap[0,14]==0 || unit->LastAttackedVDirection) { //no timestamp is stored or unit is still under attack
+			ap[0,14] = current;
+			PERFORM SET_ADDITIONAL_PARAMS ap; //store the first 14 bits
+			PERFORM NOTHING;
+		} else {
+			if (current > ap[0,14] + (3$seconds)) { //wait 3 seconds after attacks stop
+				PERFORM $ACTION_SWITCH;
+				PERFORM SET_ADDITIONAL_PARAMS 0;
+				PERFORM NOTHING;
+			}
+		}
+	}
+	
+	if (uclass==$GREKIM_RP_OFF_CLASS) {
+		if (unit->Age < 15 $seconds) {
+			PERFORM NOTHING;
+		}
+	}
+}
+
+
+object mineral=0;
+object commander = unit->Commander;
+if (commander>0) {
+	int calive = commander->IsAlive;
+	if (calive==1) {
+		if ( (commander.Rank != $RESOURCE_RANK && commander.Rank != $RESOURCE_CELL_RANK) || commander->Carrier>0)  {
+			PERFORM $ACTION_CLEAR_COMMANDER 0;
+		}
+		else {
+			mineral = commander;
+		}
+	} 
+	else {
+		PERFORM $ACTION_CLEAR_COMMANDER 0;
+	}
+}
+
+
+
+if (mineral->IsAlive!=1) {
+	//1) if already adjacent to a crate or cell then harvest from it
+	query_vis_distance = 4;
+	mineral = QUERY UNIT [unit] MIN [ unit<_>query ] WHERE [ query.Rank==$RESOURCE_RANK || query.Rank==$RESOURCE_CELL_RANK && query->Armour<query.MaxArmour ];
+	
+	//2) Otherwise look further away for preferably a crate
+	//	 then unoccupied cell, and last occupied cell
+	if (mineral->IsAlive!=1) {
+		query_vis_distance = 20;
+		mineral = QUERY UNIT [unit] MIN [ unit<_>query * (15*(query.Rank==$RESOURCE_CELL_RANK)+1) * (15*(query->Armour)+1) ] WHERE [ query.Rank==$RESOURCE_RANK || query.Rank==$RESOURCE_CELL_RANK && query->Armour<query.MaxArmour ];
+	}
+	query_vis_distance = -1; //reset query vis range
+}
+
+
+if (mineral->IsAlive!=1) { 
+	PERFORM SET_OBJECTIVE 0;
+	
+	//NOTHING TO HARVEST so switch to making power full time
+	if( !isClosed && unit->Energy<=0 ){
+		PERFORM $ACTION_SET_IDLE;
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+	}
+}
+else {
+	if ($IS_RP_CLOSED) {  //moving rp
+
+	if (ap[$RP_PATCH_BIT] && ap[$STOREDUNIT]>0) { //couldn't get close to either box so give up trying 
+
+		PERFORM NOTHING;
+	}		
+
+	if (uclass==$VECGIR_RP_OFF_CLASS ) {
+		int boundary = $RP_PROCESS_DISTANCE;
+		if (mineral->Class==$QP_LARGE_CLASS) { boundary = 25; } //increase radius to 5 to allow for mining LARGE QP crates 		
+		if ( mineral <_> unit <= boundary) {  //am close enough to mine (RPs have short range)
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+			PERFORM $ACTION_PLANT;
+			PERFORM NOTHING;
+		}
+	}
+
+	
+	if (uclass!=$VECGIR_RP_OFF_CLASS || (uclass==$VECGIR_RP_OFF_CLASS && unit->Energy>=25) ){	//vecgir RPs without energy can't move
+		if (!myStatus[$CAP_BIT_3]) { //not closed
+			PERFORM $ACTION_CHANGE_COMMANDER mineral; 
+			//int team= unit->Owner;
+			//PERFORM $ACTION_CLAIM_CRATE team; //converts target crate to RP owner's team
+			PERFORM SET_PARAM mineral->Position;
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+			
+			if (uclass==$VECGIR_RP_OFF_CLASS) { //vecgir RPs
+				ap = 0;
+				ap[$RP_PATCH_BIT] = 1; //set the patchbit, that way it'll teleport silently
+				PERFORM SET_ADDITIONAL_PARAMS ap;
+			} else {
+				PERFORM SET_ADDITIONAL_PARAMS 0;
+			}
+			
+			PERFORM SET_OBJECTIVE $OBJ_BLDG_MOVE; //move to it 
+			
+			PERFORM NOTHING;
+		}
+	}
+
+			PERFORM NOTHING;
+	}
+	target = mineral;
+	PERFORM $ACTION_CHANGE_COMMANDER mineral;
+	//int team= unit->Owner;
+	//PERFORM $ACTION_CLAIM_CRATE team; //converts target crate to RP owner's team
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_OBJECTIVE $OBJ_BLDG_PROCESS; 
+	PERFORM NOTHING;
+}
+
+
+int flags=0;
+#include common/include/unit_autopilot_building.ais
+
+

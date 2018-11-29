@@ -1,0 +1,29 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+PERFORM GET_CUR_TIME;
+if (perf_ret < 24)  { PERFORM NOTHING; }
+
+if($AUTOPILOT) //only if it's a NON-passive computer player
+{
+    PERFORM 25; //become a nanited portal
+	
+	//PERFORM SET_OBJECTIVE 50;        //for now always choose human  
+    
+/*    
+    PERFORM RAND; //choose random
+    if (perf_ret < 10923) {
+        PERFORM SET_OBJECTIVE 50;         //human
+        PERFORM NOTHING;
+    }
+    if ( perf_ret < 21856) {
+        PERFORM SET_OBJECTIVE 51;  //grekim
+    }
+    else {
+        PERFORM SET_OBJECTIVE 52;  //vecgir
+    }
+*/
+
+}
+

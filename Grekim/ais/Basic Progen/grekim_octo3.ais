@@ -1,0 +1,24 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+int PROGEN_CLASS = $OCTOLIGO_CLASS;
+int ENERGY = $GREKIM2_ENERGY;
+#define LC $OCTOLIGO_LC
+#define QP $OCTOLIGO_QP
+
+//Gestation by Sepiligo
+if (uclass == $SEPILIGO_CLASS){
+	if (player->$LCrystals < $LC || player->$QPlasma < $QP) {
+		$SAY_RESOURCES
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	}
+	PERFORM $ACTION_PROGEN_UP_S;
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+//Normal Progeneration
+#include common/include/grekim_progen.ais

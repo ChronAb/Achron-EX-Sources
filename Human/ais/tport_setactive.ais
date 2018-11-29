@@ -1,0 +1,70 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+// Sensor ping for an Amplifier Relay
+if (unit->Class == $GENERATOR_CLASS) {
+int op = unit->ObjectiveParameters;
+
+	if (player->$LCrystals < $SCAN_PULSE_LC || player->$QPlasma < $SCAN_PULSE_QP ) {
+		PERFORM SET_OBJECTIVE 0;    
+		$SAY_RESOURCES
+		PERFORM $ACTION_ERROR1;
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM NOTHING;
+	}
+    
+	if (unit->Energy < 60) {
+		PERFORM SET_OBJECTIVE 0;    
+		$SAY_ENERGY
+		PERFORM $ACTION_ERROR1;
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM NOTHING;
+	}
+
+	target = $REAPH_CLASS;
+    PERFORM $ACTION_MAKE_REAPH op;
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+
+//set output position for a slingshot
+int ap = unit->AdditionalParameters;
+
+if (!ap[$ACTIVE_BIT] ) {    
+    PERFORM $ACTION_SETACTIVE;
+    ap[$ACTIVE_BIT] = 1;
+    PERFORM SET_ADDITIONAL_PARAMS ap;
+}
+
+int x = unit->ObjParamX;
+int y = unit->ObjParamY;
+int location = 0;    //always teleport to ground location, z = 0
+
+location[$Xpos] = x; location[$Ypos] = y;
+
+int max = 60; // 16 vis + 60 = 76, max range is 76, allow for some wiggle room on the edge
+
+if (|/(location <_> unit) > max) {
+
+    int ux = unit->XPosition;  //unit's location
+    int uy = unit->YPosition;      
+    
+    int xd = x - ux;   //the x-difference
+    int yd = y - uy;   //the y-difference
+    
+    float a = yd atan2 xd; //angle of teleport
+    yd = max * sin a;      //the new y-offset
+    xd = max * cos a;      //the new x-offset
+      
+    location[$Xpos] = ux + xd;
+    location[$Ypos] = uy + yd;   
+}
+
+PERFORM SET_PARAM location;
+
+PERFORM SET_OBJECTIVE $OBJ_BLDG_ACTIVE;
+

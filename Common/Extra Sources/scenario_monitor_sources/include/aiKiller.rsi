@@ -1,0 +1,75 @@
+/***************************************************
+* AI Killer module. Ensures one can have a game with only human players
+*
+* Global vars used: nonPlayer
+*
+* Defines: WANT_AI (player->ControlFlags)[2] || (player->ControlFlags)[3]: Player Control flags bit for setting that an AI should not automatically die
+*
+* Global vars defined: none
+*
+***************************************************/
+
+//ControlFlags bit check to ensure AI doesn't get killed. This is partially a hack until lobby based AI selection is implemented
+#define WANT_AI (player->ControlFlags)[2] || (player->ControlFlags)[3]
+
+if (current == present && present == 1){
+	config_property_int "aiMaskOut";
+	int aiMask = perf_ret;
+	
+	//Temporary check for number of human players (Superceded by being able to add/remove AI in lobby)
+	// int realplayerCount = 0;
+	int x = 0;
+	// for (x = 0; x<15; x = x + 1){
+	// 	if (((connected&(~nonPlayer))>>x)&1) realplayerCount = realplayerCount + 1;
+	// }
+	
+	//ensure that AI skirmish can work properly, even if no AI are spared
+	aiPlayer[15,15] = aiPlayer[0,15];
+	target = $AIPLAYER_AF;
+	PERFORM SET_ACHRONAL_FIELD aiPlayer; 
+	
+	for (x = 0; x<15; x = x + 1){
+		if ((aiPlayer>>x)&1){
+			player = x;
+			//If there are no real players, don't kill any AI
+			// if (realplayerCount==0){
+			// 	aiPlayer[15,15] = 0; //Set that all AI are to be spared
+			// 	target = $AIPLAYER_AF;
+			// 	PERFORM SET_ACHRONAL_FIELD aiPlayer;
+			// 	break;
+			// }
+			
+			//Check that there is only one player and that no other AI have been spared. Regardless of player count, spare AI that are wanted.
+			if ($WANT_AI || ((aiMask>>x)&1) || ((nonPlayer>>x)&1)){
+				aiPlayer[15,15] = (aiPlayer[15,15] & (~(1<<x))); //Remove this AI's bit from the mask of doomed AI
+				// aiPlayer = aiPlayer | (1<<31); //Set that an AI has been spared
+				target = $AIPLAYER_AF;
+				PERFORM SET_ACHRONAL_FIELD aiPlayer;
+			}
+			
+			//If there is more than one player or an AI has been spared, kill the rest of them
+			else {
+				target = $GET_UNIT [query.Rank == $RACE_CHOOSER_RANK && query->Owner == x];
+				PERFORM $ACTION_KILL_UNIT; //Kill unit owned by AI player
+				PERFORM PLAYER_LOST (1<<x); //Make AI player lose
+			}
+		}
+	}
+				
+	af2[15,15] = af2[15,15] | aiPlayer[15,15]; //Make surrender message not pop up
+	target = 1; PERFORM SET_ACHRONAL_FIELD af2;
+				
+	PERFORM GET_PLAYER_TIMEWAVE_VISIBILIY;
+	PERFORM SET_PLAYER_TIMEWAVE_VISIBILIY (perf_ret|(aiPlayer[0,15]&~nonPlayer))&(~(aiPlayer[15,15]));
+}
+
+if (current == 1 ) {
+	//Check that AI that haven't been spared are always killed.
+	int x = 0;
+	for (x = 0; x<15; x = x + 1){
+		if (((aiPlayer[15,15])>>x)&1)	{
+			target = $GET_UNIT [query.Rank == $RACE_CHOOSER_RANK && query->Owner == x];
+			PERFORM $ACTION_KILL_UNIT; //Kill unit owned by AI player
+		}
+	}
+}

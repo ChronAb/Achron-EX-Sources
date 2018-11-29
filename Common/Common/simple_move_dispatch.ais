@@ -1,0 +1,46 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+//simple move dispatch - used by mobile buildings
+
+int ap = unit->AdditionalParameters;
+int uclass = unit->Class;
+ap = 0;
+
+int op = unit->ObjectiveParameters;
+PERFORM IS_MAP_POSITION_VALID op; //returs 0 if it's not valid
+if (perf_ret==0) {
+	op[$Zpos] = 0; //default to ground for that position
+	
+	if (uclass != $CIV_RP_OFF_CLASS && uclass != $HUMAN_RP_OFF_CLASS && uclass!=$SLINGSHOT_CLASS) { //only human RP's can't move vertically
+		PERFORM GET_MAP_NEXT_Z_POSITION_UP op; //get the next height above for air units
+		op = perf_ret;
+	}
+	PERFORM SET_PARAM op;
+}
+
+
+if (uclass==$CIV_RP_CLASS || uclass==$HUMAN_RP_CLASS || uclass==$GREKIM_RP_CLASS ||
+	uclass==$SLINGSHOT_CLASS || uclass==$MOUND_CLASS || uclass==$COMM_C_CLASS ||
+	uclass==$COMM_H_CLASS || uclass==$ARCTICUS_CLASS || uclass==$REAPH_CLASS ||
+	uclass==$DOME_CLASS || uclass==$DOME_BEAM_CLASS || uclass==$SPYRE_CLASS) {
+	
+	
+	if (uclass==$SLINGSHOT_CLASS  && unit->Status & 16) {  } //already moving slingshot don't need to 'start moving again'
+	else  {
+		PERFORM $ACTION_STARTMOVE;
+	}
+}
+
+
+
+PERFORM SET_ADDITIONAL_PARAMS ap;
+PERFORM SET_ADDITIONAL_PARAMS2 0;
+PERFORM SET_OBJECTIVE $OBJ_BLDG_MOVE;
+
+
+
+if(1) { //prevent already-initialized var errors
+	#include common/simple_move.ais
+}

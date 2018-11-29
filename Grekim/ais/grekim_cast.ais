@@ -1,0 +1,132 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+//chronoport script for grekim units
+// (re the name of this script, the Hyperion and Fall of Hyperion books are a good read )
+
+
+PERFORM SET_OBJECTIVE 0;
+
+//RPs have a special QP bootstrap action that is not a real chronoport
+if ( unit.Rank == $RP_RANK ){
+	if (unit->Ammo < 60) {
+		say "Not enough Charge";
+		PERFORM $ACTION_ERROR1;
+	}
+	else {
+		PERFORM $ACTION_CAST;
+	}
+	PERFORM NOTHING;
+}
+
+if ( !(player->Advancements)[$GREKIM_ADV_GATE] ) {
+    PERFORM NOTHING;
+}
+
+//tss'd units can't chronoport. don't waste time on it
+if (unit->IsStasis) { 
+    PERFORM SET_PARAM 0;
+    PERFORM NOTHING;
+}
+
+int uclass = unit->Class;
+//default chronoport costs to be of base grex units
+int lc = 0;
+int qp = 0;
+
+if (uclass==$OCTO_CLASS) { qp = $OCTO_CPORT_QP; } 
+else if (uclass==$OCTOPOD_CLASS || uclass==$GHOST_CLASS) { qp = $OCTOPOD_CPORT_QP; } 
+else if (uclass==$OCTOLIGO_CLASS) { qp = $OCTOLIGO_CPORT_QP; } 
+else if (uclass==$SEPI_CLASS) { qp = $SEPI_CPORT_QP; } 
+else if (uclass==$SEPIPOD_CLASS) { qp = $SEPIPOD_CPORT_QP; } 
+else if (uclass==$SEPILIGO_CLASS) { qp = $SEPILIGO_CPORT_QP; } 
+else if (uclass==$PHARO_CLASS) { qp = $PHARO_CPORT_QP; } 
+else if (uclass==$PHAROPOD_CLASS) { qp = $PHAROPOD_CPORT_QP; } 
+else if (uclass==$PHAROLIGO_CLASS) { qp = $PHAROLIGO_CPORT_QP; } 
+
+//was 225/175 for all
+if (player->$LCrystals<lc || player->$QPlasma<qp) {
+    $SAY_RESOURCES
+    PERFORM SET_PARAM 0;
+    PERFORM $ACTION_ERROR_CP 0;
+    PERFORM NOTHING;
+}
+
+int timeSinceLastChronoport = unit->TimeSinceLastChronoport;
+PERFORM GET_RECHRONOPORT_DELAY;  //get the rechronoport delay in ticks
+if (timeSinceLastChronoport!=-1 && timeSinceLastChronoport<= perf_ret ) { //-1 means unit did not chronoport
+	int rechronoportRemaining = perf_ret - timeSinceLastChronoport;
+	//ticks per second - set in the scenario parameters    
+	PERFORM CONVERT_SECONDS_TO_TICKS 1;
+	int TPSOND = perf_ret;
+	int rechronoportSeconds = rechronoportRemaining / TPSOND; //used by the $SAY_RECHRONOPORT
+	if (rechronoportSeconds==0) { rechronoportSeconds = 1; } //prevent rounding down to 0 
+	$SAY_RECHRONOPORT
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_PARAM 0;
+	PERFORM $ACTION_ERROR_CP;
+	PERFORM NOTHING;
+}
+
+
+//get the maximum chronoporting distance in ticks
+PERFORM GET_MAX_CHRONOPORT_DISTANCE;
+int cport_max = perf_ret;
+
+//get the current time in ticks
+PERFORM GET_CUR_TIME;
+int current = perf_ret;
+
+//get the destination time in ticks
+int op = unit->ObjectiveParameters;
+
+//if the destination time falls outside of chronoporting distance, unit is not allowed to chronoport
+if ( abs(op - current) >= cport_max ) {
+// UNCOMMENT THE FOLLOWING BLOCK TO PREVENT CPORT BEYOND MAX RANGE
+/*
+    $SAY_CHRONOPORT
+    PERFORM SET_PARAM 0;
+    PERFORM $ACTION_ERROR_CP 0;
+    PERFORM NOTHING;
+*/
+	//if cporting beyond max range, cport TO the max range
+	if(op < current) {
+		op = current - cport_max + 5;
+	}
+	else {
+		op = current + cport_max;
+	}
+	PERFORM SET_PARAM op; 	
+}
+
+//going to the future and happens to be a hero unit, don't chronoport
+if (op > current) {
+
+	int tc = unit->Class;
+	if (tc==$OCTOLIGO_GUARD_CLASS || tc==$GUARDIAN_CLASS || tc==$GUARDIAN_ELDER_CLASS || tc==$ELDER_CLASS ) {
+		
+		say "Mission commanders should not abandon their troops";
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM SET_PARAM 0;
+		PERFORM $ACTION_ERROR_CP;
+		PERFORM NOTHING;
+	}
+}
+
+
+
+object myCommander = unit->Commander;
+
+if (myCommander->IsAlive==1) {
+	int ap = unit->AdditionalParameters;
+	ap[$STOREDUNIT] = myCommander;
+	PERFORM SET_ADDITIONAL_PARAMS ap;
+}
+
+
+PERFORM SET_OBJECTIVE $OBJECTIVE_CHRONOPORTED;
+PERFORM $ACTION_CAST op;
+PERFORM NOTHING;

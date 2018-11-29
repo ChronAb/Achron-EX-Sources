@@ -1,0 +1,724 @@
+#include include/monitorHeader.rsh
+
+//save game starts at 4:30 mark
+//when recording, let it auto-play, and save 1 sec after screen gets locked
+
+/* ***************************************
+* DO NOT MODIFY ANYTHING BELOW THIS LINE *    
+**************************************** */  
+
+PERFORM GET_XPORT_TIMEOUT;
+int XPORT_DELAY = perf_ret;
+
+#include include/commonStatsAndPlayerUpdates.rsi
+
+PERFORM GET_PLAYER_TIME 0;
+int player1time = perf_ret;    
+
+PERFORM GET_ACHRONAL_FIELD 1;
+int af1 = perf_ret; //stores time stamp and unit lost time
+PERFORM GET_ACHRONAL_FIELD 2; 
+int af2 = perf_ret;  //stores time offset for second and third white player jump
+
+int obj = af2[0,3]; //objective
+
+int storedDiff1 = af2[3,14];  //store the time offset from 'storedTime' for second jump
+int storedDiff2 = af2[17,15]; //store the time offset from 'storedTime' for third jump
+
+int storedTime = af1[0,16]; //stored time stamp
+int ImportantUnitLostTime = af1[16,16];  
+
+_uclass = $UNITCREATOR_CLASS; _uowner = 1; $INITIALIZE_UNIT_CREATOR_AND_UI
+
+
+player=0;
+
+PERFORM GET_PLAYER_TIME 1;
+int player2time = perf_ret;
+
+//start game behavior
+if (current == 3 || current==6) {  // create 2 carried tanks (3,6)
+	_create_action = $UC_CREATE_HEAVYTANK; $UNIT_CREATOR_CREATE_UNIT
+}
+
+if (current % 3 == 0 && current>6 && current<=27) {  // create 7 carried mechs (9,12,15,18,21,24,27)
+	_create_action = $UC_CREATE_MECH; $UNIT_CREATOR_CREATE_UNIT
+}
+
+//release tank by macrofab
+if (current == 279 * $TPS)  {  
+		_dest = 0;
+		_change_owner = 1; _owner = 0;
+		_release_next = 1;
+		_dest[$Xpos] = 91;
+		_dest[$Ypos] = 75;
+		$UNIT_CREATOR_RELEASE_UNIT
+}
+
+
+//release tank by factory
+if (current == 281 * $TPS)  {  
+	_dest = 0;
+_change_owner = 1; _owner = 0;
+		_release_next = 1;
+		_dest[$Xpos] = 238;
+		_dest[$Ypos] = 412;
+		$UNIT_CREATOR_RELEASE_UNIT
+}
+
+//release mech by factory
+if (current == 282 * $TPS)  {  
+		_dest = 0;
+		_change_owner = 1; _owner = 0;
+		_release_next = 1;
+		_dest[$Xpos] = 241;
+		_dest[$Ypos] = 421;		
+		$UNIT_CREATOR_RELEASE_UNIT
+}
+
+//move unit creator back to its original location after placing player 1's mech and tank by factory
+//but only if it's not releasing other units in the later objectives
+if (    current == 283 * $TPS
+	&& (current != storedTime + 1)  
+	&& (current != storedTime + storedDiff1 + 1) 
+	&& (current != storedTime + storedDiff1 + 2 + XPORT_DELAY) 
+	&& (current != storedTime + storedDiff2 + 1) 
+	&& (current != storedTime + storedDiff2 + 2 + XPORT_DELAY) 
+	&& (current != storedTime + storedDiff2 + 3 + 2 * XPORT_DELAY) 
+	)  {  
+		_dest[$Xpos] = 400;
+		_dest[$Ypos] = 400;
+		_dest[$Zpos] = 2;
+		$UNIT_CREATOR_RELOCATE
+}
+
+
+
+//**start the white player main attack on the teleporter base at 3:59
+//make the mechs attack the base
+if (current >= (238 * $TPS) && current <= (239 *$TPS) ) {
+	//look for enemy mechs that aren't yet attacking
+	target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==10 && query->Owner==1 && query->YPosition > 215 &&
+	                                           query->XPosition < 170 && query->Objective!=$OBJECTIVE_ATTACKING];
+	if (target->IsAlive==1) {
+		_x = 215; _y = 254; _dest = 0; $GO_ATTACK //attack position		
+	}
+}
+
+//make the northern lancers attack the base 4:07
+if (current >= (247 * $TPS) && current <= (248 *$TPS) ) {
+	//look for enemy lancers that aren't yet attacking
+	target = QUERY UNIT [unit] MIN [1] WHERE [ (query->Class==200 || query->Class==205) && query->Owner==1 && query->YPosition < 230 &&
+												query->Objective!=$OBJECTIVE_ATTACKING];
+	if (target->IsAlive==1) {
+		_x = 204; _y = 256; _dest = 0; $GO_ATTACK //attack position	
+	}
+}
+
+//make the southern lancers attack the base at 4:19
+if (current >= (259 * $TPS) && current <= (260 *$TPS) ) {
+	//look for enemy lancers that aren't yet attacking
+	target = QUERY UNIT [unit] MIN [1] WHERE [ (query->Class==200 || query->Class==205 )&& query->Owner==1 && query->YPosition > 270 && 
+												query->YPosition < 290 && query->Objective!=$OBJECTIVE_ATTACKING ];
+	if (target->IsAlive==1) {
+		_x = 200; _y = 246; _dest = 0; $GO_ATTACK //attack position
+	}
+}
+
+
+//if on objectives 3 4 or 5, don't start checking until 20 seconds have elapsed since the start of the objective
+int timeoffset = storedTime;
+if (obj==4) { timeoffset = storedTime + storedDiff1; }
+if (obj==5) { timeoffset = storedTime + storedDiff2; }
+
+
+if (TwicePerSecond) {
+	if (current > 240) { 
+		//objective 1 means defended the base, so this code is run if base is not safe yet
+		if (obj==0) { 
+			int enemies = QUERY VALUE [unit] SUM [1] WHERE [ query->Owner==1 && query->XPosition < 290 && query->XPosition > 155&&
+															 query->YPosition < 280 && query->YPosition > 205];
+			//look only for player's teleporters
+			int bldgs = QUERY VALUE [unit] SUM [1] WHERE [ query->Owner==0 && query->Class==135 && 
+														   query->YPosition < 280 && query->YPosition > 205];
+
+			//no enemies left 
+			if (enemies==0) {
+				if ( bldgs == 3 ) { //no teleporters have been destroyed	
+					storedTime = present; //save the absolute time of objective completion
+					obj = 1;					
+					af2[0,3] = 1; //set objective to 1
+					af1[0,16] = storedTime;
+					target = 1; PERFORM SET_ACHRONAL_FIELD  af1; //save timestamp
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2; //save objective
+					
+				} 
+				else {  //at least one building was destroyed
+					if (current==player1time && current % (20 * $TPS)==0) {
+						say "The mission requires you to prevent any"; 
+						say_to_var ""; say "teleporter from being destroyed";
+						say_to_var "playSaySound";
+						say 1;
+						say_to_var ""; 
+					}
+				}
+			}
+		}
+
+		if (current==present) {
+			if (obj==0) {
+				if (present == 300 * $TPS) {
+					PERFORM GET_PLAYER_TIME_RATE 0; //1 : 0.5 speed, 2 : normal speed, 3 : fast forward
+					if (perf_ret!=3) {
+						$UI_MSG "Hint: when replaying the Past, try playing in Fast Forward";
+					}
+				}
+				
+				if (present == 390*$TPS) {
+					$UI_MSG "Jumping back to a minute before the battle should suffice";
+				}
+				
+				if (present == 450*$TPS) {
+					$UI_MSG "Hurry up, before the attack on the Teleporter base";
+					say_to_var ""; say "falls too far into the past and off the playable timeline!";
+				}
+
+				if (present > 540*$TPS) {
+					say_to_var "SMObjectiveFailText";
+					say "Mission Failed: All the Teleporters were not saved";
+					say_to_var "";
+
+					PERFORM PLAYER_LOST 1; 
+					PERFORM END_SCENARIO;
+					PERFORM EXIT_ENGINE;
+					PERFORM NOTHING;
+				}
+			}
+			
+			if (obj>=3) {
+				//present is at 270, 
+				//the player still has 70 seconds to save the building
+				if ((present - timeoffset) == 185*$TPS) { 
+					say "Hurry up, before the attack on the "; 
+					if (obj==3) { say "Factory"; }
+					if (obj==4) { say "Macrofab"; }
+					if (obj==5) { say "Teleporter"; }
+					say_to_var ""; say "falls too far into the past and off the playable timeline!";
+					
+					say_to_var "playSaySound";
+					say 1;
+					say_to_var "";
+				}
+				
+				if (obj==5 && (present - timeoffset) == 155*$TPS) { 
+					$UI_MSG "You do have a Teleporter base in the center of the map...";
+				}
+				
+				//if event is the edge of timeline, the player was unable to save the building
+				if ((present - timeoffset) > 270*$TPS) { 
+					say_to_var "SMObjectiveFailText";
+					say "Mission Failed: the ";
+
+					if (obj==3) { say "Factory"; }
+					if (obj==4) { say "Macrofab"; }
+					if (obj==5) { say "Teleporter"; }
+
+					say " destroyed at "; 	
+
+					int totalSecs = ImportantUnitLostTime / $TPS;
+					int min = totalSecs / 60;
+					int sec = totalSecs % 60;
+					if (min<10) { say "0"; }
+					say min, ":";
+					if (sec<10) { say "0"; }
+					say sec;
+					say " was not saved";
+					say_to_var "";
+
+					PERFORM PLAYER_LOST 1; 
+					PERFORM END_SCENARIO;
+					PERFORM EXIT_ENGINE;
+					PERFORM NOTHING;
+				}
+			}
+		}
+	}
+}
+
+if (obj==3 && current==ImportantUnitLostTime) {
+	int factory = QUERY VALUE [unit] SUM [1] WHERE [query->Class==150 && query->Owner==0 && query->YPosition>400];
+	if (factory==1) {
+		ImportantUnitLostTime = 0;
+		af1[16,16] = 0; //clear out important unit lost time
+		target = 1; PERFORM SET_ACHRONAL_FIELD  af1;	
+	}
+}
+
+if (obj==4 && current==ImportantUnitLostTime) {
+	int macrofab = QUERY VALUE [unit] SUM [1] WHERE [query->Class==90 && query->Owner==0 ]; 
+	if (macrofab==1) {
+		ImportantUnitLostTime = 0;
+		af1[16,16] = 0; //clear out important unit lost time
+		target = 1; PERFORM SET_ACHRONAL_FIELD  af1;	
+	}
+}
+
+
+if (obj==5 && current==ImportantUnitLostTime) {
+	int tport = QUERY VALUE [unit] SUM [1] WHERE [query->Class==135 && query->Owner==0 && query->YPosition<80]; 
+	if (tport==1) {
+		ImportantUnitLostTime = 0;
+		af1[16,16] = 0; //clear out important unit lost time
+		target = 1; PERFORM SET_ACHRONAL_FIELD  af1;	
+	}
+}
+
+if (obj>=3 ) {
+	//check for the 33 second period after mechs teleported in to see if factory died
+	if (current >= timeoffset + 2 * $TPS && current <= timeoffset + 35 * $TPS) {
+		int bldg = 0;
+		if (obj==3) { //factory
+			bldg = QUERY VALUE [unit] SUM [1] WHERE [query->Class==150 && query->Owner==0 && query->YPosition>400]; 
+		}
+		
+		if (obj==4) { //macrofab
+			bldg = QUERY VALUE [unit] SUM [1] WHERE [query->Class==90 && query->Owner==0 ]; 
+		}
+		if (obj==5) { //teleporter
+			bldg = QUERY VALUE [unit] SUM [1] WHERE [query->Class==135 && query->Owner==0 && query->YPosition<80]; 
+		}
+		
+		if (bldg==0) {		//an important building died
+			int additionalParams = unit->AdditionalParameters;
+			int updateSM = 0;
+			if (!additionalParams[0]) { 
+				additionalParams[0] = 1;  //AP==1 means building is dead at this time
+				updateSM = 1;
+			}
+			if (updateSM) {
+				//store current time as unit's death time if no death time is stored or 
+				//current time is further in the past (less) than the stored time
+				if (ImportantUnitLostTime==0 || current < ImportantUnitLostTime) {
+					ImportantUnitLostTime = current;
+					af1[16,16] = ImportantUnitLostTime;
+					target = 1; PERFORM SET_ACHRONAL_FIELD  af1;
+				} 				
+				PERFORM SET_ADDITIONAL_PARAMS additionalParams;
+			}
+		}
+	}
+}
+
+
+
+if (present==current) {
+	if (present>=268*$TPS && present < 277*$TPS) {
+	
+		PERFORM DISABLE_PLAYER_CHRONAL_INPUT; PERFORM DISABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+		say 1;
+		say_to_var "";  
+	}
+	
+	if (present==270*$TPS) {
+		object tport = QUERY UNIT [unit] MIN [1] WHERE [ query->Owner==0 && query->Class==135 && query->YPosition > 205 && query->XPosition > 205];
+		player = 0;
+		$UI_SELECT_UNIT tport;
+		//flop follow-unit on/off here and reset camera to center camera on the unit
+		say_to_var "SMcenterCamera";
+		say 1;
+		say_to_var "";   
+	}
+	if (present==272*$TPS) {
+		object frigate = 15; //QUERY UNIT [unit] MIN [1] WHERE [ query->Owner==1 && query->Class==205 && query->XPosition < 235 ];
+		player = 0;
+		$UI_SELECT_UNIT frigate;
+		say_to_var "SMRotateAroundUnit";
+		say 1;
+		say_to_var "SMUnitDescriptionText";
+		say "The enemy's CESO Frigate is a middleweight aerospace vehicle that is equipped with a pair of powerful anti-matter cannons, making it much stronger against other aerospace units than it is against ground targets.";
+		
+	}
+	if (present==274*$TPS) {
+		object lancer = QUERY UNIT [unit] MIN [1] WHERE [ query->Owner==1 && query->Class==200 && query->XPosition < 235 ];
+		player = 0;
+		$UI_SELECT_UNIT lancer;
+		say_to_var "SMRotateAroundUnit";
+		say 1;
+		say_to_var "SMUnitDescriptionText";
+		say "The enemy's CESO Lancer is a lightweight, fast aerospace vehicle.  Though not quite as strong as the Frigate against aerospace vehicles, it is faster and more balanced against all targets.";
+	}
+	
+	if (present==276*$TPS) {
+		object tank = QUERY UNIT [unit] MIN [1] WHERE [ query->Owner==0 && query->Class==25 && query->XPosition < 200 && query->YPosition > 280];
+		player = 0;
+		$UI_SELECT_UNIT tank;
+		//flop follow-unit on/off here and reset camera to center camera on the unit
+		say_to_var "SMRotateAroundUnit";
+		say 1;
+		say_to_var "SMUnitDescriptionText";
+		say "The Heavy Tank, is an upgraded version of the regular beam Tank.\n \nLarge beam cannon, large anti-matter anti-air guns.\nCan take on anything.";
+	}
+
+	if (present==277*$TPS ) {
+		PERFORM ENABLE_PLAYER_CHRONAL_INPUT; PERFORM ENABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+		say 0;
+		say_to_var "";                
+		//flop follow-unit on/off here and reset camera to center camera on the unit
+		say_to_var "SMfreeCamera";
+		say 1;
+		say_to_var "";
+		say "Save that Teleporter base, you will need it later.";
+		say_to_var "playObjSound";
+		say 1;
+		say_to_var "";
+	}
+	
+	
+	
+	if (TwicePerSecond) {
+		if (obj>=2) {
+			PERFORM GET_PLAYER_TIMEWAVE_VISIBILIY;
+			int pvis = perf_ret;
+			if (!pvis[1]) {
+				pvis[1] = 1;
+				PERFORM SET_PLAYER_TIMEWAVE_VISIBILIY pvis; //enable white timewave
+			}
+		}
+	
+		if (obj==6) { //you win
+			PERFORM PLAYER_LOST 2;
+			PERFORM END_SCENARIO;
+			PERFORM EXIT_ENGINE;
+		}
+	
+		if (current % (20 * $TPS) == 0) { 
+			if (ImportantUnitLostTime!=0) {
+				
+				if (obj==3) { say "The Factory was destroyed at "; }
+				if (obj==4) { say "The Macrofab was destroyed at "; }
+				if (obj==5) { say "The Teleporter was destroyed at "; }
+			 
+				int totalSecs = ImportantUnitLostTime / $TPS;
+				int min = totalSecs / 60;
+				int sec = totalSecs % 60;
+				if (min<10) { say "0"; }
+				say min, ":";
+				if (sec<10) { say "0"; }
+				say sec;
+
+				say_to_var "";
+				if (player1time > ImportantUnitLostTime) { 
+					say "You must jump back and prevent its destruction!";					
+				} else {
+					say "You must prevent its destruction!";
+				}
+				
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			} else {
+				//event at -120, wait 35 seconds after event happens to check
+				if (obj==5 && present >= timeoffset + 155 * $TPS) { 
+					say "Success!";
+					say_to_var "playObjSound";
+					say 1;
+					say_to_var "";
+					af2[0,3] = 6;
+					obj = 6;
+					storedTime = present; //save the absolute time of objective completion
+					af1[0,16] = storedTime;
+					target = 1; PERFORM SET_ACHRONAL_FIELD  af1;
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+					PERFORM NOTHING;
+				}
+				//event at +45, wait 35 seconds after event happens to check
+				if (obj==4 && present >= timeoffset - 10 * $TPS) { 
+					$UI_MSG "Keep following the white... player.  It jumped again!";
+					af2[0,3] = 5;
+					obj = 5;
+					storedDiff2 = (present - 120 * $TPS) - storedTime;
+					af2[17,15] = storedDiff2;
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+					player = 1; //send second player to -120 sec
+					PERFORM SET_PLAYER_TIME (present - 120*$TPS);
+					PERFORM NOTHING;
+				}
+				//event at -60, wait 35 seconds after event happens to check
+				if (obj==3 && present >= storedTime + 95 * $TPS) { 				
+					say "Oh no, it's jumping again.  Follow it!";
+					say_to_var "playSaySound";
+					say 1;
+					say_to_var "tutorialText";
+					say "";
+					say_to_var "";
+					af2[0,3] = 4;
+					obj = 4;
+					storedDiff1 = (present + 45 * $TPS) - storedTime; 
+					af2[3,14] = storedDiff1;
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+					player = 1; //send second player to +45 sec
+					PERFORM SET_PLAYER_TIME (present + 45*$TPS);
+					PERFORM NOTHING;
+				}
+
+			}
+		}
+	
+		if (obj>1) { 
+			say_to_var "tutObj1";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj1Text";
+			say "x Jump back and save the Teleporters";
+			say_to_var "";
+		} else {
+			say_to_var "Obj1Text";
+			say "- Jump back and save the Teleporters";
+			say_to_var "";
+		}
+		
+		if (obj==2) {
+			say_to_var "Obj2Text";
+			say "- Follow the white rabbit through time";
+			say_to_var "";
+		}  else if (obj<2) {
+			say_to_var "Obj2Text";
+			say "   Follow the white rabbit through time";
+			say_to_var "";
+		}
+		if (obj>2) {
+			say_to_var "tutObj2";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj2Text";
+			say "x Follow the white rabbit through time";
+			say_to_var "";
+		}
+		
+		if (obj==3||obj==4||obj==5) {
+			say_to_var "Obj3Text";
+			say "- Do not let any buildings be destroyed";
+			say_to_var "";
+		}  else if (obj<3) {
+			say_to_var "Obj3Text";
+			say "   ? ? ?"; //"   Do not let any buildings be destroyed";
+			say_to_var "";
+		}
+		if (obj>5) {
+			say_to_var "tutObj3";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj3Text";
+			say "x Do not let any buildings be destroyed";
+			say_to_var "";
+		}
+	
+	
+		if (obj==1 && current >= storedTime + 10*$TPS) {
+			say "Teleporter base has been defended succesfully! Good job.";
+			say_to_var "playObjSound";
+			say 1;
+			say_to_var "";
+			storedTime = present; //save the absolute time of objective completion
+			af2[0,3] = 2;
+			af1[0,16] = storedTime;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  af1; //save timestamp
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2; //save objective	
+		}	
+	}
+	
+	if (obj==2) {
+		if (current == storedTime + 13 * $TPS) {
+			$UI_MSG "Have you noticed that orders such as Attack-Move show";
+			say_to_var ""; say "an 'Estimated Time of Completion' on the timeline?";
+		}
+		
+		if (current == storedTime + 20 * $TPS) {
+			say_to_var "tutorialText";
+			say "ETA for orders is displayed as a grey area on the timeline that\nextends out from your player line.\n \nExample: When you select the Attack control, but before you click on\nthe ground, you will see the grey area extend on the timeline, showing\napproximately how long it will take to arrive at that destination.";		
+			say_to_var "";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+		if (current == storedTime + 45 * $TPS) {
+			player = 1; //send second player to +45 sec
+			PERFORM SET_PLAYER_TIME (present + 45*$TPS);
+			player = 0;
+		}
+		if (current == storedTime + 47 * $TPS) {
+			$UI_MSG "Look at the timeline! The enemy is jumping around in time.";
+		}
+		if (current == storedTime + 55 * $TPS) {
+			player = 1; //send second player to -3:30 min
+			PERFORM SET_PLAYER_TIME (present - 210*$TPS);
+			player = 0;
+		}
+		if (current == storedTime + 59 * $TPS) {
+			$UI_MSG "It may try to teleport in units to destroy your buildings.";
+		}
+		if (current == storedTime + 60 * $TPS) {
+			player = 1; //send second player to -60 sec
+			PERFORM SET_PLAYER_TIME (present - 60*$TPS);
+			player = 0;
+		}
+		if (current == storedTime + 65 * $TPS) {
+			$UI_MSG "New objective: Follow the White player through time";
+			say_to_var ""; say "to see where you will be attacked";
+		}
+		
+		if (current == storedTime + 71 * $TPS) {
+			say "After you see the attack, jump a little further back in time";
+			say_to_var ""; say "and order your nearby units to protect the buildings";
+			say_to_var "playObjSound";
+			say 1;
+			say_to_var "";
+			storedTime = present - 60*$TPS; //store player2's time at -30 sec as the baseline stored time (+1 tick)
+			obj = 3;					
+			af2[0,3] = 3;
+			af1[0,16] = storedTime;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  af1; //save timestamp
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2; //save objective
+			PERFORM NOTHING;
+		}
+	}
+}
+
+if (obj>=3) {
+	//***bottom factory attack
+	//release 1 held mech
+	if (current == storedTime + 1)  {
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 266;
+		_dest[$Ypos] = 418;		
+		$UNIT_CREATOR_RELEASE_UNIT
+	}
+
+	if (current == (storedTime + 1 * $TPS)) {
+		_dest[$Xpos] = 400;
+		_dest[$Ypos] = 400;
+		_dest[$Zpos] = 2;
+		$UNIT_CREATOR_RELOCATE
+	}
+
+	//make the mechs attack the bottom factory
+	if (current >= (storedTime + 2 * $TPS) && current <= (storedTime + 6 *$TPS) ) {
+		//look for enemy mechs that aren't yet attacking
+		target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==10 && query->Owner==1 && query->YPosition > 380 &&
+												   query->XPosition < 310 && query->Objective!=$OBJECTIVE_ATTACKING_UNIT];
+		if (target->IsAlive==1) {
+			object factory = QUERY UNIT [target] MIN [1] WHERE [ query->Class==150 && query->Owner==0];
+			//&& query->YPosition > 400 && query->XPosition < 310];
+			
+			if (factory->IsAlive==1) {
+			    _x = 0; _y = 0; _dest = factory; $GO_ATTACK //attack unit
+			}
+		}
+	}
+
+}
+
+if (obj>=4) {
+	//***top macrofab attack
+	//release 2 held mechs
+	if (current == storedTime + storedDiff1 + 1)  {
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 66;
+		_dest[$Ypos] = 85;		
+		$UNIT_CREATOR_RELEASE_UNIT
+	}
+	
+	//wait for previous unit to be released via xport animation, and an extra tick 
+	if (current == storedTime + storedDiff1 + 2 + XPORT_DELAY)  {
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 67;
+		_dest[$Ypos] = 90;		
+		$UNIT_CREATOR_RELEASE_UNIT
+	}
+
+	//wait for previous unit to be released via xport animation, and an extra tick 
+	if (current == (storedTime + storedDiff1 + 3 + 2 * XPORT_DELAY) ) {
+		_dest[$Xpos] = 400;
+		_dest[$Ypos] = 400;
+		_dest[$Zpos] = 2;
+		$UNIT_CREATOR_RELOCATE
+	}
+	
+	//make the mechs attack the  top macrofab
+	if (current >= (storedTime + storedDiff1 + 2 * $TPS) && current <= (storedTime + storedDiff1 + 6 *$TPS) ) {
+		//look for enemy mechs that aren't yet attacking
+		target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==10 && query->Owner==1 && query->YPosition < 100 &&
+												   query->XPosition < 80 && query->Objective!=$OBJECTIVE_ATTACKING_UNIT];
+												   
+		if (target->IsAlive==1) {
+			object macrofab= QUERY UNIT [target] MIN [1] WHERE [ query->Class==90 && query->Owner==0];
+			//&& query->YPosition > 400 && query->XPosition < 310];
+			
+			if (macrofab->IsAlive==1) {
+				_x = 0; _y = 0; _dest = macrofab; $GO_ATTACK //attack unit
+			}
+		}
+	}
+
+}
+
+if (obj>=5) {
+
+	//***top teleporter attack
+	//release 3 held mechs
+	if (current == storedTime + storedDiff2 + 1)  {
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 368;
+		_dest[$Ypos] = 40;		
+		$UNIT_CREATOR_RELEASE_UNIT
+	}
+	//wait for previous unit to be released via xport animation, and an extra tick 
+	if (current == (storedTime + storedDiff2 + 2 + XPORT_DELAY ))  {
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 364;
+		_dest[$Ypos] = 50;		
+		$UNIT_CREATOR_RELEASE_UNIT
+	}
+	//wait for previous unit to be released via xport animation, and an extra tick 
+	if (current == storedTime + storedDiff2 + 3 + 2 * XPORT_DELAY)  {
+		_release_next = 1;
+		_release_teleport = 1;
+		_dest[$Xpos] = 365;
+		_dest[$Ypos] = 54;		
+		$UNIT_CREATOR_RELEASE_UNIT
+	}
+
+	if (current == (storedTime + storedDiff2 + 3 * XPORT_DELAY) ) {
+		_dest[$Xpos] = 400;
+		_dest[$Ypos] = 400;
+		_dest[$Zpos] = 2;
+		$UNIT_CREATOR_RELOCATE
+	}
+	
+	//make the mechs attack the top tport
+	if (current >= (storedTime + storedDiff2 + 2 * $TPS) && current <= (storedTime + storedDiff2 + 6 *$TPS) ) {
+		//look for enemy mechs that aren't yet attacking
+		target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==10 && query->Owner==1 && query->YPosition < 70 &&
+												   query->XPosition > 300 && query->Objective!=$OBJECTIVE_ATTACKING_UNIT];
+		if (target->IsAlive==1) {
+			object tport = QUERY UNIT [target] MIN [1] WHERE [ query->Class==135 && query->Owner==0];
+			
+			if (tport->IsAlive==1) {
+				_x = 0; _y = 0; _dest = tport; $GO_ATTACK //attack unit
+			}
+		}
+	}
+
+}
+
+

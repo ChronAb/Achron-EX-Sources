@@ -1,0 +1,111 @@
+//loop through all active players and display to them their time
+//relative to the present
+
+PERFORM GET_PRESENT_TIME;
+int present = perf_ret;    
+    
+PERFORM GET_CUR_TIME;
+int current = perf_ret;
+
+//update skin 2x a second
+int TwicePerSecond = 0;
+if (current % ($TPS / 2) == 0) { 
+	TwicePerSecond = 1; 
+}
+
+PERFORM GET_ACTIVE_PLAYERS;
+int active = perf_ret;       //bitmask of active players
+
+PERFORM GET_TIMELINE_CONTROLS_PLAYERS;
+int timelineControllers = perf_ret;
+
+//relative time is calculated only by the fixed updater/time wave at present
+//and only run this twice a second (since there's no need to run it more often)
+if (current==present && TwicePerSecond ) {
+	int x=0;
+	//loop through the possible 15 players
+	for (x=0;x<=15;x=x+1) {
+	//get each ACTIVE players time
+		if ( ((active | timelineControllers)>>x)&1 ) {
+			PERFORM GET_PLAYER_TIME x; 
+			int pt = perf_ret;
+			
+			//direct which player should be viewing the say message
+			player = x;
+			say_to_var "relativeTime";  //exported skin variable
+			
+			//total seconds calculated as the PlayerTime relative to Present
+			int totalSecs = (pt - present ) / $TPS;
+			say "(";
+			if (totalSecs < 0) { say "-"; }
+			else { if (totalSecs != 0) say "+"; }
+			totalSecs = abs(totalSecs);
+			int min = totalSecs / 60;
+			int sec = totalSecs % 60;
+			if (min<10) { say "0"; }
+			say min, ":";
+			if (sec<10) { say "0"; }
+			say sec, ")";
+			say_to_var "";
+			
+			say_to_var "absoluteTime";  //exported skin variable
+			//total seconds calculated as the PlayerTime relative to Present
+			totalSecs = pt / $TPS;
+			int hr = totalSecs / 3600;
+			int hr_length = 0; //for fake right-aligned text
+			min = (totalSecs / 60) % 60;
+			sec = totalSecs % 60;
+			if (hr>0) { 
+				say hr, ":"; 
+				hr_length = 1;
+				if (hr>10) {hr_length = 2;}
+			}
+			if (min<10) { say "0"; }
+			say min, ":";
+			if (sec<10) { say "0"; }
+			say sec; 
+			say_to_var "hrLength";
+			say hr_length;		
+			say_to_var ""; 			
+		}
+	}
+}
+
+PERFORM GET_ACHRONAL_FIELD $PRE_GAME_SETTINGS_AF;
+int pre_game_settings = perf_ret;
+
+//calculate resources for all players every tick
+if(1) {
+
+	PERFORM GET_ENABLED_PLAYERS; 
+	int en = perf_ret;		
+	
+	int r = 0; 
+	for (r=0;r<=15;r=r+1) { 
+		//only check enabled players, ie: check the 4 players in a 4-player scenario
+		if ((( en >> r) & 1) == 1 ) {  
+			//active players who are currently still alive
+			if (((active >> r) & 1) == 1) { 
+		
+				player = r;
+				int power = 0 |> player->$Power; //can't have negative power
+				int materials = player->$LCrystals;
+				int raremat = player->$QPlasma;
+				int reserve = player->$ReserveSoldiers;
+				
+				//compute geometric mean of resources
+				float accum = 1.0;
+				accum = accum * (power+1);
+				accum = accum * (materials+1);
+				accum = accum * (raremat+1);
+				accum = accum * (reserve+1);
+
+				accum = (accum - 1.0) ** 0.25;		//find geometric mean of four resources
+
+				int resources = accum;
+				target = 5;
+				PERFORM ACCUMULATE_STATISTIC resources;
+			}
+		}
+	}
+}

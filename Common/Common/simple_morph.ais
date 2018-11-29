@@ -1,0 +1,29 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+if (unit.Rank==$REAPH_RANK){
+	PERFORM 14;
+}
+else PERFORM $ACTION_SELF_UPGRADE;
+
+int ap = unit->AdditionalParameters;
+
+//enable resuming of objective if unit was previously attacking or moving
+if  ( (ap[6,3] == $OBJECTIVE_ATTACKING && ap[$ATTACK_BIT]) || (ap[6,3] == $OBJECTIVE_UNIT_MOVE && ap[$MOVE_BIT]) || ap[6,3] == $OBJECTIVE_UNIT_DEFEND) {
+
+
+	//set actual objective to attack_unit if was attacking a unit
+	if (ap[$UNIT_BIT] && ap[6,3] == $OBJECTIVE_ATTACKING) {
+		PERFORM SET_OBJECTIVE $OBJECTIVE_ATTACKING_UNIT;
+	} else {
+		PERFORM SET_OBJECTIVE ap[6,3];
+	}
+}
+else {
+	
+	//return back to idle
+	//PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_OBJECTIVE 0;
+}

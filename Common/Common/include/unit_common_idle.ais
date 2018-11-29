@@ -1,0 +1,497 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//unit_common_idle.ais  - common idle script used by all 3 races. 
+//this is not standalone script. should be included inside the specific race_idle scripts
+
+object temp = 0;
+int smart = $SMART_IDLE;
+int FORCE_AUTOPILOT = 0;
+
+if (smart) { //smart idle must be on for the following to work
+	int runSmartIdle = 0;
+	
+	PERFORM GET_CUR_TIME;
+	//2654435761 shares no common factors with 2^31 used to create a 
+	//hash for whether or not to run smartIdle abilities based on unit number
+	//this way smart idle won't execute more ofter than once/15 ticks
+	//for this unit, decreasing CPU load
+	if (perf_ret[0,4] == (unit * 2654435761)[28,4]) {
+		runSmartIdle = 1;
+	}
+
+    if(runSmartIdle && !myStatus[$TSS_BIT] ) {
+		
+		object helper = ap[$STOREDUNIT];
+		int percent = (unit->HP * 100 / unit.MaxHP);     
+		if ($IS_HUMAN) {
+			if (percent < 30) { //DAMAGED!
+				if (AP_UNIT && helper && helper->ObjectiveParameters == unit) { //a healer unit might already be coming for this unit
+					if (helper<_>unit > 144) { 
+						//Waiting to be helped... move towards helper
+						ignore_collision_with_unit = helper;
+						dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [helper <=> query] WHERE [1];
+						dir[16,8] = 0; //clear out the 3rd byte that stores the move counter
+						if (dir && dir != $QUERY_EXHAUSTED) {
+							PERFORM $ACTION_MOVE dir;
+							$SET_AP
+							PERFORM SET_ADDITIONAL_PARAMS2 0;
+							PERFORM NOTHING;
+						}
+					}
+				}
+				else { //no helper, or helper changed objective			
+					#include common/include/unit_heal_request.ais   
+				}
+			}
+			else { //not damaged anymore, clear out the request
+				if (AP_UNIT && helper > 0 ) { //a healer unit already responded 
+					ap = 0;
+					setAdditionalParameters = 1;
+					PERFORM SET_PARAM 0;
+				}
+			}
+		}
+		else {
+			if (percent < 30) { //DAMAGED!
+				int healer = $REAPH_RANK;
+				if ($IS_VECGIR) healer = $FOUNDATION_RANK;
+
+				if (AP_UNIT && helper && helper.Rank==healer) { //have a healer nearby, move towards
+					int distToHelper = helper<_>unit;
+					if (distToHelper <= $LOOKUP_BOUNDARY && distToHelper > 225) { 
+						ignore_collision_with_unit = helper;
+						dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [helper <=> query] WHERE [1];
+						dir[16,8] = 0; //clear out the 3rd byte that stores the move counter
+						if (dir && dir != $QUERY_EXHAUSTED) {
+							PERFORM $ACTION_MOVE dir;
+							$SET_AP
+							PERFORM SET_ADDITIONAL_PARAMS2 0;
+							PERFORM NOTHING;
+						}
+					}
+				}
+				else { //find a helper
+					object lookup = 0;
+					int LOOKUP = $REAPH;
+					if ($IS_VECGIR) LOOKUP = $FOUNDATION;				
+					#include common/include/unit_lookup_request.ais
+				}
+			
+			}
+			else { //not damaged anymore, clear out lookup request
+				if (AP_UNIT && helper > 0 ) { //a healer unit already responded 
+					ap = 0;
+					setAdditionalParameters = 1;
+				}
+			}			
+		
+		}
+    }
+	
+	
+    
+    /* Check if this unit is being requested by another, do handshake and distance calculations */
+	int hash = 0;
+	int num = 0;
+    object lookupunit = unit;
+    int find = $FLAGS[0,6]; // & 63;
+    //the unit 'hash' lookup table...
+    #include common/include/unit_lookup.ais
+    //num now has the lookup value for this unit
+    if (num == find) {    //somebody in field 'lookup' wants this unit...
+        #include common/include/unit_lookup_response.ais
+    }
+    
+    if (runSmartIdle) { 
+		int qstatus = 0;
+        object helper = QUERY UNIT [unit] MIN [ unit <=> query ] WHERE 
+			[ query->IsAlly==1 && ((qstatus=query->Status)&$FROZEN_COMMJAM ) && !qstatus[$TSS_BIT] && query.Rank >= $RP_RANK];
+        /* Check status - request recover if buddy is comm jammed */
+        if (helper > 0) { 
+            #include common/include/unit_recover_request.ais
+        }
+    }
+} //smart idle on
+
+
+
+
+/* Do autofloat for air units if they are grounded */
+
+int airunit = 0;
+//wait time with time ticks for AIR units 
+if (!AP_PLAYER && $IS_AIR_UNIT) { 
+	airunit = 1;
+	if (!ap[$PRIORITY_BIT]) { 
+		int unitPosition = unit->Position;
+		
+		//do auto-float after ~3 seconds if on the ground
+		if (unitPosition[$Zpos]==0) { //GROUND tile
+			int oldtime = ap[$TIMESTAMP];
+			PERFORM GET_CUR_TIME;
+			int time = perf_ret[0,6] ; //if 18tics per second, 64/18 = ~3.5 seconds
+			if (!ap[$TIME_BIT] ) { //no time stored
+				if (time == 0) { time = 63; }
+				ap[$TIMESTAMP] = time; 
+				ap[$TIME_BIT] = 1;
+				setAdditionalParameters = 1;
+			}
+			else {
+				if (time == oldtime) { //time matches
+					PERFORM GET_MAP_NEXT_Z_POSITION_UP unitPosition; //move to the spot above the unit
+					int uppos = perf_ret;
+					
+					dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ uppos <=> query ] WHERE [1];
+					PERFORM $ACTION_MOVE dir;
+					//if unit is not on the ground, clear the AP-counter bits
+					if (!AP_UNIT && !AP_DISTANCE) { ap[16,8] = 0; } 
+					ap[$TIMESTAMP] = 0;
+					ap[$TIME_BIT] = 0; 
+					PERFORM SET_ADDITIONAL_PARAMS ap;
+					PERFORM SET_ADDITIONAL_PARAMS2 0;
+					PERFORM NOTHING;
+				
+				}
+			}
+		}
+	}
+}
+
+//unit was recently issued a stop order
+if (ap[$OBJECTIVE]==$OBJECTIVE_STOP) {					
+	PERFORM GET_CUR_TIME;
+	int time = perf_ret[0,6] ; //if 18tics per second, 63/18 = ~3.5 seconds
+	if (!ap[$TIME_BIT] ) { //no time stored, clear out the ap field
+		ap[$OBJECTIVE]=0;
+		setAdditionalParameters = 1;
+	}
+	else {
+		if (time == ap[$TIMESTAMP]) { //time matches, clear out the ap field
+			ap[$OBJECTIVE]=0;
+			ap[$TIMESTAMP] = 0;
+			ap[$TIME_BIT] = 0; 
+			setAdditionalParameters = 1;
+		}
+	}
+}
+
+
+
+// Rest 1 out of 8 tics if really not doing anything at all. 
+//if AP_DISTANCE is set, it means it's moving to/from somewhere to attack, so don't rest
+PERFORM RAND;
+if (perf_ret < 4096 && !smart && !AP_DISTANCE && !($IS_BREAKTSS_UNIT) ) { 
+  $SET_AP
+  PERFORM NOTHING;
+}
+
+
+if (perf_ret > 24576) {  //check do this for carrier units 1/4th of the time
+    if ($IS_CARRIER_UNIT) {
+        temp = QUERY UNIT [unit] MIN [ unit <=> query] WHERE [ query->Objective == $OBJECTIVE_PICKMEUP && 
+															   query->IsAlly==1 && (query->ObjectiveParameters == unit)];
+        if (temp) {
+			if (temp.Rank!=$CARRIER_RANK) {
+				PERFORM SET_PARAM temp;
+				PERFORM SET_OBJECTIVE $OBJECTIVE_PICKUP;
+			}
+			$SET_AP
+            PERFORM NOTHING;
+        }
+    }
+}
+
+
+//*** FOLLOWING A TELEPORTING LEADER
+int unitPosition = unit->Position;
+//check to see if commander/leader is teleporting somewhere and follow it if near a gate or can self-skip
+$INIT_GLOBAL_CHRONAL_PROPERTIES
+if ($CLEAR_QUEUE_AFTER_CHRONOPORT) {//only perform if hierarchy control is enabled
+if ($IS_GREKIM) { 
+	if (myArcticus > 0) { //only check if the grekim unit has a command arcticus
+		PERFORM GET_CUR_TIME;
+		if (perf_ret[0]) { //run this check every other tick
+			object ordinate = myArcticus->Commander;      //get the arcticus's leader unit
+			if (ordinate > 0) {
+				cap = ordinate->AdditionalParameters;
+				if (cap[$OBJECTIVE]==$OBJECTIVE_SKIP) {
+					int ordinateObjective = ordinate->Objective;
+					if ( ordinateObjective==0 || ordinateObjective==$OBJECTIVE_SKIP)  {
+
+						int qrank = 0;
+						object tporter = QUERY UNIT [unit] MIN [ unit <=> query ] 
+									   WHERE [ ((qrank = query.Rank)>=$TELEPORTER_RANK && qrank<=$SLIPGATE_RANK) && query->IsAlly==1 && (query->Objective == 0) ]; 
+						//found one, so teleport there
+						//$print "tporter: ", tporter,"\n";
+						if (tporter->IsAlive==1 ) { //found teleporter or unit can skip self
+							//int unitPosition = unit->Position; //store unit's position , used by the formation script
+							temp1 = unit.Length;   //temp1 store the unit's length, used by the formation script
+						
+							myCommander = ordinate;
+							commanderOP = myCommander->ObjectiveParameters;
+							location = commanderOP; //store commander's destination as the location to teleport, used by the formation script
+							
+							//this will teleport the unit in formation relative to the commander
+							#include common/include/unit_common_formation.ais
+							if (temp2!=0) { //temp2 will be set to 0 in the formation script above if jumping to <6 spaces away
+								PERFORM SET_OBJECTIVE $OBJECTIVE_SKIP;
+								ap = 0;
+								ap[$OBJECTIVE] = $OBJECTIVE_SKIP;
+								PERFORM SET_ADDITIONAL_PARAMS ap;
+								PERFORM SET_ADDITIONAL_PARAMS2 0;
+								PERFORM NOTHING;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+} 
+else {
+	//commander is teleporting somewhere, follow it if possible
+	if (myCommander>0 && cap[$OBJECTIVE]==$OBJECTIVE_SKIP && 
+		( commanderObjective==0 || commanderObjective==$OBJECTIVE_SKIP || commanderObjective==$OBJECTIVE_SKIPTO ) ) {
+		if ((uclass >= $TERCHER_Z_CLASS && uclass < 2060 && myStatus[$CAP_BIT_2] ) || uclass==$INCEPTER_CLASS ) {
+			//int unitPosition = unit->Position; //store unit's position , used by the formation script
+			temp1 = unit.Length;   //temp1 store the unit's length, used by the formation script
+			location = commanderOP; //store commander's destination as the location to teleport, used by the formation script
+
+			//this will teleport the unit in formation relative to the commander
+			#include common/include/unit_common_formation.ais
+			if (temp2!=0) { //temp2 will be set to 0 in the formation script above if jumping to <6 spaces away
+				PERFORM SET_OBJECTIVE $OBJECTIVE_SKIP;
+				ap = 0;
+				ap[$OBJECTIVE] = $OBJECTIVE_SKIP;
+				PERFORM SET_ADDITIONAL_PARAMS ap;
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+				PERFORM NOTHING;
+			}
+		} else {
+			
+			if (uclass!=$CARRIER_CLASS) { //carriers can't follow, if not a carrier look for a teleporter
+				int qrank = 0;
+				object tporter = QUERY UNIT [unit] MIN [ unit <=> query ] 
+							   WHERE [ ((qrank = query.Rank)>=$TELEPORTER_RANK && qrank<=$SLIPGATE_RANK) && query->IsAlly==1 && (query->Objective == 0) ]; 
+				//found one, so teleport there
+				//$print "tporter: ", tporter,"\n";
+				if (tporter->IsAlive==1 ) { //found teleporter or unit can skip self
+					//int unitPosition = unit->Position; //store unit's position , used by the formation script
+					temp1 = unit.Length;   //temp1 store the unit's length, used by the formation script
+					location = commanderOP; //store commander's destination as the location to teleport, used by the formation script
+					//this will teleport the unit in formation relative to the commander
+					#include common/include/unit_common_formation.ais
+					if (temp2!=0) { //temp2 will be set to 0 in the formation script above if jumping to <6 spaces away
+						PERFORM SET_OBJECTIVE $OBJECTIVE_SKIP;
+						ap = 0;
+						ap[$OBJECTIVE] = $OBJECTIVE_SKIP;
+						PERFORM SET_ADDITIONAL_PARAMS ap;
+						PERFORM SET_ADDITIONAL_PARAMS2 0;
+						PERFORM NOTHING;
+					}
+				}
+			}
+		}
+	}
+}
+}
+
+
+//*** BEING ATTACKED or ATTACKING WHILE IDLE
+#include common/include/unit_common_idle_aggro.ais
+
+
+//*** RETURN BACK TO ORIGINAL POSITION
+if ( AP_DISTANCE && !AP_UNIT ) {
+	if ( ap[$HOLDMOVE_BIT] ) {
+		int op = unit->ObjectiveParameters;
+		//not back to original position, move there if possible
+		if (unit<_>op > 0) {
+			dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [query <=> op] WHERE [1];		
+			dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+			if (dir && dir != $QUERY_EXHAUSTED) {
+				ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] = 0;
+				PERFORM $ACTION_MOVE dir;
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+			}
+			else { //stuck, just stay here then and clear out the counters
+				ap[$DISTANCE_BIT] = 0;
+				ap[$HOLDMOVE_BIT] = 0;
+				ap[$HOLD_COUNTER] = 0;
+				ap[$HOLD_LAHD] = 0;
+				ap[$HOLDATTACK_BIT] = 0; 
+				ap[$HOLD_COMMANDER_BIT] = 0;
+				if (!ap[$HOLD_TARGET_BIT]) { 
+					PERFORM RAND; if (perf_ret <16384) $SAY_HITNRUN 
+				}
+				else { ap[$HOLD_TARGET_BIT] = 0; }				
+				
+				//rotate around to face original direction
+				int rot = unit->Rotation;
+				rot = (rot + 4)[0,3];  //3 bits of opposite rotation
+				PERFORM $ACTION_ROTATE rot;
+				
+			}
+			ap[$HOLD_LAHD] = 0; //clear out the lahd once we start moving back
+			PERFORM SET_ADDITIONAL_PARAMS ap;
+			PERFORM CLEAR_LAST_ATTACKED_DIRECTION;
+			PERFORM NOTHING;
+		} 
+		
+		//returned to original position, clear out bits
+		ap[$DISTANCE_BIT] = 0;
+		ap[$HOLDMOVE_BIT] = 0;
+		ap[$HOLD_COUNTER] = 0;
+		ap[$HOLD_LAHD] = 0;
+		ap[$HOLDATTACK_BIT] = 0; 
+		ap[$HOLD_COMMANDER_BIT] = 0;
+		if (!ap[$HOLD_TARGET_BIT] ) { 
+			PERFORM RAND; if (perf_ret <16384) $SAY_HITNRUN 
+		}
+		else { ap[$HOLD_TARGET_BIT] = 0; }
+		PERFORM SET_ADDITIONAL_PARAMS ap;
+		PERFORM CLEAR_LAST_ATTACKED_DIRECTION;
+
+		
+		//rotate around to face original direction
+		int rot = unit->Rotation;
+		rot = (rot + 4)[0,3];  //3 bits of opposite rotation
+		PERFORM $ACTION_ROTATE rot;
+		PERFORM NOTHING;
+	
+	}
+
+	//move towards the attacked direction and decrease counter
+	float direction = rottorad( ap[$HOLD_LAHD] ) + 3.1415926;
+	int uY = unitPosition[$Ypos];
+	int uX = unitPosition[$Xpos];
+	int uZ = unitPosition[$Zpos];
+	
+	int y = uY - 10.0 * sin(direction);
+	int x = uX + 10.0 * cos(direction);
+	
+	y = uY + 10.0 * sin(direction);
+	x = uX - 10.0 * cos(direction);
+	int todir = 0;
+	todir[$Xpos] = x;
+	todir[$Ypos] = y;
+
+	if ( uZ > 0 ) { //check if this is an air unit
+		PERFORM GET_MAP_NEXT_Z_POSITION_UP todir;  
+		if (uZ > perf_ret[$Zpos]) { perf_ret[$Zpos] = uZ; } //allow the air unit to remain on its height level
+		todir = perf_ret;
+	} 
+
+	dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [query <=> todir] WHERE [1];
+	dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+	if (dir && dir != $QUERY_EXHAUSTED) {
+		ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] = 0;
+		PERFORM $ACTION_MOVE dir;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+	}
+	
+		
+	int COUNTER = ap[$HOLD_COUNTER];
+	COUNTER = COUNTER - 1;
+	ap[$HOLD_COUNTER] = COUNTER;
+
+	//maxed out on moves, start returning back to original spot
+	if (COUNTER==0) {
+		//if was trying to help heirarchy personel, check to see if it still needs help
+		//if it does, keep going towards it, otherwise return like normal
+		if ( ap[$HOLDATTACK_BIT] ) {
+			if ( ap[$HOLD_COMMANDER_BIT] )  { //commander needs help
+				int tisAlive = 0;
+				
+				if ( myCommander > 0) {
+					if ($IS_GREKIM) {						
+						object leader = myCommander->Commander;						
+						if (leader > 0 && leader.Rank != $ARCTICUS_RANK ) {
+							//leader must be attacking something while idle
+							if ( leader->Objective == 0 && (leader->AdditionalParameters)[$ATTACK_BIT] ) {
+
+								target = leader->ObjectiveParameters;  //get its target
+								tisAlive = target->IsAlive;
+								if (tisAlive!=1 || (tisAlive==1 && target->IsAlly==1) ) {
+									target = QUERY UNIT [ leader ] MIN [ leader <=> query] WHERE [!(query->IsAlly) ];  
+									tisAlive = 0;
+									if ( target->IsAlive==1 ) { tisAlive = 1; }
+								}
+							}
+						}
+			
+					}
+					else {
+						
+						target = commanderOP;  //get its target
+						tisAlive = target->IsAlive;			
+						if (tisAlive!=1 || (tisAlive==1 && target->IsAlly==1) ) {
+							target = QUERY UNIT [ myCommander ] MIN [ myCommander <=> query] WHERE  [!(query->IsAlly) ];  
+							tisAlive = 0;
+							if ( target->IsAlive==1 ) { tisAlive = 1; }
+						}
+					}
+				}
+				
+				if (tisAlive==1) {
+					//ap[$DISTANCE_BIT] = 1;
+					//ap[$HOLDATTACK_BIT] = 1; //moving to help out heirarchy personel
+					//ap[$HOLD_COMMANDER_BIT] = 1; //moving to help out commander and not a subordinate
+					PERFORM GET_BEST_POSITION_ATTACK_DIRECTION target->Position;
+					ap[$HOLD_LAHD] = perf_ret; //store directon of buddy's enemy
+					ap[$HOLD_COUNTER] = 7;  //max counter to move that direction
+					ap[$HOLDMOVE_BIT] = 0;  //don't return yet
+					ap[$HOLD_TARGET_BIT] = 1; //found the target
+					PERFORM SET_ADDITIONAL_PARAMS ap;
+					PERFORM NOTHING;
+				}
+				
+				ap[$HOLD_COMMANDER_BIT]  = 0; 
+			} 
+			else { //subordinate needs help
+				object sub=0;
+				int num = 0;
+				int s_count = 0;
+				while (!s_count) { //cycle through subordinates
+					if(!$IS_GREKIM) { sub = unit->NextSubordinate; }
+					else { sub = myCommander->NextSubordinate; } //grekim cycle through arcticus's subordinates
+					num = num + 1;  
+					if (num == 1) { temp = sub; }
+					else if (temp == sub) { s_count = 1; }
+					if (sub && sub->LastAttackedVDirection>0) {  //if one of them has been attacked
+						target = sub->ObjectiveParameters; //get its target
+						int tisAlive = target->IsAlive;
+						if (tisAlive!=1 || (tisAlive==1 && target->IsAlly==1) ) {
+							//don't look for buildings except turrets
+							target = QUERY UNIT [sub] MIN [sub<=>query] WHERE [!(query->IsAlly) && query.Rank>=$TURRET_RANK ];  
+							tisAlive = 0;
+							if ( target->IsAlive==1 ) { tisAlive = 1; }
+						}
+						
+						if (tisAlive==1) {
+							//ap[$DISTANCE_BIT] = 1;
+							//ap[$HOLDATTACK_BIT] = 1; //moving to help out subordinate
+							//ap[$HOLD_COMMANDER_BIT]  = 0; 
+							PERFORM GET_BEST_POSITION_ATTACK_DIRECTION target->Position;
+							ap[$HOLD_LAHD] = perf_ret; //store directon of subordinate's enemy
+							ap[$HOLD_COUNTER] = 7;  //max counter to move that direction again
+							ap[$HOLDMOVE_BIT] = 0;  //don't return yet
+							ap[$HOLD_TARGET_BIT] = 1; //found the target
+							PERFORM SET_ADDITIONAL_PARAMS ap;
+							PERFORM NOTHING;
+						}
+					}
+				} 
+			}
+			
+			ap[$HOLDATTACK_BIT] = 0; //clear out the helping subordinate bit
+		}
+		ap[$HOLDMOVE_BIT] = 1;
+	}
+	PERFORM SET_ADDITIONAL_PARAMS ap;
+	PERFORM NOTHING;	
+	
+}
+
+
+

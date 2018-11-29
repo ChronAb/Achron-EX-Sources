@@ -1,0 +1,26 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+PERFORM SET_OBJECTIVE 0;
+
+if (player->$LCrystals < $CHRONOBOMB_LC || player->$QPlasma < $CHRONOBOMB_QP) {
+	$SAY_RESOURCES
+   PERFORM $ACTION_ERROR1;
+   PERFORM NOTHING;
+}
+
+
+
+int adv = player->Advancements;
+if  (( adv[$GREKIM_ADV_WEAPONS] && adv[$GREKIM_ADV_GATE])  || player.ScenarioConstraints[15]) { //exception is C3L5
+	if ( unit->Energy >= 125 && unit->Ammo >= 15 ) {
+		PERFORM GET_MAP_NEXT_Z_POSITION_UP unit->ObjectiveParameters;  //store the location
+		PERFORM SET_ADDITIONAL_PARAMS perf_ret;
+		PERFORM $ACTION_CHRONOBOMB;
+	}
+	else {
+		$SAY_ENERGY
+		PERFORM $ACTION_ERROR1;
+	}
+}

@@ -1,0 +1,753 @@
+#include include/monitorHeader.rsh
+
+//save game starts at 4:00 mark
+//when recording, let it play, and save 5 seconds after screen gets locked
+
+/* ***************************************
+* DO NOT MODIFY ANYTHING BELOW THIS LINE *    
+**************************************** */  
+
+#include include/commonStatsAndPlayerUpdates.rsi
+
+player=0;
+#define PLAYER 0
+PERFORM GET_PLAYER_TIME 0;
+int player1time = perf_ret;    
+
+
+PERFORM GET_ACHRONAL_FIELD 1;
+int ap = perf_ret; //Achronal Parameter field
+PERFORM GET_ACHRONAL_FIELD 2;
+int af2 = perf_ret;  //objective stored in the second Achronal Parameter
+int obj = af2[0,4];
+
+PERFORM GET_ACHRONAL_FIELD 3; // store present for objective completion
+int af3 = perf_ret;
+
+_uclass = $UNITCREATOR_CLASS; _uowner = 1; $INITIALIZE_UNIT_CREATOR_AND_UI
+
+//unit creator is at 44x68x3
+
+if (current==3 || current==6) { //create 2 tanks (3,6)
+	_create_action = $UC_CREATE_TANK; $UNIT_CREATOR_CREATE_UNIT
+}
+if (current==9 || current==12) { //create 2  athcs (9,12)
+	_create_action = $UC_CREATE_ATHC; $UNIT_CREATOR_CREATE_UNIT
+}
+if (current==15 || current==18 || current==21) { //create  3 lancers (15,18,21)
+	_create_action = $UC_CREATE_LANCER; $UNIT_CREATOR_CREATE_UNIT
+}
+if (current>=24 && current<=33 && current % 3 == 0) { //create  4 mechs (24,27,30,33)
+	_create_action = $UC_CREATE_MECH; $UNIT_CREATOR_CREATE_UNIT
+}
+
+if (current==42) {
+	_create_action = $UC_CREATE_WAYPOINT; $UNIT_CREATOR_CREATE_UNIT
+}
+
+
+//convert all created units to player 3's (gamma team)
+if (current == 4$seconds) {
+	while (1) {
+		target = $GET_UNIT [ query->Owner == 1 && query->Carrier==unit_creator ];
+		if (target) { PERFORM SET_UNIT_OWNER 2; } 
+		else { break; } }
+}
+
+
+//player wins scenario when no enemies left at point when player is
+//and all buildings survived
+if (TwicePerSecond) {
+	//objective 2 means defended the base, so this code is run if base is not yet safe
+	if (current<=player1time && obj<2) { 
+		int enemies = $GET_UNIT_COUNT [ query->Owner==1 && query->YPosition < 100 && query->Class!=4010];
+		int bldgs = $GET_UNIT_COUNT [ query->Owner==0 && query.Rank<100 ];
+		int betabldgs = $GET_UNIT_COUNT [ query->Owner==15 && query.Rank<100 && query->Class < 4000];
+
+		//no enemies and sum of beta squad building's plus own buildings is 10
+		if (enemies==0) {
+			if ( (bldgs+betabldgs)==10) { //no buildings have been destroyed
+				say_to_var "tutObj2";
+				say 1;
+				say_to_var "";
+				
+				say_to_var "Obj2Text";
+				say "x Teleport squad and save the North base";
+				say_to_var "";
+				
+				//if (current==player1time) { //end scenario if player is there to witness it
+					
+				//	PERFORM PLAYER_LOST 2;
+				//	PERFORM END_SCENARIO;
+				//	PERFORM NOTHING;	
+				//}
+				target = 1; PERFORM SET_ACHRONAL_FIELD  current; //store the absolute timestamp of when player defended the base
+				target = 3; PERFORM SET_ACHRONAL_FIELD present;
+				af2[0,4] = 2;
+				obj = 2;
+				target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+			} 
+			else {  //at least one building was destroyed
+				if (current==player1time && current % (20$seconds)==0) {
+					$UI_MSG "The mission requires that no buildings shall be destroyed";
+				}
+			}
+		}
+	} else {
+		//run the check only in the 35 seconds furthest in the past, near left edge of timeline
+		if (current <= present - 235$seconds) {
+			//look for attack-capable units
+			int playerUnits = $GET_UNIT_COUNT [ query->Owner==0 && query.Rank>=100 ];
+			if (playerUnits == 0) { //no attacking units remain, player loses				
+				$UI_MISSION_FAILED "Mission Failed: You lost all your attack-capable units";
+				PERFORM PLAYER_LOST 1;
+				PERFORM END_SCENARIO;
+				PERFORM EXIT_ENGINE;
+				PERFORM NOTHING;
+			}
+			
+			playerUnits = $GET_UNIT_COUNT [ query->Owner==0 && query.Rank<100 && query->XPosition>300];
+			if (playerUnits == 0) { //no north base building remain, player loses
+				$UI_MISSION_FAILED "Mission Failed: All the Northern base buildings were destroyed";
+				PERFORM PLAYER_LOST 1; 
+				PERFORM END_SCENARIO;
+				PERFORM EXIT_ENGINE;
+				PERFORM NOTHING;
+			}
+			
+		}
+	}
+}
+
+//at 3:31 mark, send northern enemy units to attack North Base
+if (current >= 211$seconds && current <= 212$seconds) {
+	_x = 395; _y = 55; _dest = 0;
+	target = $GET_UNIT [ query->Owner==1 && query->Objective==0 && query->YPosition < 150 && query.Rank!=$UNITCREATOR_RANK && query->Class<200];
+	if (target->IsAlive==1) { $GO_ATTACK } 
+}
+if (current >= 214$seconds && current <= 215$seconds) {
+	_x = 395; _y = 55; _dest = 0;
+	target = $GET_UNIT [ query->Owner==1 && query->Objective==0 && query->YPosition < 150 && query.Rank!=$UNITCREATOR_RANK && query->Class>=200];
+	if (target->IsAlive==1) { $GO_ATTACK } 
+}
+
+
+//at 4:25 mark, send northern enemy units to attack different part of North Base
+if (current == 249$seconds ) {
+	_x = 385; _y = 62; _dest = 0;
+	object previous = 0;
+	while (1) {
+		target = $GET_UNIT [ query->Owner==1 && query->YPosition < 150 && query.Rank!=$UNITCREATOR_RANK && query!=previous ];
+		if (target) { previous = target; $GO_ATTACK } else { break; } }
+}
+
+
+//player is in the past, see if chronoport happened yet
+if (player1time < 220$seconds && current==player1time) {
+	if (obj==0) { //if player still hasn't chronoported units yet
+	
+		int mech = $GET_UNIT_COUNT [ query->Class==10 && query->Owner==0 ];
+		int tank = $GET_UNIT_COUNT [ query->Class==20 && query->Owner==0 ];
+		//there are more than 2 of each at this point in time, meaning the player just cported them in
+		if (mech>2 && tank>2) { //
+			target = 1; PERFORM SET_ACHRONAL_FIELD  present; //store the absolute timestamp of when player cported his units in
+			af2[0,4] = 1;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+			$UI_NEW_OBJECTIVE_SOUND
+			$UI_MSG  "Now move the team towards the three teleporters and";
+			say_to_var ""; say "then teleport them all to the North base";
+			
+		}
+	}
+}
+
+//ap holds absolute time of when player cported units in, so rcemind them 12 seconds afterwards
+//to move the units towards the teleporter
+if (obj==1 && current==present && present == (ap + 12$seconds) ) {
+	$UI_MSG "Move your team towards the three teleporters,";
+	say_to_var ""; say "then teleport them all to the North base";
+}
+
+
+if (obj==1 && current==present && present == (ap + 25$seconds) ) {
+	$UI_MSG "The units flash yellow because they need to recover from the";
+	say_to_var "";
+	say "previous chronoport.  This is called the Rechronoport delay";
+}
+
+if (obj==1 && current==present && present == (ap + 40$seconds) ) {
+	PERFORM GET_PLAYER_TIME_RATE 0; //1 : 0.5 speed, 2 : normal speed, 3 : fast forward
+	//remind player about playing in FF if they are not 
+	if (perf_ret != 3) {
+		$UI_MSG "When replaying the Past, play in FastForward since observing";
+		say_to_var "";
+		say "the timeline brings changes forward just like a timewave";
+	}
+}
+
+			
+//freeze all play input 1 second after player defends base
+if (obj==2) {
+	if (current==present && current == af3 + 2$seconds) {    
+		$UI_MSG "Good job! You defended the North base successfully.";
+		af2[0,4] = 3;
+		obj = 3;
+		target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+	} 
+}
+
+if (obj==3) {
+	if (current==present && current == af3 + 5$seconds) {
+		if (player1time != ap) { //force player to winning time
+			player = 0;
+			PERFORM SET_PLAYER_TIME ap + 1$seconds;
+			
+			//only tell the player that their time location changed if it was more than a 5 second jump
+			if (abs(player1time - ap) > 5$seconds) {
+				$UI_MSG "Jumping on the timeline to the end of the battle";
+			}
+		}
+		
+		PERFORM GET_PLAYER_TIME_RATE 0; //1 : 0.5 speed, 2 : normal speed, 3 : fast forward
+		//force player into fast forward
+		if (perf_ret != 3) {
+			PERFORM SET_PLAYER_TIME_RATE 3;
+		}
+		
+		af2[0,4] = 4;
+		obj = 4;
+		target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+	}
+}
+
+
+if (obj==4) {
+	
+	if (current == player1time) {
+	
+		if (current == ap + 8$seconds) {
+			object mf = $GET_UNIT [ query->Class==90 && query->Owner==0 && query->YPosition < 100];
+			PERFORM UI_SELECT_UNIT mf; 
+			$UI_CENTER_CAMERA_SELECTED        
+		}
+		
+		if ( current == ap + 16$seconds || current == ap + 16$seconds +1) {
+			$UI_START_ZOOM_OUT
+		}
+		
+		if (current == ap + 16$seconds + 12 || current == ap + 16$seconds + 13) {
+			$UI_STOP_ZOOM_OUT
+		}
+		
+		if ( current == ap + 26$seconds) {
+			$UI_MSG "Gamma team will teleport from orbit to your base shortly";
+		}
+		
+		if (current == ap + 32$seconds) {
+			$UI_MSG "They will join with your forces to help you defend the area";
+		}
+				
+		if ( current == ap + 51$seconds) {
+			$UI_MSG "Gamma team reporting for operations, awaiting rendezvous";
+			_uclass = $MECH_CLASS; _uowner = 2; object mech = $GET_UNIT_ANYWHERE
+			PERFORM UI_SELECT_UNIT mech; 
+			$UI_CENTER_CAMERA_SELECTED
+			
+		}
+			
+		if ( current == ap + 69$seconds){
+			$UI_MSG "Looks like the orbital teleporter overshot your base";
+		}
+		
+		if ( current == ap + 75$seconds){
+			$UI_MSG "You'll have to send one of your units to meet Gamma team";	
+		}
+		
+		if ( current == ap + 85$seconds){
+			say "New Objective: Rendezvous with Gamma team (yellow units)";		
+			$UI_NEW_OBJECTIVE_SOUND
+		}
+        
+        if (current == ap + 85$seconds || current == ap + 85$seconds + 1 ) {    
+            af2[0,4] = 5;
+			obj = 5;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+	}
+}
+if (obj>=4) {
+	//share vision
+	if (current == ap[0,19] + 49$seconds)  {  
+		player = 2; PERFORM SET_PLAYER_VISIBILITY_SHARING 1; 
+		player = 0;
+	}
+	//^^^teleport gamma team into the level
+	//release tanks
+	if (current == ap[0,19] + 50$seconds)  {  
+			if (obj==4) {
+				PERFORM UI_SELECT_UNIT 0;
+			}
+
+			_dest[$Xpos] = 127;
+			_dest[$Ypos] = 34;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT	
+	}
+	if (current == ap[0,19] + 50$seconds + 2)  {  
+			if (obj==4) {
+				say_to_var "SMSetCameraSpeed";
+				say 1;
+				say_to_var "SMCameraSpeed";
+				say 3;
+				say_to_var "";
+			}
+			_dest[$Xpos] = 128;
+			_dest[$Ypos] = 41;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	//release athc
+	if (current == ap[0,19] + 50$seconds + 4)  {  
+			_dest[$Xpos] = 132;
+			_dest[$Ypos] = 30;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	if (current == ap[0,19] + 50$seconds + 6)  {  
+			_dest[$Xpos] = 131;
+			_dest[$Ypos] = 37;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	//release lancers
+	if (current == ap[0,19] + 50$seconds + 8)  {  
+			_dest[$Xpos] = 127;
+			_dest[$Ypos] = 30;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	if (current == ap[0,19] + 50$seconds + 10)  {  
+			_dest[$Xpos] = 124;
+			_dest[$Ypos] = 34;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	if (current == ap[0,19] + 50$seconds + 12)  {  
+			_dest[$Xpos] = 125;
+			_dest[$Ypos] = 39;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+
+	//release mechs
+	if (current == ap[0,19] + 50$seconds + 20)  {  
+			_dest[$Xpos] = 134;
+			_dest[$Ypos] = 34;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	if (current == ap[0,19] + 50$seconds + 22)  {  
+			_dest[$Xpos] = 136;
+			_dest[$Ypos] = 36;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	if (current == ap[0,19] + 50$seconds + 24)  {  
+			_dest[$Xpos] = 134;
+			_dest[$Ypos] = 39;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}
+	if (current == ap[0,19] + 50$seconds + 26)  {  
+			_dest[$Xpos] = 134;
+			_dest[$Ypos] = 42;
+			_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT			
+	}	
+	
+		
+	//make the gamma team build a teleporter	
+	if ( current == ap[0,19] + 62$seconds) {
+		_uclass = $MECH_CLASS; _uowner = 2; target = $GET_UNIT_ANYWHERE
+		_x = 140; _y = 38; _obj = $OBJECTIVE_BUILD_TELEPORTER;
+		$DISPATCH_OBJECTIVE
+		
+	}
+}
+
+if (obj>=2 && obj<5) { //after base was defeated, during gamma team arrival
+	if (current==player1time) {
+		if (current >= (ap + $TPS) && current < (ap + 103$seconds)) {
+			$UI_LOCK_SCREEN
+			$UI_LOCK_SCREEN_SHOW_MAP
+			PERFORM GET_PLAYER_TIME_RATE 0; //1 : 0.5 speed, 2 : normal speed, 3 : fast forward
+			//force player into fast forward
+			if (perf_ret != 3) {
+				PERFORM SET_PLAYER_TIME_RATE 3;
+			}
+		}
+	}
+}
+
+if (obj==5) {
+	if (current == player1time) {
+		if (current == ap + 90$seconds){
+			object tp = $GET_UNIT [ query->Class==135 && query->Owner==0 && query->YPosition < 100];
+			PERFORM UI_SELECT_UNIT tp;
+			$UI_CENTER_CAMERA_SELECTED
+		}
+		
+		if (current == ap + 98$seconds) {
+			$UI_MSG "You only need to send one of your units for the rendezvous";		
+		}
+		
+		//a nice 4 tick period in which to unfreeze, for slow pc's
+		if ( current >= (ap + 102$seconds) && current <= (ap + 102$seconds + 4) ){ 
+			say_to_var "SMResetCameraSpeed";
+			say 1;
+			$UI_UNLOCK_SCREEN 
+			$UI_FREE_CAMERA   
+			af2[0,4] = 6;
+			obj = 6;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+	}
+}
+
+if (obj==6) {		
+	if (current==player1time) {
+		PERFORM GET_PLAYER_TIME_RATE 0; //1 : 0.5 speed, 2 : normal speed, 3 : fast forward
+		if (perf_ret<3 || (perf_ret==3 && current%2==1)) { //if player is in FF, only run it during one tick
+		//otherwise player may get this alert twice
+			if (present % (20$seconds) == 0) { //remind player to rendezvous with yellow team
+				int gamma = $GET_UNIT_COUNT [ query->Owner==2 && query->XPosition > 0 ];
+				if (gamma > 0) {
+					$UI_MSG "Gamma/yellow team is waiting for you to meet with them";		
+				}
+			}
+		}
+	}
+}
+
+if (obj>=6) {	
+	
+	if (current >= ap[0,19] + 93$seconds) {
+		_uowner=0; _leftX=110; _rightX=150; _topY=20; _bottomY=50; object playerUnit =  $GET_ANY_UNIT_AT_POSITION
+
+		if (playerUnit->IsAlive==1) {
+			//change player to 0 for all Gamma team units
+			while (1) {
+				target = $GET_UNIT [ query->Owner == 2];
+				if (target) { PERFORM SET_UNIT_OWNER 0; } 
+				else { break; } }
+			
+
+			if (obj==6) {
+				$UI_MSG "Gamma team joining your forces!";
+				
+				af2[0,4] = 7;
+				obj = 7;
+				af2[4,28] = current; //store the absolute timestamp of when player joined gamma team
+				target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+				ap[19,13] = present - current; //store the difference between present and when gamma join
+				target = 1; PERFORM SET_ACHRONAL_FIELD  ap;
+			}
+		}
+	}
+
+}
+
+if (obj>=7) {
+	int gamma = af2[4,28]; //absolute time of when gamma team joined
+	int delta = ap[19,13]; //difference in ticks between present and gamma 
+	//13 bits for delta is more than enough to store 8192 bits, which is 455 seconds at 18 TPS (present is at 270 seconds)
+	
+	if (current == gamma + 10 $seconds) {
+		_dest[$Xpos] = 410; _dest[$Ypos] = 185; $PLACE_WAYPOINT //place waypoint
+	}
+	
+	//send enemy lancers to attack north base
+	if (current == gamma + 9$seconds) {
+		_x = 385; _y = 46; _z=2; 
+		while (1) {
+			target = $GET_UNIT [ query->Owner==1 && query->Objective!=$OBJECTIVE_ATTACKING && query->Class==$LANCER_CLASS];
+			if (target) { $GO_ATTACK } 
+			else { break; } }
+	}
+	
+	//send enemy athc's to attack north base
+	if (current == gamma + 22$seconds) {
+		_x = 396; _y = 47; 
+		while (1) {
+			target = $GET_UNIT [ query->Owner==1 && query->Objective!=$OBJECTIVE_ATTACKING && query->Class==$ATHC_CLASS];
+			if (target) { $GO_ATTACK } 
+			else { break; } }
+	}
+	
+	//send 2 enemy mechs to attack north base
+	if (current == gamma + 65$seconds) {
+		_uowner = 1; _uclass = $MECH_CLASS; target = $GET_UNIT_ANYWHERE 
+		_x = 385; _y = 52; $GO_ATTACK
+		
+		target = $GET_UNIT [ query->Owner==_uowner && query->Objective!=$OBJECTIVE_ATTACKING && query->Class==_uclass];
+		$GO_ATTACK
+	}
+		
+	if (current==present) {	
+		if (current == gamma + delta + 5$seconds) {
+			$UI_MSG "You now have control of Gamma team.";
+			say_to_var ""; say "Send them over to your North base";		
+		}
+		
+		if (current == gamma + delta + 15$seconds) {
+			$UI_MSG "New Objective: Destroy all enemy units South of the base";		
+		}
+		
+		if (current == gamma + delta + 35$seconds) {
+			$UI_MSG "The enemies are coming from an outpost South your base";		
+		}
+	}
+	
+	if (TwicePerSecond) {
+		int enemies = $GET_UNIT_COUNT [ query->Owner==1 && query->Class!=4010];
+		if (enemies==0) {
+			$UI_MSG "The Mission was a success!";		
+			af2[0,4] = 8;
+			obj = 8;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+		if (enemies < 7) {
+			_uc_target = $GET_UNIT [ query->Class==$WAYPOINT_CLASS && unit->Carrier<=0 ]; 
+			if (_uc_target->IsAlive==1) { $UNIT_CREATOR_TAKE_UNIT }
+		}
+	}	
+
+
+}
+
+//freeze all play input from 4:20-4:40
+if (present >= 260$seconds && present < 280$seconds) {
+	$UI_LOCK_SCREEN  
+	$UI_LOCK_SCREEN_SHOW_MAP
+}
+
+if (present==current) {
+
+	if (TwicePerSecond) {
+		if (obj>0) { 
+			say_to_var "tutObj1";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj1Text";
+			say "x Chronoport squad into the past";
+			say_to_var "";
+		} else {
+			say_to_var "Obj1Text";
+			say "- Chronoport squad into the past";
+			say_to_var "";
+		}
+		
+		if (obj==1) {
+			say_to_var "Obj2Text";
+			say "- Teleport squad to save the base";
+			say_to_var "";
+			
+		}  else if (obj<1) {
+			say_to_var "Obj2Text";
+			say "   Teleport squad to save the base";
+			say_to_var "";
+		}
+		
+		if (obj>=2) { 
+			say_to_var "tutObj2";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj2Text";
+			say "x Teleport squad and save the base";
+			say_to_var "";
+		}
+		
+		
+		if (obj==5||obj==6) {		
+			say_to_var "Obj3Text";
+			say "- Rendezvous with Gamma team";
+			say_to_var "";
+		}  else if (obj<5) {
+			say_to_var "Obj3Text";
+			say " ";
+			say_to_var "";
+		}
+		if (obj>6) {
+			say_to_var "tutObj3";
+			say 1;
+			say_to_var "";
+		
+			say_to_var "Obj3Text";
+			say "x Rendezvous with Gamma team";
+			say_to_var "";
+		}
+		
+		if (obj==7) {		
+			say_to_var "Obj4Text";
+			say "- Destroy enemy outpost South of base";
+			say_to_var "";
+			
+		}  else if (obj<7) {
+			say_to_var "Obj4Text";
+			say " ";
+			say_to_var "";
+		}
+		if (obj>7) {
+			say_to_var "tutObj4";
+			say 1;
+			say_to_var "";
+		
+			say_to_var "Obj4Text";
+			say "x Destroy enemy outpost South of base";
+			say_to_var "";
+		}
+				
+		
+	}
+
+	//at 4:26 center camera on north base being attacked
+	if (present == 266$seconds) {
+		_uclass = $FACTORY_CLASS; _uowner=0; _topY=50; _bottomY = 100; _leftX = 0; _rightX = 4000;
+		object factory = $GET_UNIT_AT_POSITION
+		PERFORM UI_SELECT_UNIT factory;
+		$UI_CENTER_CAMERA_SELECTED
+	}
+
+	if (present == 269$seconds) {
+		$UI_MSG "Your North Base is Under Attack";
+		say_to_var ""; say "Beta squad will be arriving shortly for assistance";
+	}
+
+	//Notify of incoming ally at the 4:40 mark 	and camera lock onto the allies 
+	if (present == 280$seconds) {
+		$UI_MSG "Beta Squad reporting for operations!";
+		object tank = $GET_UNIT [ query->Class==$TANK_CLASS && query->Owner==0 && query==14]; //go by specific unit #
+		PERFORM UI_SELECT_UNIT tank;
+		//flop follow-unit on/off here and reset camera to center camera on the unit
+		$UI_CENTER_CAMERA_SELECTED
+		$UI_START_ZOOM_OUT
+	}
+	
+	 if (present == 280$seconds + 3 || present == 280$seconds + 4) {
+		 $UI_STOP_ZOOM_OUT
+	 }
+	
+	//at 4:43 center camera on mech
+	if (present==283$seconds) {
+		object mech = $GET_UNIT [ query->Class==$MECH_CLASS && query->Owner==0 && query==20]; //go by unit #
+		PERFORM UI_SELECT_UNIT mech; 
+	}
+
+	//at 4:47 center camera on chronoporter
+	if (present == 288$seconds && player1time==present) {
+		$UI_FREE_CAMERA
+		_uclass=$CHRONOPORTER_CLASS; _uowner=0; object gate = $GET_UNIT_ANYWHERE
+		PERFORM UI_SELECT_UNIT gate; 		
+		$UI_ROTATE_AROUND_SELECTED "The Chronoporter Gate enables units to travel through time.\n \nThink of it as a Teleporter for time instead of space.";
+		
+	}
+	if (present == 289$seconds || present == 289$seconds+1 ) {
+		$UI_UNLOCK_SCREEN  
+	}
+
+	//HowTo use gates text start at 4:50 mark and is only displayed before you chronoport
+	if (present >= 292$seconds && TwicePerSecond ) {
+		say_to_var "tutorialText";
+		if (obj==0) {
+			say "To use a Chronoporter Gate, a unit must be within the gate's action radius.\n \n- Chronoporting Directions:\nMove ALL the units within a Chronoporter's action radius,\nselect the units' chronoport control (keyboard shortcut: "; say_from_config "AchronKBChronoport";  say " )\nthen left click on the timeline for the destination time\n \nReminder:\nThe keyboard shortcut for Teleporting is "; say_from_config "AchronKBTeleport"; say "\nThe keyboard shortcut for Chronoporting is "; say_from_config "AchronKBChronoport"; 
+		} else {
+			say "";
+		}
+		say_to_var "";
+	}
+	if (present == 292$seconds) {  //play the sound effect only once 
+		$UI_NEW_OBJECTIVE_SOUND
+	}
+	
+	//9:10 mark, shoulda won by now, otherwise player loses
+	if (obj<2 && present >= 550$seconds) { 
+		//player 1 did not win, lose the scenario
+		$UI_MISSION_FAILED "Mission Failed: All the Northern base buildings were not saved";
+
+		PERFORM PLAYER_LOST 1; 
+		PERFORM END_SCENARIO;
+		PERFORM EXIT_ENGINE;
+		PERFORM NOTHING;
+	}
+}
+	
+	
+
+//at the 5:13 mark, remind player what to do
+if (current==present && present == 313$seconds && obj==0) {
+	player = 0;
+    if (player1time < present) {
+        say "[At Present] Chronoport Beta Squad to before the attack";
+    }
+    if (player1time >=present ) {
+        $UI_MSG "Chronoport Beta Squad to before the attack started";
+    }
+	if (obj==0) {
+		say_to_var "showBalloonM100";
+		say 1;
+		say_to_var "";				
+	}
+}
+
+//at the 5:32 mark, remind player what to do again
+if (current==present && present == 332$seconds && obj==0) {
+	player = 0;
+    if (player1time != current ) {
+        $UI_MSG "[At Present] Chronoport Beta Squad to before the attack";
+    }
+    else {
+        $UI_MSG "Chronoport Beta Squad to before the attack started.  Hurry!";
+    }
+}
+
+if (present == 370$seconds || obj>0 ){ 
+	say_to_var "showBalloonM100";
+	say 0;
+	say_to_var "";				
+}
+
+
+//at 4:05 switch neutral units to player's (beta squad joining) via script
+if (current == 246$seconds ) {
+	while (1) {
+		target = $GET_UNIT [ query->Owner==15 && query->Class < 4000 ];
+		if (target) { PERFORM SET_UNIT_OWNER 0; PERFORM SET_OTHER_ADDITIONAL_PARAMS 0; PERFORM SET_OTHER_OBJECTIVE 0; } else { break; } }
+}
+
+//at 4:06 move the beta squad units towards to chronoporter gate
+if (current == 246$seconds + 1) {
+    //move the Beta company Mechs
+	_dest=0; _x = 238; _y = 298; _z=0; _obj = $OBJECTIVE_MOVE_DISPATCH;
+	while (1) {
+		target = $GET_UNIT [ query->Owner==0 && query->Class==$MECH_CLASS && query->YPosition>=340 && query->Objective!=$OBJECTIVE_MOVE_DISPATCH ];
+		if (target) { $DISPATCH_OBJECTIVE } else { break; } }
+}
+
+if (current == 246$seconds + 2 ) {
+    //move the Beta company Tanks
+	_dest=0; _x = 244; _y = 285; _z=0; _obj = $OBJECTIVE_MOVE_DISPATCH;
+	while (1) {
+		target = $GET_UNIT [ query->Owner==0 && query->Class==$TANK_CLASS && query->YPosition>=340 && query->Objective!=$OBJECTIVE_MOVE_DISPATCH ];
+		if (target) { $DISPATCH_OBJECTIVE  } else { break; } }
+}
+
+//switch buildings over
+if (current == 249$seconds) {  
+	while (1) {
+		target = $GET_UNIT [ query->Owner==15 && query.Rank >= 10 && query.Rank < 100];
+		if (target) { PERFORM SET_UNIT_OWNER 0; PERFORM SET_OTHER_ADDITIONAL_PARAMS 0; PERFORM SET_OTHER_OBJECTIVE 0; } else { break; } }
+}
+
+
+if (obj==9) { //player wins
+	PERFORM PLAYER_LOST 2;
+	PERFORM END_SCENARIO;
+	PERFORM EXIT_ENGINE;
+	PERFORM NOTHING;	
+}
+
+if (obj==8) {
+	af2[0,4] = 9; //set objective to 9
+	target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+}

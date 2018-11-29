@@ -1,0 +1,25 @@
+
+To compile your own scenario monitor script to control winning conditions and more, run the following command on the command prompt:
+ ..\RescriptCompiler MyScenarioMonitor.rsq
+For this example, the compiler will output a compiled Rescript binary file that should be named MyScenarioMonitor.abn.
+
+If you want to load up and test your scenario monitor, simply rename it to one of the existing
+scenario monitors from the list and load up the level that uses it:
+
+MULTI(2) - Iced 		: scenario_monitors/multiplayerTotalDefeatMonitor.abn
+MULTI(2) - IcedTactics		: scenario_monitors/multiplayerTotalDefealtTacticsMonitor.abn
+MULTI(2) - QuadTactics		: scenario_monitors/multiplayerAnytimeDefeatMonitor.abn
+MULTI(2) - Clone Tactics	: scenario_monitors/CloneTactics.abn
+
+SANDBOX - Iced			: scenario_monitors/multiplayerAnytimeDefeatMonitor.abn
+SANDBOX - Temporal Forest Battle: scenario_monitors/multiplayerAnytimeDefeatMonitor.abn
+SANDBOX - Clone Challenge	: scenario_monitors/clonerChallenge.abn
+
+
+levels/Campaign-Basics		: scenario_monitors/Tutorial1.abn
+levels/Campaign-IntroTimeTravel	: scenario_monitors/Tutorial2.abn
+levels/Campaign-WhiteRabbit	: scenario_monitors/WhiteRabbit.abn
+levels/Campaign-Chronoporting	: scenario_monitors/Chronoporting.abn
+levels/Campaign-ForestBattle	: scenario_monitors/ForestBattle.abn
+
+We plan to include configurable scenario monitor parameters when launching a level (from the user interface), as well as the ability to change the scenario monitor prior to playing the game.  For now, you should just make a backup of the current scenario monitors.

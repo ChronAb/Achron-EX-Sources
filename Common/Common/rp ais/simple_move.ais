@@ -1,0 +1,316 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+// HA! it is simple move, for all except Resource Processors. Those suckers have it hard.
+// 90% of this file is to handle RP-specific logic, otherwise it really is simple. sorry
+
+int uclass = unit->Class;
+//grekim RPs can't move if they have no energy
+if (uclass==$GREKIM_RP_OFF_CLASS) {
+	if (unit->Ammo == 0) {
+		//check if near the box 1/sec just in case
+		PERFORM GET_CUR_TIME;
+		if (perf_ret % 18 == 0) {
+			object commander = unit->Commander;
+			int op = unit->ObjectiveParameters;
+			int halt = 1;
+			if ( commander->IsAlive==1 && commander->Position==op[0,24]) {  //the objective location is the materials
+				int boundary = $RP_PROCESS_DISTANCE;
+				if (commander->Class==$QP_LARGE_CLASS) { boundary = boundary + 4; } //add 2 to allow for mining LARGE QP crates 		
+				if (op <_> unit <= boundary) {  //am close enough to mine (RPs have short range)
+					if ( unit->Position[$Zpos]!=0) {
+						halt = 0; //continue with the script to land the RP
+					} else {
+						PERFORM SET_ADDITIONAL_PARAMS2 0;
+						PERFORM $ACTION_PLANT;
+						PERFORM SET_OBJECTIVE 0;
+						PERFORM NOTHING;
+					}
+				}
+			}
+			
+			if (halt) { PERFORM NOTHING; }
+		}
+		else { PERFORM NOTHING; }
+	}
+}
+
+int urank = unit.Rank;
+
+int dir = 0;
+int RP_POS = 1; //default for RP move is that it's moving to a position, not towards a box
+int op = unit->ObjectiveParameters;
+
+
+int counter = unit->AdditionalParameters2;
+int ap2 = counter;
+int airunit = 0;
+if ($IS_AIR_UNIT) {	airunit = 1; }
+
+int unitPosition = 0;
+if (counter>0) {
+	if (urank==$RP_RANK) {  //moving closed RPs
+		object commander = unit->Commander;
+		if ( commander->IsAlive==1 && commander->Position==op[0,24]) {  //the objective location is the materials
+			RP_POS = 0; //now we know that it's moving towards a box
+			int boundary = $RP_PROCESS_DISTANCE;
+			if (commander->Class==$QP_LARGE_CLASS) { boundary = boundary + 4; } //add 2 to allow for mining LARGE QP crates 		
+			if (op <_> unit <= boundary) {  //am close enough to mine (RPs have short range)
+				if (uclass==$GREKIM_RP_OFF_CLASS && unit->Position[$Zpos]!=0) {
+					op[$Zpos] = 0;	//grekim RP should land here
+					counter = 1;
+				} else {
+					PERFORM SET_ADDITIONAL_PARAMS2 0;
+					PERFORM $ACTION_PLANT;
+					PERFORM SET_OBJECTIVE 0;
+					PERFORM NOTHING;
+				}
+			}
+		}
+	}
+	counter = counter - 1;
+	ap2 = counter;
+	int rot = unit->Rotation;
+	$DIR_FROM_ROT
+}
+else {
+	int distToOP = op <_> unit;
+	if (airunit) {
+		int stayOnGround = 0;
+		if (uclass==$GREKIM_RP_OFF_CLASS) { //force grekim rp's to prefer ground during startgame
+			PERFORM GET_CUR_TIME;
+			if (perf_ret < 20 $seconds) {
+				stayOnGround = 1;
+			}
+		}
+		if (!stayOnGround) {
+			unitPosition = unit->Position;
+			if (distToOP > 64) { //air units over 8 spaces away prefer air route
+				if (unitPosition[$Zpos] == 0) { //on the ground
+					PERFORM GET_MAP_NEXT_Z_POSITION_UP unitPosition;  //move to the spot above the position
+					int temp1 = perf_ret; //overwrite the evelated Z coord with the +1 of the current coordinate
+					target = uclass;
+					PERFORM CAN_CLASS_FIT_AT temp1;
+					if (perf_ret==255) {  //only move up if it can fit there			
+						dir = QUERY BESTMOVE [unit, $ACTION_MOVE_UP] MIN [ temp1 <=> query ] WHERE [1];
+						dir[16,8]=0; //clear out the 3rd byte that stores the counter
+						if (dir && dir != $QUERY_EXHAUSTED) {
+							PERFORM $ACTION_MOVE_UP dir;
+							PERFORM SET_ADDITIONAL_PARAMS2 0;
+							PERFORM NOTHING;
+						}
+					}
+				} else {
+					if (op[$Zpos]==0) { //going to ground level
+						PERFORM GET_MAP_NEXT_Z_POSITION_UP op;  //move to the spot above the position
+						//op = perf_ret; 
+						if (perf_ret[$Zpos] > unitPosition[$Zpos]) { op[$Zpos] = perf_ret[$Zpos]; }
+						else {
+							PERFORM GET_MAP_NEXT_Z_POSITION_UP perf_ret; //get the spot above the previous spot
+							op[$Zpos] = perf_ret[$Zpos]; 
+						}
+					}
+				}
+			}
+
+			//prevent landing on the ground if not reached destination yet, and destination is below the unit
+			if (distToOP > 36 && op[$Zpos] < unitPosition[$Zpos]) {	
+				op[$Zpos] = unitPosition[$Zpos]; //overwrite with current height
+			}
+		}
+	}
+
+	if (urank==$RP_RANK) {  //moving closed RPs
+		object commander = unit->Commander;
+//print " to: ", op[$Xpos]," ", op[$Ypos],  " c: ", commander, " at: ", commander->XPosition, " ", commander->YPosition, " \n";			
+		if ( commander->IsAlive==1 && commander->Position==op[0,24]) {  //the objective location is the materials
+			RP_POS = 0; //now we know that it's moving towards a box	
+			int unitPosition = unit->Position;
+			int boundary = $RP_PROCESS_DISTANCE;
+			
+			goal_distance = 2; //how close to move to the resource crate
+			if (commander->Class==$QP_LARGE_CLASS) { 
+				boundary = boundary + 4;  //add 2 to allow for mining LARGE QP crates 		
+				goal_distance = 3;       
+			} 
+			if ( distToOP <= boundary) {  //am close enough to mine (RPs have short range)
+				if (uclass==$GREKIM_RP_OFF_CLASS && unitPosition[$Zpos]!=0) {
+					int OP = op[0,24];
+					op = unitPosition;
+					op[$Zpos] = 0;	//grekim RP should land right here
+					target = $GREKIM_RP_CLASS;
+					PERFORM CAN_CLASS_FIT_AT op;
+					if (perf_ret!=255) { //can't land here, try to autocorrect land near the box		
+						int length = $GREKIM_RP_CLASS::Length;
+						#include common/include/unit_rp_autocorrect.ais
+					}
+
+				} else {
+					PERFORM SET_ADDITIONAL_PARAMS2 0;
+					PERFORM $ACTION_PLANT;
+					PERFORM SET_OBJECTIVE 0;
+					PERFORM NOTHING;
+				}
+			}
+
+			//if the rp is coming from the right, adjust the position it's moving to, to be on the right side of the resource
+			if (unitPosition[$Xpos] > op[$Xpos]) {  op = op + 1; } //add 1 to the X position
+
+			//ignore_collision_with_unit = commander; //we use goal_dist as specified above instead of ignoring the commander
+			// because RPs aren't allowed to be at a diagonal to the box, so that way they'll attempt to be 1 spot on the vert/horz 
+			//instead of directly diagonal to the resource crate			
+			dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ op <=> query ] WHERE [1];  //moving towards a material patch			
+		}
+		else {  //mine is moving to a location
+			if ( uclass==$GREKIM_RP_OFF_CLASS && distToOP <= $RP_PROCESS_DISTANCE) {  //am close enough to mine (RPs have short range)
+				int unitPosition = unit->Position;
+				if (unitPosition[$Zpos]!=0) {
+					int OP = op[0,24];
+					
+					//store the ground for the destination tile since we're landing now
+					if (op[$Zpos] > 0) {
+						OP[$Zpos] = 0; 
+						PERFORM SET_PARAM OP;
+					}
+					
+					op = unitPosition;
+					op[$Zpos] = 0;	//grekim RP should land right here
+
+					target = $GREKIM_RP_CLASS;
+					PERFORM CAN_CLASS_FIT_AT op;	//store the ground 
+
+					if (perf_ret!=255) { //can't land here, try to autocorrect land near the box			
+						int length = $GREKIM_RP_CLASS::Length;
+						#include common/include/unit_rp_autocorrect.ais
+					}
+				}
+			}
+		
+			if (commander->IsAlive==1) { PERFORM $ACTION_CHANGE_COMMANDER 0; }
+
+			dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ op <=> query ] WHERE [1]; 
+		}
+
+	}
+	else { //all others
+		dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ op <=> query ] WHERE [1];   
+	}
+
+	if (dir[0,8] >= 16) { counter = 0; } //moving up or down, so don't store counter
+	else {
+		counter = dir[16,8];
+		if (counter > 7) { counter = 7; } //cap it at 7
+	}
+	ap2 = counter;
+	dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+	
+}
+
+int distToOP = op <_> unit;
+//$print  "d: ", distToOP, " counter: ", ap2, "\n";
+//force RP's to calculate bestmove every time when within processing distance by clearing the move counter
+if (urank == $RP_RANK && distToOP <= $RP_PROCESS_DISTANCE) {
+	ap2 = 0;
+}
+
+if (dir == 0 || dir==$QUERY_EXHAUSTED) {
+	ap2 = 0;
+	int ap = 0;
+	if (urank==$RP_RANK) { //moving closed RP
+		if (distToOP > $RP_PROCESS_DISTANCE && distToOP <= $RP_PROCESS_DISTANCE * 2 + 4) { //can't get any closer and already 1 RP-width away or closer
+			int energy = 0;
+			object mineral = 0;
+			if (RP_POS) { //look for a box not at the position of op
+				PERFORM GET_UNIT_AT op;
+				object box = perf_ret;
+				if (box->IsAlive==1) { //box is there, so look for another box	
+					mineral =  QUERY UNIT [unit] MIN [ unit <=> query ] WHERE
+													 [query!=box && query.Rank==$RESOURCE_RANK && query->Energy>0];
+				} else { //no box, so just look for something that's not located at that location
+					mineral =  QUERY UNIT [unit] MIN [ unit <=> query ] WHERE
+													[query<_>op > 2 && query.Rank==$RESOURCE_RANK && query->Energy>0];
+				}
+				
+			} else { //moving towards commander, so look for another box that is not the commander
+	
+				ap = unit->AdditionalParameters;
+				object commander = unit->Commander;
+				if (ap[$STOREDUNIT]>0 && ap[$RP_PATCH_BIT]) { //has a box stored that it couldn't get to and it was stored via move and not from smart-idle
+					object previousBox = ap[$STOREDUNIT]; //so look for a box that is neither the current commander Box nor the previousBox			
+					mineral =  QUERY UNIT [unit] MIN [ unit <=> query ] WHERE 
+													 [query!=commander && query!=previousBox && query.Rank==$RESOURCE_RANK && query->Energy>0];
+				}
+				else {	//store current box as the one this RP can't get to
+				
+					ap[$STOREDUNIT] = commander;
+					ap[$RP_PATCH_BIT] = 1;
+					mineral =  QUERY UNIT [unit] MIN [ unit <=> query ] WHERE 
+													 [query!=commander && query.Rank==$RESOURCE_RANK && query->Energy>0];
+				}
+				
+			}
+			if (mineral->IsAlive==1) {
+				PERFORM $ACTION_CHANGE_COMMANDER mineral; 
+				PERFORM SET_PARAM mineral->Position;
+				PERFORM SET_ADDITIONAL_PARAMS ap;
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+				PERFORM NOTHING;
+			}
+		}
+		
+	}
+
+	PERFORM SET_OBJECTIVE 0;
+	//comm centers
+	if (urank==$COMMC_OFF_RANK) {
+		PERFORM SET_PARAM 0;
+	}
+	
+	PERFORM SET_ADDITIONAL_PARAMS ap;	
+	PERFORM SET_ADDITIONAL_PARAMS2 ap2;
+	PERFORM NOTHING;
+}
+
+//prevent landing on the ground if not reached destination yet
+//helps units get further off the ground initially
+if (airunit && distToOP > 36 && dir[0,8]==$TERRAIN_DOWN) {
+	PERFORM GET_MAP_NEXT_Z_POSITION_DOWN unitPosition;
+	if (perf_ret[$Zpos]==0) {    //ground tile
+		dir[0,8] = $TERRAIN_UP; //don't allow moving down before reaching the destination
+	}
+}
+
+//move faster vertically
+if (dir[$DIR_UP_BIT]) { PERFORM $ACTION_MOVE_UP dir; }
+else if (dir[$DIR_DOWN_BIT]) { PERFORM $ACTION_MOVE_DOWN dir; }
+else {
+	PERFORM $ACTION_MOVE dir; 
+}
+
+if ( perf_ret!=1) { 
+	ap2 = 0;
+}
+
+//query is exhausted (something is in the way?), and already within 20 spaces
+if (dir[$BESTMOVE_GAVE_UP] && distToOP < 401) {
+	//store the new distance to the destination after the move 
+	int newdistToOP = unit<_>op; 
+	//distance to OP is now further (unit is moving further away), so increase the exhaust counter
+	if (distToOP < (newdistToOP+4)) {
+		int ap = unit->AdditionalParameters;
+		int exhaustCount = ap[6,4];
+		if (exhaustCount==8) {
+			PERFORM SET_ADDITIONAL_PARAMS 0;
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+			PERFORM SET_PARAM 0;
+			PERFORM SET_OBJECTIVE 0;
+			PERFORM NOTHING;
+		}
+		ap[6,4] = exhaustCount + 1;
+		PERFORM SET_ADDITIONAL_PARAMS ap;
+		ap2 = 0;
+	}
+}
+
+PERFORM SET_ADDITIONAL_PARAMS2 ap2;

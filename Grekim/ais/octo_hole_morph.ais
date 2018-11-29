@@ -1,0 +1,104 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+#include common/include/unit_morph_rechronoport_check.ais
+
+int OP = unit->ObjectiveParameters;
+int dist = unit<_>OP;
+int length  = $GREKIM_RP_CLASS::Length;
+
+PERFORM POSITION_VISIBLE OP;
+int vis = perf_ret;
+
+//Octo: if on full energy can plant an RP
+if (unit->Class == $OCTO_CLASS && unit->Energy == $GREKIM_RP_E 
+	&& dist <= $GREKIM_SPAWN_R && vis != 0 ) { //range is 15 (225)
+	//check if there are sufficient resources
+	if (player->$LCrystals >= $GREKIM_RP_LC && player->$QPlasma >= $GREKIM_RP_QP ) {
+		#include common/include/unit_rp_autocorrect.ais
+		target = $GREKIM_RP_CLASS;
+		PERFORM CAN_CLASS_FIT_AT OP; //check if the structure will fit
+		if (perf_ret==255 && dist > 6) {
+			//Everything checks out. So make structure and go to idle
+			PERFORM $ACTION_MAKE_RP_OCTO OP;
+			PERFORM SET_OBJECTIVE 0;
+			PERFORM NOTHING;
+		} else {
+			$SAY_OBSTACLE
+		}
+	} else {
+		$SAY_RESOURCES
+	}
+	PERFORM SET_OBJECTIVE 0;  
+	PERFORM $ACTION_ERROR1;
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM NOTHING;
+}
+
+//Otherwise will have to morph
+if (unit->Position == OP) {
+	if (player->$LCrystals >= $GREKIM_RP_LC && player->$QPlasma >= $GREKIM_RP_QP) {
+		#include common/include/unit_rp_autocorrect.ais
+		target = $GREKIM_RP_CLASS;
+		PERFORM CAN_CLASS_FIT_AT OP;
+		if (perf_ret==255) {
+			//if you can fit then go ahead and morph
+			PERFORM $ACTION_CHANGE_COMMANDER 0;
+			PERFORM $ACTION_CHANGE $OCTO_CLASS;
+			PERFORM SET_OBJECTIVE $OBJ_BLDG_CONSTRUCTION;
+			PERFORM NOTHING;
+		} else {
+			$SAY_MORPH
+		}
+	} else {
+		$SAY_RESOURCES
+	}
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM $ACTION_ERROR1;
+    PERFORM NOTHING;
+}
+
+int qp = 0;
+int dir = 0;
+int obstacle = 0;
+//once within 3 spaces of destination, make sure to move to the exact position the player selected 
+if (unit<_>OP <= 6) {
+	target = $GREKIM_RP_CLASS;
+	PERFORM CAN_CLASS_FIT_AT OP;
+	if (!perf_ret[$ROT_S]) {
+		dir = 0;
+		obstacle = 1;
+	} else {
+		int opx = OP[$Xpos];
+		int opy = OP[$Ypos];
+		int _qy = 0;
+		int _qx = 0;		
+		//adjust for tOP left corner of the 2x2 grek unit
+		dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ 
+						((_qx=((qp=query->Position)[$Xpos])) - opx) * (_qx - opx) +
+							((_qy=qp[$Ypos]) - opy) * (_qy - opy) 		
+						] WHERE [1];
+	}
+} else {
+	dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ query <_> OP ] WHERE [1];
+}
+
+if(dir==0 || dir==$QUERY_EXHAUSTED ) { 
+	if (unit <_> OP <= 6) { //within 3 spaces, see if it's ON TOP of the resource box
+		#include common/include/unit_rp_autocorrect.ais
+	}
+	
+	if (obstacle) { $SAY_MORPH }
+	//can't get to where we need to go, so give up!
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_OBJECTIVE 0;
+} else {
+	PERFORM $ACTION_MOVE dir;
+}
+    
+	

@@ -1,0 +1,8 @@
+#include include/monitorHeader.rsh
+
+int PLAYER_DEAD_MODE 	= $NON_PRODUCING_NON_GATES;
+int END_GAME_MODE 		= $ANYTIME_DEFEAT;
+
+#include include/multiplayerMonitor.rsi
+
+

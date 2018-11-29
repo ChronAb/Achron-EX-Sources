@@ -1,0 +1,522 @@
+#include include/monitorHeader.rsh
+
+//Custom script for the SANDBOX - Clone Challenge level, including dynamic weather (rotating sun)
+
+// save starts at 6 min mark
+#define START_GAME 360
+
+//ticks per second - set in the scenario parameters    
+#define $TPS 18
+
+//Set this value to 0 to disable
+#define ENABLE_DYNAMIC_WEATHER 0
+
+/*    You can change DAY_PERIOD_SECONDS   */
+
+
+//completes the full weather + day/night cycle in this many seconds     
+#define DAY_PERIOD_SECONDS 1800
+//number of seconds between updates to weather
+// shouldn't be less than $DAY_PERIOD_SECONDS/61, otherwise the shadows move in a somewhat jerky fashion (especially if WEATHER_UPDATE_PERIOD_SECONDS is small)
+// and can't be more than 1023 / $TPS
+#define WEATHER_UPDATE_PERIOD_SECONDS 26
+
+#define DAY_TIME_START 0.0
+
+/* ***************************************
+* DO NOT MODIFY ANYTHING BELOW THIS LINE *    
+**************************************** */  
+
+#include include/commonStatsAndPlayerUpdates.rsi
+
+if (current >= 50 && current <= present) {
+
+	PERFORM GET_ENABLED_PLAYERS;
+	int enabled = perf_ret;
+
+	//^^^ TODO: add this to only check at present ?
+	PERFORM GET_CONNECTED_PLAYERS;
+	int connected = perf_ret;
+    
+    
+	    //game is over (objective==2), so display the endgame time to the winning player by
+    //cycling through enabled and still-playing(active) players showing that player the time
+    PERFORM GET_NUMBER_OF_TEAMS;                //objective==2 means end game
+	if ( perf_ret == 1 && unit->Objective==2) { //1 team remains, other player just lost
+        int x=0;
+		//loop through the 15 possible players
+        for (x=0;x<=15;x=x+1) {
+            if ( ( enabled >> x) & 1 == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+                if ( (active >> x) & 1 == 1) { //active players who are currently still alive
+					int class = 0;
+					
+					int playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == x ];
+					
+                    if ( playerHealth > 0 ) {  //show the winner their winning time
+						 int totalSecs = (present - $START_GAME * $TPS) / $TPS;
+						 $CALCULATE_MIN_SEC_HOUR
+						 //direct which player sees the message
+                         player = x;
+                         say_to_var "endgameTime";  //exported skin variable
+                         say "It took you ";
+						 $SAY_CALCULATED_TIME
+
+						 //unlock achievement if beat level in a minute or less
+						 if (totalSecs <= 60) {
+						 
+							$ACHRON_ACHIEVEMENT_20
+						 }
+                    }
+                }
+            }
+        }
+	    PERFORM END_SCENARIO;
+		say_to_var "endgamePause"; say 1;
+	}
+	
+	//check one player every other tick, but randomize it such that they're not all done at once
+	// multiplying by a prime number and that mixes it up nicely and taking the modulus
+	// of the maximum number of players (15) does the trick in this case
+	int p = (((current / 2) * 11) % 15);
+    int LOSER = 0;
+	int class = 0;
+	if ( ( enabled >> p) & 1 == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+		if ( (active >> p) & 1 == 1) { //active players who are currently still alive, ignoring barracks
+			int playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == p ];
+			
+			if ( playerHealth == 0 ) {  //show the loser their losing time
+				int totalSecs = (present - $START_GAME * $TPS) / $TPS;
+				$CALCULATE_MIN_SEC_HOUR 
+				player = p;
+				say_to_var "endgameTime"; 
+				say "It took you ";
+				$SAY_CALCULATED_TIME
+				
+				PERFORM PLAYER_LOST (1 << p); //player p lost
+				LOSER = 1;
+				
+	 			//loop through the possible 15 players and alert them of player p's loss
+				int x=0;
+				for (x=0;x<=15;x=x+1) {
+					if ( ( enabled >> x) & 1 == 1 ) {		
+						//direct which player should be viewing the say message
+						player = x;
+						say "UPDATE:   Player ", p+1, " has been eliminated";
+					}
+				}
+			}
+		}
+        else { //Surrendered or disconnected?
+            PERFORM PLAYER_LOST (1 << p); //player p lost
+            LOSER = 1;			
+        }
+	}
+    
+    if (LOSER==1) { //a player just lost
+        PERFORM GET_NUMBER_OF_TEAMS; //check if this player is on the winning team
+        if ( perf_ret == 1) { //1 team remains, they are the winner
+            PERFORM SET_OBJECTIVE 2; //objective to end game via WIN
+        }
+    }
+    
+}
+
+
+if( (current % 540) == 0) {
+	PERFORM SET_ENV_TRANSITION_TIME 540;
+	
+	//daytime2 is in the range of [0,1], where 0 is daybreak, 0.25 is noon, 0.5 is sunset, and .75 is midnight
+	float daytime2 = (current % (600*$TPS));
+	daytime2 = daytime2 / (600*$TPS);
+
+	
+	//west-east
+	int t = daytime2 * 61 + 1;
+	PERFORM SET_DIRECTION_LIGHT_ANGLE_THETA t;
+
+	//top-down
+	int d = daytime2 * 20 + 2;
+	PERFORM SET_DIRECTION_LIGHT_ANGLE_PHI d;
+	
+}
+
+if(!$ENABLE_DYNAMIC_WEATHER)
+	PERFORM NOTHING;
+
+//#############################################################################
+    
+//weather states
+#define WEATHER_CLEAR 0
+#define WEATHER_LOW_CLOUDS_THIN 1
+#define WEATHER_LOW_CLOUDS_THICK 2
+#define WEATHER_NIMBOSTRATUS 3
+#define WEATHER_MID_CLOUDS 4
+#define WEATHER_CUMULONIMBUS 5
+#define WEATHER_CUMULONIMBUS_EDGE 6
+
+
+//number of ticks per day
+int day_period = $DAY_PERIOD_SECONDS * $TPS;
+//number of ticks between updates
+int update_period = $WEATHER_UPDATE_PERIOD_SECONDS * $TPS;
+
+int day_start_cycle = ($DAY_TIME_START*$DAY_PERIOD_SECONDS) / $WEATHER_UPDATE_PERIOD_SECONDS;
+current = current + day_start_cycle * $TPS;
+
+if( (current % update_period) == 0) {
+
+	//daytime is in the range of [0,1], where 0 is daybreak, 0.25 is noon, 0.5 is sunset, and .75 is midnight
+	float daytime = (current % day_period);
+	daytime = daytime / day_period;
+
+	//transition until next update
+	PERFORM SET_ENV_TRANSITION_TIME update_period;
+
+	//say daytime, " ";
+	
+	//figure out weather transition
+	int weather = unit->AdditionalParameters;
+	PERFORM RAND;
+	float rand = perf_ret / 32767.0;
+	if(weather == $WEATHER_CLEAR) {
+		//say "clear";
+		float mean_period = 0.8 * $DAY_PERIOD_SECONDS;	//mean time: .8 day
+		mean_period = mean_period / $WEATHER_UPDATE_PERIOD_SECONDS;
+		//if switching out
+		if(rand < (1.0/mean_period)) {
+			PERFORM RAND;
+			rand = perf_ret / 32767.0;
+			//0->0.5: warm front, 0.5->1.0, cold front
+			if(rand < .2)
+				weather = $WEATHER_LOW_CLOUDS_THIN;
+			else if(rand < .4)
+				weather = $WEATHER_LOW_CLOUDS_THICK;
+			else if(rand < .5)
+				weather = $WEATHER_NIMBOSTRATUS;
+			else if(rand < .8)
+				weather = $WEATHER_MID_CLOUDS;
+			else if(rand < .85)	//only small chance of big storm hitting immediately
+				weather = $WEATHER_CUMULONIMBUS;
+			else
+				weather = $WEATHER_CUMULONIMBUS_EDGE;
+		}
+	}
+	else if(weather == $WEATHER_LOW_CLOUDS_THIN) {
+		//say "low clouds thin";
+		float mean_period = 0.5 * $DAY_PERIOD_SECONDS;	//mean time: 0.5 day
+		mean_period = mean_period / $WEATHER_UPDATE_PERIOD_SECONDS;
+		//if switching out
+		if(rand < (1.0/mean_period)) {
+			PERFORM RAND;
+			rand = perf_ret / 32767.0;
+			if(rand < .3)
+				weather = $WEATHER_CLEAR;
+			else if(rand < .6)
+				weather = $WEATHER_LOW_CLOUDS_THICK;
+			else if(rand < .9)
+				weather = $WEATHER_NIMBOSTRATUS;
+			else if(rand < .95)
+				weather = $WEATHER_MID_CLOUDS;
+			else if(rand < .97)	//only small chance of big storm hitting immediately
+				weather = $WEATHER_CUMULONIMBUS;
+			else
+				weather = $WEATHER_CUMULONIMBUS_EDGE;
+		}
+	}
+	else if(weather == $WEATHER_LOW_CLOUDS_THICK) {
+		//say "low clouds thick";
+		float mean_period = 0.4 * $DAY_PERIOD_SECONDS;	//mean time: 0.4 day
+		mean_period = mean_period / $WEATHER_UPDATE_PERIOD_SECONDS;
+		//if switching out
+		if(rand < (1.0/mean_period)) {
+			PERFORM RAND;
+			rand = perf_ret / 32767.0;
+			if(rand < .2)
+				weather = $WEATHER_CLEAR;
+			else if(rand < .4)
+				weather = $WEATHER_LOW_CLOUDS_THIN;
+			else if(rand < .9)
+				weather = $WEATHER_NIMBOSTRATUS;
+			else if(rand < .95)
+				weather = $WEATHER_MID_CLOUDS;
+			else if(rand < .97)	//only small chance of big storm hitting immediately
+				weather = $WEATHER_CUMULONIMBUS;
+			else
+				weather = $WEATHER_CUMULONIMBUS_EDGE;
+		}
+	}
+	else if(weather == $WEATHER_NIMBOSTRATUS) {
+		//say "nimbostratus";
+		float mean_period = 0.7 * $DAY_PERIOD_SECONDS;	//mean time: 0.7 day
+		mean_period = mean_period / $WEATHER_UPDATE_PERIOD_SECONDS;
+		//if switching out
+		if(rand < (1.0/mean_period)) {
+			PERFORM RAND;
+			rand = perf_ret / 32767.0;
+			if(rand < .6)
+				weather = $WEATHER_CLEAR;
+			else if(rand < .8)
+				weather = $WEATHER_LOW_CLOUDS_THIN;
+			else if(rand < .9)
+				weather = $WEATHER_LOW_CLOUDS_THICK;
+			else if(rand < .95)
+				weather = $WEATHER_MID_CLOUDS;
+			else if(rand < .98)	//only remote chance of big storm hitting after nimbostratus
+				weather = $WEATHER_CUMULONIMBUS;
+			else
+				weather = $WEATHER_CUMULONIMBUS_EDGE;
+		}
+	}
+	else if(weather == $WEATHER_MID_CLOUDS) {
+		//cumulus
+		//say "mid clouds";
+		float mean_period = 0.5 * $DAY_PERIOD_SECONDS;	//mean time: 0.5 day
+		mean_period = mean_period / $WEATHER_UPDATE_PERIOD_SECONDS;
+		//if switching out
+		if(rand < (1.0/mean_period)) {
+			PERFORM RAND;
+			rand = perf_ret / 32767.0;
+			if(rand < .3)
+				weather = $WEATHER_CLEAR;
+			else if(rand < .4)
+				weather = $WEATHER_LOW_CLOUDS_THIN;
+			else if(rand < .45)
+				weather = $WEATHER_LOW_CLOUDS_THICK;
+			else if(rand < .47)
+				weather = $WEATHER_NIMBOSTRATUS;
+			else if(rand < .8)	//only remote chance of big storm hitting after nimbostratus
+				weather = $WEATHER_CUMULONIMBUS;
+			else
+				weather = $WEATHER_CUMULONIMBUS_EDGE;
+		}
+	}
+	else if(weather == $WEATHER_CUMULONIMBUS) {
+		//say "cumulonimbus";
+		float mean_period = 0.1 * $DAY_PERIOD_SECONDS;	//mean time: 0.1 day
+		mean_period = mean_period / $WEATHER_UPDATE_PERIOD_SECONDS;
+		//if switching out
+		if(rand < (1.0/mean_period)) {
+			PERFORM RAND;
+			rand = perf_ret / 32767.0;
+			if(rand < .5)
+				weather = $WEATHER_CLEAR;
+			else if(rand < .53)
+				weather = $WEATHER_LOW_CLOUDS_THIN;
+			else if(rand < .55)
+				weather = $WEATHER_LOW_CLOUDS_THICK;
+			else if(rand < .56)
+				weather = $WEATHER_NIMBOSTRATUS;
+			else if(rand < .58)	//only remote chance of big storm hitting after nimbostratus
+				weather = $WEATHER_MID_CLOUDS;
+			else
+				weather = $WEATHER_CUMULONIMBUS_EDGE;
+		}
+	}
+	else if(weather == $WEATHER_CUMULONIMBUS_EDGE) {
+		//say "cumulonimbus edge";
+		float mean_period = 0.05 * $DAY_PERIOD_SECONDS;	//mean time: 0.05 day
+		mean_period = mean_period / $WEATHER_UPDATE_PERIOD_SECONDS;
+		//if switching out
+		if(rand < (1.0/mean_period)) {
+			PERFORM RAND;
+			rand = perf_ret / 32767.0;
+			if(rand < .6)
+				weather = $WEATHER_CLEAR;
+			else if(rand < .63)
+				weather = $WEATHER_LOW_CLOUDS_THIN;
+			else if(rand < .65)
+				weather = $WEATHER_LOW_CLOUDS_THICK;
+			else if(rand < .66)
+				weather = $WEATHER_NIMBOSTRATUS;
+			else if(rand < .68)	//only remote chance of big storm hitting after nimbostratus
+				weather = $WEATHER_MID_CLOUDS;
+			else
+				weather = $WEATHER_CUMULONIMBUS;
+		}
+	}
+	else //if starts off uninitialized
+		weather = $WEATHER_CLEAR;
+
+	PERFORM SET_ADDITIONAL_PARAMS weather;
+	
+	
+	//set light direction
+
+	//west-east
+	PERFORM SET_DIRECTION_LIGHT_ANGLE_THETA 0;
+
+	//go the full range of 0 -> 63 over the course of the day, but reset at night
+	int d = (daytime / 0.5) * 61 + 1;
+	if(daytime > .75)
+		d = 1;
+	else if(daytime > .5)
+		d = 62;
+	PERFORM SET_DIRECTION_LIGHT_ANGLE_PHI d;
+	
+
+	//set light intensity
+
+	//if during the day
+	if(daytime > 0 && daytime <= 0.5) {
+	
+		if(weather == $WEATHER_CLEAR) {
+			PERFORM SET_DIRECTION_LIGHT_R  15;
+		        PERFORM SET_DIRECTION_LIGHT_G  15;
+		        PERFORM SET_DIRECTION_LIGHT_B  15;
+			
+			PERFORM SET_AMBIENT_LIGHT_R 10;
+			PERFORM SET_AMBIENT_LIGHT_G 10;
+			PERFORM SET_AMBIENT_LIGHT_B 10;
+		}
+		else if(weather == $WEATHER_LOW_CLOUDS_THIN) {
+			PERFORM SET_DIRECTION_LIGHT_R  12;
+		        PERFORM SET_DIRECTION_LIGHT_G  12;
+		        PERFORM SET_DIRECTION_LIGHT_B  12;
+			
+			PERFORM SET_AMBIENT_LIGHT_R 9;
+			PERFORM SET_AMBIENT_LIGHT_G 9;
+			PERFORM SET_AMBIENT_LIGHT_B 9;
+		}
+		else if(weather == $WEATHER_LOW_CLOUDS_THICK) {
+			PERFORM SET_DIRECTION_LIGHT_R  9;
+		        PERFORM SET_DIRECTION_LIGHT_G  9;
+		        PERFORM SET_DIRECTION_LIGHT_B  9;
+			
+			PERFORM SET_AMBIENT_LIGHT_R 8;
+			PERFORM SET_AMBIENT_LIGHT_G 8;
+			PERFORM SET_AMBIENT_LIGHT_B 8;
+		}
+		else if(weather == $WEATHER_NIMBOSTRATUS) {
+			PERFORM SET_DIRECTION_LIGHT_R  7;
+		        PERFORM SET_DIRECTION_LIGHT_G  7;
+		        PERFORM SET_DIRECTION_LIGHT_B  7;
+			
+			PERFORM SET_AMBIENT_LIGHT_R 8;
+			PERFORM SET_AMBIENT_LIGHT_G 8;
+			PERFORM SET_AMBIENT_LIGHT_B 8;
+		}
+		else if(weather == $WEATHER_MID_CLOUDS) {
+			PERFORM SET_DIRECTION_LIGHT_R  11;
+		        PERFORM SET_DIRECTION_LIGHT_G  11;
+		        PERFORM SET_DIRECTION_LIGHT_B  11;
+			
+			PERFORM SET_AMBIENT_LIGHT_R 10;
+			PERFORM SET_AMBIENT_LIGHT_G 10;
+			PERFORM SET_AMBIENT_LIGHT_B 10;
+		}
+		else if(weather == $WEATHER_CUMULONIMBUS) {
+			PERFORM SET_DIRECTION_LIGHT_R  5;
+		        PERFORM SET_DIRECTION_LIGHT_G  5;
+		        PERFORM SET_DIRECTION_LIGHT_B  5;
+			
+			PERFORM SET_AMBIENT_LIGHT_R 7;
+			PERFORM SET_AMBIENT_LIGHT_G 7;
+			PERFORM SET_AMBIENT_LIGHT_B 7;
+		}
+		else if(weather == $WEATHER_CUMULONIMBUS_EDGE) {
+			PERFORM SET_DIRECTION_LIGHT_R  7;
+		        PERFORM SET_DIRECTION_LIGHT_G  7;
+		        PERFORM SET_DIRECTION_LIGHT_B  7;
+			
+			PERFORM SET_AMBIENT_LIGHT_R 8;
+			PERFORM SET_AMBIENT_LIGHT_G 8;
+			PERFORM SET_AMBIENT_LIGHT_B 8;
+		}
+	}
+	else { //night
+		PERFORM SET_DIRECTION_LIGHT_R  0;
+	        PERFORM SET_DIRECTION_LIGHT_G  0;
+	        PERFORM SET_DIRECTION_LIGHT_B  0;
+		
+		PERFORM SET_AMBIENT_LIGHT_R 2;
+		PERFORM SET_AMBIENT_LIGHT_G 2;
+		PERFORM SET_AMBIENT_LIGHT_B 2;
+	}
+	
+	
+	//set precipitation
+	if(weather == $WEATHER_NIMBOSTRATUS) {
+		PERFORM SET_NUM_PRECIPITATION_PARTICLES 80;
+	}
+	else if(weather == $WEATHER_CUMULONIMBUS) {
+		PERFORM SET_NUM_PRECIPITATION_PARTICLES 150;
+	}
+	else if(weather == $WEATHER_CUMULONIMBUS_EDGE) {
+		PERFORM SET_NUM_PRECIPITATION_PARTICLES 80;
+	}
+	else
+		PERFORM SET_NUM_PRECIPITATION_PARTICLES 0;
+
+}
+
+
+PERFORM NOTHING;
+ 
+ 
+/* 
+    Weather + day/night conditions for one full DAY-NIGHT cycle
+    
+    The cycle values go from -20 to 0 to 20; it's night time between 2..0..and -2, and high noon between -18..20..and 18
+    The sunset, a reddish hue, is in the evenings between values 10 and 4, and the morning fog is between -4 and -9
+*/
+
+int cycle = $DAY_PERIOD_SECONDS * $TPS;  
+int divider = cycle / 40;
+//if (current == present) {    
+    int ts = current % cycle;
+    int rval = cycle / 2 - ts;  //real value
+    int val = abs (rval);       //absolute value
+    //^^^if (present==current) { print val, "\n"; }
+    if ((val % divider) == 0 ) { //only run this once a second
+        val = val / divider; 
+        rval = rval / divider;
+        //^^^say "setting to "; say rval;
+
+        if (val <= 2 ) val = 2;      //cap at 2 for -2,-1,0,1,2 - don't get too dark
+        if (val >= 18) val = 18;     //cap at 18 for 18,19,20,-19,-18 - don't get too light/overexposed
+        
+        int red = val;               //red sunset for values 10 -> 4
+        if (rval <= 10 && rval >= 4) { 
+            red = 6 * abs(3 - abs (7 - val)) + val;  //10, 15, 20, 25    `18, 11, 4
+        }  
+
+        PERFORM SET_ENV_TRANSITION_TIME $TPS * 3;
+
+        int fog = unit->FogIntensity;
+        if (rval >= -9 && rval <= -4 && fog != 0) {  //morning fog values -4 -> -9
+            int f = 3 - abs(6 - val);
+            if (rval != -4) {
+                int oldf = 3 - abs(7 - val);
+                fog = fog - oldf * 3;                
+            }
+            //^^^say " old fog: ", fog , " new fog: ", fog + f * 3;
+            PERFORM SET_FOG_INTENSITY (fog + f * 3);  // if default fog is 8, it goes 11, 14, 17, 14, 11, 8
+        }
+
+        PERFORM SET_AMBIENT_LIGHT_R val/2;  //ambient values are halved so as not to get too light/overexposed
+        PERFORM SET_AMBIENT_LIGHT_G val/2;
+        PERFORM SET_AMBIENT_LIGHT_B val/2;
+
+	if(val < 10)
+	{
+	        PERFORM SET_DIRECTION_LIGHT_R  0;
+	        PERFORM SET_DIRECTION_LIGHT_G  0;
+	        PERFORM SET_DIRECTION_LIGHT_B  0;
+	}
+	else {
+	        PERFORM SET_DIRECTION_LIGHT_R  red;
+	        PERFORM SET_DIRECTION_LIGHT_G  val;
+	        PERFORM SET_DIRECTION_LIGHT_B  val;
+        }
+	
+        int eastwest = 0;
+	if(rval <= -10)
+		eastwest = -3.1 * (rval+10);
+	if(rval >= 10)
+		eastwest = 31 + 3.2 * (rval-10);
+        int northsouth = 31 + rval/4;
+        PERFORM SET_DIRECTION_LIGHT_ANGLE_THETA eastwest;
+        PERFORM SET_DIRECTION_LIGHT_ANGLE_PHI northsouth;
+    
+    }
+//}

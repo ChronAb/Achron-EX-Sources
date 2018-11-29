@@ -1,0 +1,49 @@
+// --- To be used in conjuction with obsSkipper.rsi
+//     Uses LastTick to insert a discontinuity record to the discontinuity list
+//      USES:
+//          //$ListStart      used to mark the start of the usable list
+//          //$MaxFields      used to mark the end of the usable list
+//      INPUT:
+//          LastTick =      the time to be recorded as a discontinuity
+//          current =       
+//          FIndex          has to be initialised, primarily as a result of obsSkipperCheck.rsi
+// 
+// This code has been created by IphStich, who reserves all copyright.
+
+// --- FORMAT:
+//      [Departure / Arrival]
+
+
+
+// - 0) initialise variables
+{int FIndex=$MaxFields+1; player=0;int NewTemp3=LastTick;int NewTemp=current/* + 24-(current%24)*/;
+// - 1) find the appripriate index to insert
+while (1) {
+    PERFORM GET_ACHRONAL_FIELD FIndex;
+    if (perf_ret < NewTemp) {break;} else {FIndex=FIndex+2;} // if: found index: end: else: continue
+    if (perf_ret == NewTemp) {PERFORM GET_ACHRONAL_FIELD (FIndex+1); if (perf_ret==NewTemp3){FIndex=-1;break;}} // Check for duplicates
+    if (FIndex>$MaxCP) {FIndex=-1;break;} // Check for end-of-list
+}
+
+// player=0;
+//target=FIndex;PERFORM SET_ACHRONAL_FIELD LastTick;
+//$ListTest
+//say " : ",FIndex-$ListStart," : ";
+                                                                        //player=0; say "discontinuity report: ", FIndex, " = ", LastTick;
+// - 2) insert the new record and shift the rest of the list
+while (FIndex>0) {
+    int NewTemp2=NewTemp;
+    int NewTemp4=NewTemp3;
+    PERFORM GET_ACHRONAL_FIELD FIndex;
+    NewTemp=perf_ret;target=FIndex;
+    PERFORM SET_ACHRONAL_FIELD NewTemp2;
+    PERFORM GET_ACHRONAL_FIELD FIndex+1;
+    NewTemp3=perf_ret;target=FIndex+1;
+    PERFORM SET_ACHRONAL_FIELD NewTemp4;
+    FIndex=FIndex+2;
+    //say " :",NewTemp2;
+    if (NewTemp==0 || FIndex>$MaxCP) {break;}
+}
+//$ListTest2
+}
+//player=0;say "new: ",LastTick," ",present;

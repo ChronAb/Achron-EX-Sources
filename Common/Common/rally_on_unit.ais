@@ -1,0 +1,77 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+//logic for setting a waypoing for new units to congregate on a unit instead of on a location
+
+int op = unit->ObjectiveParameters;
+op[$Zpos] = 31;
+
+
+//$SAY_CONGREGATE
+
+int uclass = unit->Class;
+if (!$IS_GREKIM) { //not a grekim factory
+	object rally = op[0,16];
+	if (rally.Rank>=$BUILDINGS_RANK) { //it's a unit
+		int temp1 = rally->Class;
+		//if pointing to a grekim unit set the position of that unit as rally point
+		if (temp1 > 1000 && temp1 < 2000) { 
+			op = rally->Position;
+			op[$Zpos] = 0;
+		}
+	} else {
+		//pointing to a building so set the position of that unit as rally point
+		op = rally->Position;
+	}
+}
+
+
+PERFORM SET_PARAM op; //repack the OP for unit_or_position
+
+
+//one of the factory+upgrade buildings
+if (uclass==$ARMORY_CLASS || uclass==$ANNEX_CLASS) {
+	int ua = unit->Action;
+	
+	//this building is in the middle of an upgrade, return to the upgrade objective
+	if (uclass==$ANNEX_CLASS && ua==$ACTION_RESEARCH_U6) { PERFORM SET_OBJECTIVE $OBJ_BLDG_UPGRADE6; PERFORM NOTHING;}
+	if (ua>=$ACTION_RESEARCH_U1 && ua<=$ACTION_RESEARCH_U5) {
+		if (ua==$ACTION_RESEARCH_U1) { PERFORM SET_OBJECTIVE $OBJ_BLDG_UPGRADE1; }
+		else if (ua==$ACTION_RESEARCH_U2) { PERFORM SET_OBJECTIVE $OBJ_BLDG_UPGRADE2; }
+		else if (ua==$ACTION_RESEARCH_U3) { PERFORM SET_OBJECTIVE $OBJ_BLDG_UPGRADE3; }
+		else if (ua==$ACTION_RESEARCH_U4) { PERFORM SET_OBJECTIVE $OBJ_BLDG_UPGRADE4; }
+		else if (ua==$ACTION_RESEARCH_U5) { PERFORM SET_OBJECTIVE $OBJ_BLDG_UPGRADE5; }
+		PERFORM NOTHING;
+	}
+}
+
+if ($IS_GREKIM) { //grekim
+	target = op[0,16];
+	//only arcticuses are stored as units for grekim
+	if (target->Class!=$ARCTICUS_CLASS && target->Class!=$ARCTICUS_MOVE_CLASS) {
+		op = target->Position;
+		PERFORM SET_PARAM op; //repack the OP for the position of the target
+	}
+	else {
+		PERFORM $ACTION_CHANGE_COMMANDER target;
+	}
+	/*
+	int urank = unit.Rank;
+	while (1) { //set congretaion point for all other progen units in the area
+		target = QUERY UNIT [unit] MIN [query<_>unit] WHERE [ query->IsAlly==1 && urank==query.Rank && query->Class!=uclass &&  query->ObjectiveParameters!=op ];										 
+		if (target->IsAlive==1) {
+			PERFORM SET_OTHER_OBJECTIVE_PARAMS op;
+			PERFORM SET_OTHER_OBJECTIVE $OBJ_BLDG_CONGREGATE;
+		} else { break; }
+	}*/
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+} 
+
+//depot's deploy units while idle (in parallel)
+if (uclass!=$DEPOT_CLASS) { 
+	PERFORM SET_OBJECTIVE $OBJ_BLDG_DEPLOY;
+} else {
+	PERFORM SET_OBJECTIVE 0;
+}

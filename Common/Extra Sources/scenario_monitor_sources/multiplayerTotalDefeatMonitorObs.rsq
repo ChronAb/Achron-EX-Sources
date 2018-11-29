@@ -1,0 +1,6 @@
+#include include/monitorHeader.rsh
+
+int PLAYER_DEAD_MODE 	= $NON_PRODUCING;
+int END_GAME_MODE		= $TOTAL_DEFEAT;
+
+#include include/multiplayerObsMonitor.rsi

@@ -1,0 +1,13 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+int ENERGY =  $GREKIM1_ENERGY;
+if (uclass >= $OCTOPOD_FACTORY_CLASS) ENERGY =  $GREKIM2_ENERGY;
+
+int PROGEN_CLASS = $PHAROPOD_CLASS;
+#define LC $PHAROPOD_LC
+#define QP $PHAROPOD_QP
+
+#include common/include/grekim_progen.ais

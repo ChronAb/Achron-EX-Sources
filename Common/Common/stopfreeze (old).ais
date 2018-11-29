@@ -1,0 +1,47 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+
+if (!player->Advancements[$GREKIM_ADV_EXTRAS]) { 
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+
+int  energy = 20;
+int  health = 25;
+
+
+if (unit->Energy < energy || unit->HP <= health) {
+    PERFORM SET_OBJECTIVE 0;
+    $SAY_ENERGY
+    PERFORM $ACTION_ERROR1;
+    PERFORM NOTHING;
+}
+
+//if freeze is charged, cycle through and freeze all targets, then end script
+if(unit->Status[$CAP_BIT_3]){
+	int enemy = 0;
+	//only look for non stopped enemies that are <=12 spaces and <=30 spaces away
+	target = QUERY UNIT [unit] MIN [unit<=>target] WHERE [!(query->IsAlly) && !(query->IsStop) && !(query->IsStasis) && query<_>unit<=256 && query<^>unit <= 900 && query.Rank!=$ACHRON_RANK];
+	if (target->IsAlive==1) { enemy = 1; }
+	while (target->IsAlive==1) {
+			enemy = 1;
+			PERFORM $ACTION_STOP target;
+
+			target = QUERY UNIT [unit] MIN [unit<=>target] WHERE [!(query->IsAlly) && !(query->IsStop) && !(query->IsStasis) && query<_>unit<=256 && query<^>unit <= 900 && query.Rank!=$ACHRON_RANK];
+			//$print "new: ", target, " d: ", target<_>unit, " limit: ", dist,"\n";
+	}
+
+	if (!enemy) {
+			$SAY_NO_ENEMIES
+	}
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_PARAM 0;
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+//freeze is not charged yet, so charge it
+PERFORM $ACTION_PREP_FREEZE;

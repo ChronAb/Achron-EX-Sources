@@ -1,0 +1,241 @@
+#include include/monitorHeader.rsh
+
+// save starts at 5:45 
+#define START_GAME 345
+#define PLAYER 0
+
+/* ***************************************
+* DO NOT MODIFY ANYTHING BELOW THIS LINE *    
+**************************************** */  
+
+#include include/commonStatsAndPlayerUpdates.rsi
+
+
+if (current >= 50 && current <= present) {
+
+	PERFORM GET_ENABLED_PLAYERS;
+	int enabled = perf_ret;
+
+	//^^^ TODO: add this to only check at present ?
+	PERFORM GET_CONNECTED_PLAYERS;
+	int connected = perf_ret;
+    
+    
+	    //game is over (objective==2), so display the endgame time to the winning player by
+    //cycling through enabled and still-playing(active) players showing that player the time
+    PERFORM GET_NUMBER_OF_TEAMS;                //objective==2 means end game
+	if ( perf_ret == 1 && unit->Objective==2) { //1 team remains, other player just lost
+        int x=0;
+		//loop through the 15 possible players
+        for (x=0;x<=15;x=x+1) {
+            if ( ( enabled >> x) & 1 == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+                if ( (active >> x) & 1 == 1) { //active players who are currently still alive, ignoring barracks, mines, and comm centers
+					int class = 0;
+                    int playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == x && !(query->IsStop) && (class=query->Class)!=120 
+								&& class!=105 && class!=109 //ignore human comm center
+								&& class!=145 && class!=146  //ignore human RPs
+								&& class!=125 && class!=130 && class!=135 //ignore human Gates
+								&& class!=137
+								]; 					
+                    if ( playerHealth > 0 ) {  //show the winner their winning time
+						 int totalSecs = (present - $START_GAME * $TPS) / $TPS;
+						 //int totalSecs = present / $TPS;
+                         int min = 0;
+                         int sec = 0;
+                         int hour = 0;
+                         if (totalSecs < 3600) { //if < 1 hour, show only mm:ss
+                            min = totalSecs / 60;
+                            sec = totalSecs % 60;
+                         } else {                // > 1hours, show hh:mm:ss
+                            hour = totalSecs / 3600;
+                            totalSecs = totalSecs % 3600;
+                            min = totalSecs / 60;
+                            sec = totalSecs % 60;
+                         }   
+						 //direct which player sees the message
+                         player = x;
+						 
+                         say_to_var "endgameTime";  //exported skin variable
+                         say "It took you ";
+                         if (hour>0) { say "0",hour,":"; }
+                         if (min<10) { say "0"; }
+                         say min, ":";
+                         if (sec<10) { say "0"; }
+                         say sec; 
+                         say_to_var "";
+                    }
+                }
+            }
+        }
+	    PERFORM END_SCENARIO;
+		PERFORM EXIT_ENGINE;
+	}
+	
+	//check one player every other tick, but randomize it such that they're not all done at once
+	// multiplying by a prime number and that mixes it up nicely and taking the modulus
+	// of the maximum number of players (15) does the trick in this case
+	int p = (((current / 2) * 11) % 15);
+    int LOSER = 0;
+	int class = 0;
+	if ( ( enabled >> p) & 1 == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+		if ( (active >> p) & 1 == 1) { //active players who are currently still alive, ignoring barracks
+			int class = 0;
+			int playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == p && !(query->IsStop) && (class = query->Class)!=120
+								&& class!=105 && class!=109 //ignore human comm center
+								&& class!=145 && class!=146  //ignore human RPs
+								&& class!=125 && class!=130 && class!=135 //ignore human Gates
+								&& class!=137
+								]; 
+								
+			if ( playerHealth == 0 ) {  //show the loser their losing time
+				int totalSecs = (present - 360 * $TPS) / $TPS;
+				//int totalSecs = present / $TPS;
+				int min = 0;
+				int sec = 0;
+				int hour = 0;
+				if (totalSecs < 3600) { //if < 1 hour, show only mm:ss
+					min = totalSecs / 60;
+					sec = totalSecs % 60;
+				} else {                // > 1hours, show hh:mm:ss
+					hour = totalSecs / 3600;
+					totalSecs = totalSecs % 3600;
+					min = totalSecs / 60;
+					sec = totalSecs % 60;
+				}   
+
+				player = p;
+				say_to_var "endgameTime"; 
+				say "It took you ";
+				if (hour>0) { say "0",hour,":"; }
+				if (min<10) { say "0"; }
+				say min, ":";
+				if (sec<10) { say "0"; }
+				say sec; 
+				say_to_var "";
+				PERFORM PLAYER_LOST (1 << p); //player p lost
+				LOSER = 1;
+				player = 0;
+				say_to_var "tutObj1";
+				say 1;
+				say_to_var "";
+				say_to_var "Obj1Text";
+				say "x Defeat the enemy base South East";
+				say_to_var "";
+				
+	 			//loop through the possible 15 players and alert them of player p's loss
+				int x=0;
+				for (x=0;x<=15;x=x+1) {
+					if ( ( enabled >> x) & 1 == 1 ) {		
+						//direct which player should be viewing the say message
+						player = x;
+						say "UPDATE:   Player ", p+1, " has been eliminated";
+					}
+				}
+			}
+		}
+        else { //Surrendered or disconnected?
+            PERFORM PLAYER_LOST (1 << p); //player p lost
+            LOSER = 1;			
+			player = 0;
+			say_to_var "tutObj1";
+			say 1;
+			say_to_var "";
+			say_to_var "Obj1Text";
+			say "x Defeat the enemy base due South East";
+			say_to_var "";
+        }
+	}
+    
+    if (LOSER==1) { //a player just lost
+        PERFORM GET_NUMBER_OF_TEAMS; //check if this player is on the winning team
+        if ( perf_ret == 1) { //1 team remains, they are the winner
+            PERFORM SET_OBJECTIVE 2; //objective to end game via WIN
+        }
+    }
+    
+	if (current < present - 210 * $TPS) { // in the unusable past
+		int playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == 0 && query.Rank>=100]; 
+		if (playerHealth==0) {
+			PERFORM PLAYER_LOST 1; 
+			PERFORM END_SCENARIO;
+			PERFORM EXIT_ENGINE;
+			PERFORM NOTHING;
+		}
+	}
+	 PERFORM GET_NUMBER_OF_TEAMS; //check that both players are still active
+	if (present==current && perf_ret != 1) {
+		player = 0;
+		say_to_var "Obj1Text";
+		say "- Defeat the enemy base due South East";
+		say_to_var "";
+	}
+	
+	if (present==current) {
+		if (present == 348 *$TPS) {
+			say "The greyed-out area of the timeline is the 'Unplayable Past'";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+		if (present == 351 *$TPS) {
+			say "You can watch the Unplayable Past, but not change it";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+
+	}
+	
+}
+
+
+//move the air group at the 2 minute mark to 322x188
+if (current==120 * $TPS) {
+	target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==205 && query->Owner==1 && query->XPosition>380 && query->YPosition<435 && query->Commander==0]; //frigate
+	int _x = 322; int _y = 188; int _z = 3; int _obj = $OBJECTIVE_MOVE_DISPATCH; $DISPATCH_OBJECTIVE
+}
+
+
+//move the air group at the 4 minute mark to 181x88
+if (current==240 * $TPS) {
+	target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==205 && query->Owner==1 && query->XPosition>320 && query->Commander==0 && query->YPosition < 210]; //frigate
+	int _x = 181; int _y = 88; int _z = 3; int _obj = $OBJECTIVE_MOVE_DISPATCH; $DISPATCH_OBJECTIVE
+}
+
+//after the 5:45 mark, start attack with the air group to 105x185 at 6:18
+if (present>=345 * $TPS && current==378 * $TPS) {
+	target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==205 && query->Owner==1 && query->XPosition> 170 && query->YPosition<100 && query->Commander==0]; //frigate
+	int _x = 105; int _y = 185; int _z = 0;int _obj = $OBJECTIVE_ATTACKPOS_DISPATCH; $DISPATCH_OBJECTIVE
+}
+
+
+//after the 5:45 mark, teleport ground group to 56x161 at 5:00
+if (present>=345 * $TPS && current==300 * $TPS) {
+	target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==25 && query->Owner==1 && query->XPosition<335 && query->YPosition>450]; //heavy tank
+	int _x = 56; int _y = 161; int _z = 0; int _obj = $OBJECTIVE_TELEPORT; $DISPATCH_OBJECTIVE
+}
+
+//after the 5:45 mark, start attack with the ground group to 153x164 at 5:07
+if (present>=345 * $TPS && current==307 * $TPS) {
+	target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==25 && query->Owner==1 && query->YPosition< 200]; //heavy tank
+	int _x = 153; int _y = 164; int _z = 0; int _obj = $OBJECTIVE_ATTACKPOS_DISPATCH; $DISPATCH_OBJECTIVE
+}
+
+//444x210
+_uclass = $UNITCREATOR_CLASS; _uowner = 1; $INITIALIZE_UNIT_CREATOR_AND_UI
+if (current==100) { _create_action = $UC_CREATE_WAYPOINT; $UNIT_CREATOR_CREATE_UNIT }
+if (current==360$seconds) {
+	_dest[$Xpos] = 356; _dest[$Ypos] = 440; $PLACE_WAYPOINT //place waypoint
+}
+
+//hide waypoint
+if (current%18==0 && current > 360 $seconds) {
+	target = $GET_UNIT [ query->Owner==0 && query->YPosition > 405 && query.Rank>=$RP_RANK ] ;
+	if (target->IsAlive==1) {
+		_uc_target = $GET_UNIT [ query->Class==$WAYPOINT_CLASS && query->Carrier<=0 ];  
+		if(_uc_target>0) {
+			$UNIT_CREATOR_TAKE_UNIT
+		}
+	}
+}
+

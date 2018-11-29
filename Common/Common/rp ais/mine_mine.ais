@@ -1,0 +1,97 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+int isClosed = $IS_RP_CLOSED;
+
+//Harvest resources if already processing a core
+if ( !isClosed && unit->Energy>0 ) {
+	PERFORM $ACTION_RP_PROCESS;
+	PERFORM NOTHING;
+}
+
+object crate = unit->Commander;
+if (crate->IsAlive == 1) {
+    if ( (crate.Rank!=$RESOURCE_RANK && crate.Rank!=$RESOURCE_CELL_RANK) || crate->Carrier>0 ) { 
+        PERFORM $ACTION_CLEAR_COMMANDER 0;
+				PERFORM SET_OBJECTIVE 0;    
+				PERFORM NOTHING;
+    }
+}
+else {
+    PERFORM SET_OBJECTIVE 0;    
+    PERFORM NOTHING;
+}
+
+
+
+PERFORM GET_CUR_TIME;  //request assistance if i am getting attacked
+int curtime = perf_ret;
+//buildings have a forced function to clear LAD when timestamp % 87
+//so this guarantees that there'll be time for others to respond
+if (( curtime % 87) > 4 && unit->LastAttackedVDirection) { 
+	int flags = $FLAGS;
+    if (!flags[$LOOKUP_BIT]) {
+        PERFORM SET_PLAYER_CUSTOM_FIELD_2 ($CUSTOMFIELD_TSS | (unit << 16 ));    
+		flags[$LOOKUP_UNIT] = $ANY_UNIT;
+		flags[$LOOKUP_BIT] = 1;
+        PERFORM SET_PLAYER_CUSTOM_FIELD_3 flags;
+    }
+}
+
+
+target = crate;
+int c = target->Class;
+if (c==$LC_CLASS||c==$QP_CLASS||c==$QP_LARGE_CLASS||c==$Q_CELL_CLASS) { 
+
+	int boundary = $RP_PROCESS_DISTANCE;
+	if (c==$QP_LARGE_CLASS) { boundary = boundary + 4; } //add 2 to allow for mining LARGE QP crates 
+
+    if ((target <_> unit) > boundary) { 
+		PERFORM SET_PARAM target->Position;
+		if (unit->Class>=$VECGIR_RP_CLASS) {  //vecgir rp teleports (same obj as move)
+			if (unit->Energy >= 25) {
+				int ap = unit->AdditionalParameters;
+				ap[$RP_PATCH_BIT] = 1; //set the patchbit, that way it'll teleport silently
+				PERFORM SET_ADDITIONAL_PARAMS ap;					
+				PERFORM SET_OBJECTIVE $OBJ_BLDG_MOVE;
+			} 
+		}
+        else {
+			PERFORM SET_OBJECTIVE $OBJ_BLDG_STARTMOVE;
+			PERFORM SET_ADDITIONAL_PARAMS 0;
+		}
+
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM NOTHING;
+    }
+	
+	//Abandon current crate if empty and enqueued to move on
+	// or if the crate is already saturated
+	if ( target->Energy==0 || target->Armour==target.MaxArmour) {
+		PERFORM $ACTION_CLEAR_COMMANDER 0;
+		PERFORM SET_OBJECTIVE 0;    
+		PERFORM NOTHING;
+	}
+	
+	if (unit->Status[$CAP_BIT_1]) {  //just teleported capbit is set (capbit 1)       
+		PERFORM $ACTION_TELEPORTED; //clear the teleported capbit1
+	}
+	
+	//MINING
+	//Containers let the RP grab a core to process internally
+	if (c==$LC_CLASS||c==$QP_CLASS||c==$QP_LARGE_CLASS) {
+		PERFORM $ACTION_MINE target;  
+    PERFORM NOTHING;
+	}
+	//Cells must be farmed continuously 
+	if (c==$Q_CELL_CLASS) PERFORM $ACTION_MINE_QP target;
+	PERFORM NOTHING;  //forced action will mine it
+}
+else {  //no target? go to idle...
+    PERFORM SET_OBJECTIVE 0;    
+    PERFORM NOTHING;
+}
+
+

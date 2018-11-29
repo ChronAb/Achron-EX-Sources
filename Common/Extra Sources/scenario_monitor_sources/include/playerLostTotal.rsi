@@ -1,0 +1,67 @@
+
+		PERFORM GET_NUM_TIME_WAVES;
+		int numWaves = perf_ret;
+						
+		PERFORM GET_TIME_WINDOW_START;
+		int windowStart = perf_ret;
+		
+		PERFORM GET_TIME_WINDOW_DURATION;
+		int windowDuration = perf_ret;
+		
+		//space between timewaves; #we could either loop through all waves and take the min distance , or do this:
+		int spacing = windowDuration / numWaves;
+		
+		int dist_to_edge = current - windowStart;
+	
+		//this loss case can only happen within one timewave separation distance of the edge of the widow
+		//and AFTER present has been locked into its resting spot
+		if (windowStart > 1 && dist_to_edge < spacing) { // within a timewave space to the edge
+		
+			//Total temporal Loss is only run by pre-set timewaves, because though a player could be waiting
+			//at an earlier spot on the timeline closer to the edge of the window, player timewaves
+			//are Not reliable because they can jump away at any given point
+			int checkedByTimewave = 0;
+			int j = 0;
+			for (j=0;j<numWaves;j=j+1) {
+				//end the game for loser only if this check is being run by one of the timewaves
+				PERFORM GET_TIME_WAVE_TIME j;
+				if (perf_ret == current) { checkedByTimewave = 1; } 
+			}
+				
+			//this loss is valid because it' being run by a preset timewave and not a player's timewave
+			if (checkedByTimewave) {
+					
+				PERFORM GET_PRESENT_TIME_WAVE_TIME_RATE;
+				float rate = perf_ret_float;
+				int overtake = spacing / (rate + 1.0); //time to collision with next timewave
+				if (dist_to_edge - overtake <= 0) { // collision will fall off and not be propagated
+					//player should lose now since this this is the LOSS carrying wave
+					int totalSecs = current / $TPS;
+					$CALCULATE_MIN_SEC_HOUR
+
+					player = p;
+					say_to_var "endgameTime"; 
+					say "AT: ";
+					$SAY_CALCULATED_TIME
+					PERFORM PLAYER_LOST (1 << p); //player p lost
+					LOSER = 1;
+					
+					af2 = af2 | ( 1 << (p + 15));
+					target = 1; PERFORM SET_ACHRONAL_FIELD  af2; //update the af2 bit for the approriate lost player
+					
+					af1[0,28] = current; //store the final lost/won time 
+					
+					//loop through the possible 15 players and alert them of player p's loss
+					int x=0;
+					for (x=0;x<=15;x=x+1) {
+						if ( ( enabled >> x) & 1 == 1 ) {		
+							//direct which player should be viewing the say message
+							player = x;
+							say "UPDATE:   Player ", p+1, " has been eliminated";
+						}
+					}
+				}
+				
+			}
+		}
+	

@@ -1,0 +1,137 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+
+PERFORM RAND;
+if (perf_ret > 8192) { //relax  3/4 of the time, go easy on the cpu
+  PERFORM NOTHING; 
+}
+int qmaxHP = 0; //cache query.MaxHP
+//find weakest enemy unit...
+PERFORM GET_MAX_ACTION_RANGE_RADIUS $ACTION_ATTACK;
+query_vis_distance = perf_ret;
+target = QUERY UNIT [unit] MIN [ query->HP / log(qmaxHP) ] 
+                       WHERE [!(query->IsAlly) && query.Rank>=$TURRET_RANK && (qmaxHP=query.MaxHP)>0  ];  //don't look for buildings except turrets (rank>=90)
+if (target->IsAlive!=1) {                   
+    //look for any building
+    target = QUERY UNIT [unit] MIN [  query->HP / log(qmaxHP) ] WHERE [!(query->IsAlly) && (qmaxHP=query.MaxHP)]; 
+    if (target->IsAlive!=1) {   
+        PERFORM NOTHING;
+    }
+
+}   
+
+object tss=0; object lookup=0; object u=0;
+
+
+if ( target->IsStasis==1) {
+	if ((target<_>unit <= 529 && target<^>unit <= 2916 ) && unit->Energy == 100) { // && unit.Rank==90) {
+		PERFORM SET_PARAM target;
+		PERFORM SET_OBJECTIVE $OBJ_BLDG_BREAKTSS; // breaktss objective
+		PERFORM NOTHING;
+	}
+
+	if ($SMART_IDLE) {
+		int customField2 = player->CustomField2;
+		tss = customField2[0,16]; //$CUSTOMFIELD_TSS
+		lookup = customField2[16,16]; //$CUSTOMFIELD_LOOKUP
+		int flags = 0;
+		 /* request to breaktss this unit via the 'tss' field */  
+		 #include common/include/unit_tss_request.ais
+	}
+
+	//find weakest enemy non-TSS unit...
+	target = QUERY UNIT [unit] MIN [  query->HP / log(qmaxHP) ] 
+						   WHERE [!(query->IsAlly) && query.Rank>=$TURRET_RANK && (query->IsStasis!=1) && (qmaxHP=query.MaxHP)>0];  //don't look for buildings except turrets (rank>=90)
+	if (target < 1) {                   
+		//look for any building
+		target = QUERY UNIT [unit] MIN [  query->HP / log(qmaxHP) ] WHERE [!(query->IsAlly) && (query->IsStasis!=1) && (qmaxHP=query.MaxHP)>0]; 
+		if (target < 1) {   
+			PERFORM NOTHING;
+		}        
+	}
+	
+	PERFORM GET_CLOSEST_TARGET_POSITION_WITHIN_RANGE $ACTION_ATTACK;
+	int position = perf_ret;
+	if (position!=$INVALID_POSITION) { 
+		object enemy = target;
+		target = position;
+		PERFORM IS_POSITION_WITHIN_ACTION_ANGLE $ACTION_ATTACK;
+		if (perf_ret>0) { //target is attackable in this direction
+			int targetOnGround = 1;
+			target = enemy;
+			int uclass = unit->Class;
+			
+			//dome beam the target if it has more than 120 hp and unit has more than 50 (enough time to fire)
+			if (uclass==$DOME_BEAM_CLASS && unit->Ammo==100 && target->HP >= 120 && unit->HP >= 50) {		
+				PERFORM SET_PARAM target;
+				PERFORM SET_OBJECTIVE $OBJ_BLDG_LAUNCH;
+				PERFORM NOTHING;
+			}
+						
+			targetOnGround = target->IsTerrainGround;
+
+			
+			target_is_position = 1;
+			if (uclass!=$DOME_CLASS && uclass != $DOME_BEAM_CLASS) {			
+				if (targetOnGround) { PERFORM $ACTION_ATTACK position; }
+				else { PERFORM $ACTION_ATTACK_W1 position; }		
+			}
+			else {
+				if (targetOnGround) { PERFORM $ACTION_ATTACK_POS position; }
+				else { PERFORM $ACTION_ATTACK position; }		
+			}
+			PERFORM NOTHING;
+		}
+		else {
+			PERFORM $ACTION_ROTATE enemy->BestAttackDirection;
+			PERFORM NOTHING;
+		}
+	}
+		
+} 	
+else {
+
+	PERFORM GET_CLOSEST_TARGET_POSITION_WITHIN_RANGE $ACTION_ATTACK;
+	int position = perf_ret;
+	if (position!=$INVALID_POSITION) { 
+		object enemy = target;
+		target = position;
+		PERFORM IS_POSITION_WITHIN_ACTION_ANGLE $ACTION_ATTACK;
+		if (perf_ret>0) { //target is attackable in this direction
+			int targetOnGround = 1;
+			target = enemy;
+			int uclass = unit->Class;
+			
+			//dome beam the target if it has more than 220 hp and unit has more than 50 (enough time to fire)
+			if (uclass==$DOME_BEAM_CLASS && unit->Ammo==100 && target->HP >= 120 && unit->HP >= 50) {		
+				PERFORM SET_PARAM target;
+				PERFORM SET_OBJECTIVE $OBJ_BLDG_LAUNCH;
+				PERFORM NOTHING;
+			}
+
+			targetOnGround = target->IsTerrainGround;
+			
+			target_is_position = 1;
+			target = position;
+			if (uclass!=$DOME_CLASS && uclass != $DOME_BEAM_CLASS) {			
+				if (targetOnGround) { PERFORM $ACTION_ATTACK position; }
+				else { PERFORM $ACTION_ATTACK_W1 position; }		
+			}
+			else {
+				if (targetOnGround) { PERFORM $ACTION_ATTACK_POS position; }
+				else { PERFORM $ACTION_ATTACK position; }		
+			}
+			PERFORM NOTHING;
+		}
+		else {
+			PERFORM $ACTION_ROTATE enemy->BestAttackDirection;
+			PERFORM NOTHING;
+		}
+	}
+}
+
+
+
+PERFORM NOTHING;

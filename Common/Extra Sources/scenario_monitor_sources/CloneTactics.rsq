@@ -1,0 +1,192 @@
+#include include/monitorHeader.rsh
+
+//scenario monitor for the MULTI(2) - Clone Tactics level
+
+int PLAYER_DEAD_MODE 	= $NON_PRODUCING;
+//int END_GAME_MODE		= $TOTAL_DEFEAT; //it's custom for this level
+
+#include include/commonStatsAndPlayerUpdates.rsi
+
+
+PERFORM GET_ACHRONAL_FIELD 0;
+int af1 = perf_ret; //last 2 bits are used for end game scenario. 1 = notify players of end game time,  2 = game ended
+PERFORM GET_ACHRONAL_FIELD 1; 
+int af2 = perf_ret;  //bit 30 is used to notify of disconnected players
+
+if (current==present && current >= 1 && !af2[30]) {
+	PERFORM GET_CONNECTED_PLAYERS;
+	int connected = perf_ret;
+	if (connected != 3) { //1 of the 2 players disconnected
+		if (connected == 1) {
+			player = 0;
+			say "UPDATE:   Player 2 has disconnected";
+		} else {
+			player = 1;
+			say "UPDATE:   Player 1 has disconnected";
+		}
+		af2[30]=1;
+		target = 1; PERFORM SET_ACHRONAL_FIELD  af2;
+		PERFORM END_SCENARIO; 
+		//do NOT perform EXIT_ENGINE, so players can continue chatting
+	}
+}
+
+
+if (current >= 1 && current <= present && af1[30,2]!=2) {
+	
+	int additionalParams = unit->AdditionalParameters;
+
+// output for debugging, only the 'present' timewave will output achronal debug info:
+// if (current==present) { 	player=0; say "last known p2 alive time was: ", af2[0,27], " counter at: ", af2[27,3]; }
+
+	PERFORM GET_ENABLED_PLAYERS;
+	int enabled = perf_ret; 
+    
+	//this is inlined #include include/displayEndGameTime.rsi
+    //game is over (af1 == 1), so display the endgame time to the winning player by
+    //cycling through enabled and still-playing(active) players showing that player the time
+    PERFORM GET_NUMBER_OF_TEAMS;                //af1=1 means end game
+	if ( perf_ret == 1 && af1[30,2]==1) { //1 team remains, other player just lost
+        int x=0;
+		//loop through the 15 possible players
+        for (x=0;x<=15;x=x+1) {
+            if ( ( enabled >> x) & 1 == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+				player = x;
+				say_to_var "endgamePause";
+				say 1;				 
+                if ( (active >> x) & 1 == 1) { //active players who are currently still alive, ignoring barracks, mines, and comm centers
+					int class = 0;
+					int playerNum = x;
+                    #include include/calculatePlayerHealth.rsi
+					
+                    if ( playerHealth > 0 ) {  //show the winner their winning time
+                         int totalSecs = present / $TPS;
+                         $CALCULATE_MIN_SEC_HOUR
+						 //direct which player sees the message
+                         player = x;
+						 say_to_var "Won";
+						 say 1;		
+                         say_to_var "endgameTime";  //exported skin variable
+                         say "AT: ";
+                         $SAY_CALCULATED_TIME
+                    }
+                }
+				
+            }
+        }
+		
+		af1[30,2]=2;
+	    target = 0; PERFORM SET_ACHRONAL_FIELD  af1; //leave game paused so players can chat until they exit out 
+		PERFORM END_SCENARIO; 
+		//do NOT perform EXIT_ENGINE, so players can continue chatting
+		
+	}	
+	
+	int player1Health = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == 0 && query.Rank==$MECH_RANK]; 
+	int player2Health = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == 1 && query.Rank==$MECH_RANK]; 
+	int noLossCheck = 0;
+	if (player1Health == 0) { 
+		PERFORM GET_TIME_WINDOW_START;
+		int sameTime = 0;
+		if (current==af1[0,27]) { sameTime = 1; }
+		//if current time is same as last know alive time, or last known alive time fell off the window
+		if (sameTime || af1[0,27] < perf_ret) { 
+			
+			af1[0,27] = 0;
+			//start the loss counter, give a chance for other timewaves to check if player is still alive
+			if (af1[27,3]==0) { af1[27,3] = 1; }
+			target = 0; PERFORM SET_ACHRONAL_FIELD  af1;
+			if (sameTime) { noLossCheck = 1; }
+		}
+	} else {
+		if (current > af1[0,27]) { //store latest known alive time
+			af1[0,27] = current;
+			af1[27,3] = 0; //reset loss counter
+			target = 0; PERFORM SET_ACHRONAL_FIELD  af1;
+		}
+	}
+	
+	if (player2Health == 0) { 
+		PERFORM GET_TIME_WINDOW_START;
+		int sameTime = 0;
+		if (current==af2[0,27]) { sameTime = 1; }
+		//if current time is same as last know alive time, or last known alive time fell off the window
+		if (sameTime || af2[0,27] < perf_ret) {
+			af2[0,27] = 0;
+			//start the loss counter, give a chance for other timewaves to check if player is still alive
+			if (af2[27,3]==0) { af2[27,3] = 1; }
+			target = 1; PERFORM SET_ACHRONAL_FIELD  af2;
+			if (sameTime) { noLossCheck = 1; }
+		}
+	} else {
+		if (current > af2[0,27]) { //store latest known alive time
+			af2[0,27] = current;
+			af2[27,3] = 0; //reset loss counter
+			target = 1; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+	}
+	
+	if (noLossCheck) { PERFORM NOTHING; }
+	
+	int loser = 0;
+	int p1LossCounter = af1[27,3];
+	int p2LossCounter = af2[27,3];
+	
+    if (p1LossCounter > 0) {
+		if (p1LossCounter>=7) { //player 1 lost
+			loser = 1;
+		} else {
+			p1LossCounter = p1LossCounter + 1;
+			af1[27,3] = p1LossCounter;
+			target = 0; PERFORM SET_ACHRONAL_FIELD  af1;
+		}
+	}
+
+    if (p2LossCounter > 0) {
+		if (p2LossCounter==7) { //player 2 lost
+			loser = 2;
+		} else {
+			p2LossCounter = p2LossCounter + 1;
+			af2[27,3] = p2LossCounter;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+	}	
+	
+	int LOST = 0;
+	if (loser > 0) {
+		int totalSecs = present / $TPS;
+		$CALCULATE_MIN_SEC_HOUR
+		player = loser - 1;
+		say_to_var "endgameTime"; 
+		say "AT: ";
+		$SAY_CALCULATED_TIME
+		PERFORM PLAYER_LOST loser;
+		LOST = 1;
+	}	
+	
+	//check one player every other tick, but randomize it such that they're not all done at once
+	// multiplying by a prime number and that mixes it up nicely and taking the modulus
+	// of the maximum number of players (15) does the trick in this case
+	int p = (((current / 2) * 11) % 15);
+    
+	if ( ( enabled >> p) & 1 == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+		if ( (active >> p) & 1 == 1) { //active players who are currently still alive
+
+		}
+        else { //Surrendered or disconnected?
+            PERFORM PLAYER_LOST (1 << p); //player p lost
+            LOST = 1;			
+        }
+	}
+    
+    if (LOST==1) { //a player just lost
+        PERFORM GET_NUMBER_OF_TEAMS; //check if this player is on the winning team
+        if ( perf_ret == 1) { //1 team remains, they are the winner
+            af1[30,2] = 1;
+            target = 0; PERFORM SET_ACHRONAL_FIELD  af1;  //end scenario in displayendgametime, give SM chance to say_to_var endgame time before exiting
+			PERFORM END_SCENARIO; 
+		    //do NOT perform EXIT_ENGINE, so players can continue chatting
+        }
+    }
+    
+}

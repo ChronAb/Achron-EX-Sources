@@ -1,0 +1,38 @@
+if(current%49==0) { //every 3 seconds or so
+   int hubUnitNumber = 0; 
+
+   while(1) {
+      //find a neutral observation hub
+      object hub = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==$OBSERVATION_STATION_CLASS && query > hubUnitNumber];
+
+      if(hub != 0) {
+         hubUnitNumber = hub;  //stores the unit number of this hub, so the next iteration 
+                               // of query will look for hubs with higher unit #s
+         query_vis_distance = 20; // limit the search to only look for units within 20 spaces 
+         if (hub->Owner<15)
+         {
+            int nearbyUnits = QUERY VALUE [hub] SUM [1] WHERE [query->Class!=$OBSERVATION_STATION_CLASS && query->Owner == hub->Owner];
+            if (nearbyUnits == 0) {
+               target = hub;
+               PERFORM SET_UNIT_OWNER 15;
+            }
+         }
+         if (hub->Owner==15) //not an else, since the previous conditional may have reset ownership to neutral
+         {
+            //look for any player's units from the point of view of the hub
+            object nearbyUnit = hub->NextVisibleUnit;
+            if(nearbyUnit != 0 && nearbyUnit->Owner < 15) {
+               target = hub; 
+                   //change hub from neutral to the owner of the nearby unit
+               PERFORM SET_UNIT_OWNER nearbyUnit->Owner; 
+            }
+         }
+      }
+      else {
+         break; //didn't find any more neutral hubs, stop looping
+      }
+      
+   }
+   query_vis_distance = -1; //reset the query radius range
+
+}

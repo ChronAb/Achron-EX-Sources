@@ -1,0 +1,33 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//  arcticus_sepia.ais - create sepia unit script for arcticus and gargantuans
+//  also makes Todaro unit for spyre
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+if ( uclass!=4043) {//Starting Keeper Shell
+	if ( uclass==$MOUND_CLASS || uclass==1161 ) {//Mound
+		int energy = unit->Energy;
+		if ( player->$LCrystals < $TODARO_LC || player->$QPlasma < $TODARO_QP || energy<40) {
+				if (energy < 40) $SAY_ENERGY
+				else $SAY_RESOURCES
+				PERFORM $ACTION_ERROR2;
+				PERFORM SET_OBJECTIVE 0;
+				PERFORM NOTHING;
+		} 
+	}
+	else{//Arcticus and Garg
+		int ammo = unit->Ammo;
+		if ( player->$LCrystals < $ARCTICUS_SEPI_LC || player->$QPlasma < $ARCTICUS_SEPI_QP || ammo<5) {
+				if (ammo < 5) $SAY_PROGEN_RESERVES
+				else $SAY_RESOURCES
+				PERFORM $ACTION_ERROR2;
+				PERFORM SET_OBJECTIVE 0;
+				PERFORM NOTHING;
+		} 
+	}
+}
+
+PERFORM $ACTION_CREATE_SEPIA;
+PERFORM SET_OBJECTIVE 0;

@@ -1,0 +1,11 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+int PROGEN_CLASS = $SEPI_CLASS;
+int ENERGY = $GREKIM1_ENERGY;
+#define LC $SEPI_LC
+#define QP $SEPI_QP
+
+#include common/include/grekim_progen.ais

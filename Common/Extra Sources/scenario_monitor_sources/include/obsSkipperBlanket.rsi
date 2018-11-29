@@ -1,0 +1,28 @@
+// --- To be used in conjuction with obsSkipper.rsi
+//     Uses both LastTick and current to mark a section of the timeline with discontinuities
+//      USES:
+//          obsSkipper.rsi
+//          $BlanketSpacing
+//      INPUT:
+//          LastTick =          One side of the section
+//          current =           The other side of the section
+// This code has been created by IphStich.  All copyrights reserved.
+
+
+{int front=0;int back=0;int place=0;
+
+// - 1) Get the front and back of the section from the input
+front= LastTick <| current;
+back= LastTick |> current;
+// - 2) Parse the two values to their appropriate buffer-relative locations
+front=front + 30-(front%30)+29;
+back=back + 30-(back%30)+28;
+
+// - 3) Start marking times as discontinuities
+place=back;
+while (place > front) {
+    LastTick=place;
+    #include include/obsSkipperNew.rsi
+    place=place - $BlanketSpacing ;
+}
+}

@@ -1,0 +1,8 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int apidle = unit->AdditionalParameters3;
+int oprogen = 0;
+if(apidle > 0) oprogen = apidle + 37;
+PERFORM SET_OBJECTIVE oprogen;//try to make the unit

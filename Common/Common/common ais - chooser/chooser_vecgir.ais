@@ -1,0 +1,207 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+#define BOTTOM_RIGHT 1
+#define TOP_RIGHT 2
+#define TOP_LEFT 3
+#define BOTTOM_LEFT 4
+
+//prevent interruption mid-objective
+int myStatus = unit->Status;
+if (myStatus[$CAP_BIT_1]) {
+	PERFORM SET_OBJECTIVE 50; //choose human
+	PERFORM NOTHING;
+}
+if (myStatus[$CAP_BIT_2]) {
+	PERFORM SET_OBJECTIVE 51; //choose grekim
+	PERFORM NOTHING;
+}
+
+int uclass = unit->Class;
+
+//TECH BEACON
+if (uclass==4020) {
+	PERFORM 18; //change TO REAPH
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+
+//PORTAL CHOOSER
+if (uclass>=4047) {
+	PERFORM 3; //change TO Vecgir
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+//SPECIES CHOOSER
+int unitPosition = unit->Position;
+if (uclass==$RACE_CHOOSER_CLASS) {
+	PERFORM $ACTION_MOVE; //change into 0x0 (non-clipping model)
+	PERFORM $ACTION_VECGIR0 unitPosition; //create vecgir base
+	PERFORM NOTHING;
+}
+
+
+
+
+int ap = unit->AdditionalParameters;
+
+if (ap!=1 && ap!=2) {
+	ap = 1;
+	PERFORM SET_ADDITIONAL_PARAMS ap;
+}
+else if (ap==1) {
+	ap = 2;
+	PERFORM SET_ADDITIONAL_PARAMS ap;
+}
+else if (ap==2) {
+	ap = 0;
+	PERFORM SET_ADDITIONAL_PARAMS ap;
+}
+
+
+int class = $LC_CLASS; //look for LC
+int temp = QUERY VALUE [unit] SUM [1] WHERE [query->Class==$LC_CLASS];
+if (temp==0) { 
+	class = $QP_CLASS; //no LC around, look for QP
+	temp = QUERY VALUE [unit] SUM [1] WHERE [query.Rank == $RESOURCE_RANK ];
+	if (temp==0) {
+		class = 0; //no resources found at all
+	}
+}
+
+int quadrant = 0;
+
+int uYPosition = unitPosition[$Ypos];
+int uXPosition = unitPosition[$Xpos];
+
+
+//resources were found	nearby
+if (class>0) {	
+		
+	int qposition = 0;
+	//1 - bot right,   2-top right,   3-top left,   4-bot left
+	int quad1 = QUERY VALUE [unit] SUM [1] WHERE [query->Class==class && (qposition = query->Position) && qposition[$Xpos] >= uXPosition && qposition[$Ypos] >= uYPosition];
+	int quad2 = QUERY VALUE [unit] SUM [1] WHERE [query->Class==class && (qposition = query->Position) && qposition[$Xpos] >= uXPosition && qposition[$Ypos] < uYPosition];
+	int quad3 = QUERY VALUE [unit] SUM [1] WHERE [query->Class==class && (qposition = query->Position) && qposition[$Xpos] < uXPosition && qposition[$Ypos] < uYPosition];
+	int quad4 = QUERY VALUE [unit] SUM [1] WHERE [query->Class==class && (qposition = query->Position) && qposition[$Xpos] < uXPosition && qposition[$Ypos] >= uYPosition];
+
+	
+	//store the largest quadrant into temp1
+    int temp1 = quad1 |> quad2;
+    temp1 = quad3 |> temp1;
+    temp1 = quad4 |> temp1;
+	
+	if (temp1==quad1) { quadrant = $BOTTOM_RIGHT; }
+	if (temp1==quad2) { quadrant = $TOP_RIGHT; }
+	if (temp1==quad3) { quadrant = $TOP_LEFT; }
+	if (temp1==quad4) { quadrant = $BOTTOM_LEFT; }
+	
+} 
+else { //no resources found, place towards center of map
+	PERFORM GET_MAP_LENGTH;
+	int centerY = perf_ret / 2;
+	PERFORM GET_MAP_WIDTH;
+	int centerX = perf_ret / 2;
+	
+	if (uXPosition < centerX && uYPosition < centerY) {	quadrant = $BOTTOM_RIGHT; }
+	if (uXPosition < centerX && uYPosition >= centerY) { quadrant = $TOP_RIGHT; }
+	if (uXPosition >= centerX && uYPosition < centerY) { quadrant = $BOTTOM_LEFT; }
+	if (uXPosition >= centerX && uYPosition >= centerY) { quadrant = $TOP_LEFT; }
+
+//print quadrant," u:",uXPosition, ",", uYPosition, " c:", centerX, ",",centerY,"\n";
+	
+}
+
+int x = 0;
+int y = 0;
+
+if (quadrant==$BOTTOM_RIGHT) {
+	x = 4;
+	y = 4;
+}
+if (quadrant==$TOP_RIGHT) {
+	x = 4;
+	y = -4;
+}
+if (quadrant==$BOTTOM_LEFT) {
+	x = -4;
+	y = 4;
+}
+if (quadrant==$TOP_LEFT) {
+	x = -4;
+	y = -4;
+}
+
+
+//print quadrant, " X: ", x, " y: ", y,"\n";
+
+int position = 0;
+position[$Xpos] = uXPosition + 1.25*x; //offset by 1 extra so RPs will fit around annex
+position[$Ypos] = uYPosition + y;
+int ACTION = 0;
+if (ap==1) { //first unit being made 
+	ACTION = $ACTION_VECGIR1;
+	target = $VECGIR_RP_CLASS;
+}
+if (ap==2) { //second unit being made 
+	//position[$Xpos] = position[$Xpos] + x * 0.25;
+	position[$Ypos] = position[$Ypos] - y; //offset 4 tiles vertical back from unit 1
+	ACTION = $ACTION_VECGIR2; 
+	target = $VECGIR_RP_CLASS;
+}
+if (ap==0) { //third unit being made 
+	PERFORM SET_OBJECTIVE 0;
+	//position[$Xpos] = position[$Xpos] - x * 0.75;
+	position[$Ypos] = position[$Ypos] - 2*y; //offset 8 tiles vertical back from unit 1
+	ACTION = $ACTION_VECGIR3;
+	target = $VECGIR_RP_CLASS;
+}
+
+
+int length = 5;
+int mult = length;
+int xoffset = length; 
+int yoffset = 0;
+//target set above
+PERFORM CAN_CLASS_FIT_AT position; //see if the unit fits at original location
+int spotClear = perf_ret; 
+int counter = 0;
+
+if (spotClear != 255) {
+	position = unitPosition; //center it based on the chooser 
+	x = unitPosition[$Xpos];
+	y = unitPosition[$Ypos];
+}
+
+
+while (spotClear != 255) { //the unit does not fit, so calculate new offset coords
+	counter = counter + 1;
+	if (counter == 25) { break; }
+	position[$Xpos] = x + xoffset;
+	position[$Ypos] = y + yoffset;
+
+	PERFORM CAN_CLASS_FIT_AT position;
+	spotClear = perf_ret;   
+	
+	if (xoffset > 0 && yoffset < 0) { yoffset = 0; mult=mult+length; xoffset = mult; } 
+	else {
+		if (xoffset <= 0 && yoffset < 0) { xoffset = xoffset + mult;  }
+		if (xoffset < 0 && yoffset >= 0) { yoffset = yoffset - mult;  }
+		if (xoffset >= 0 && yoffset > 0) { xoffset = xoffset - mult;  }
+		if (xoffset > 0 && yoffset == 0) { yoffset = yoffset + mult;  } 
+	}
+	if (xoffset == 0 && yoffset == 0) { xoffset = xoffset + mult; }
+}  
+
+if (counter==25) { say "Unable to create all starter units."; say_to_var ""; say "Blame whoever made this map."; }
+
+if (ACTION==$ACTION_VECGIR1) { PERFORM $ACTION_VECGIR1 position; }
+else if (ACTION==$ACTION_VECGIR2) { PERFORM $ACTION_VECGIR2 position; }
+else if (ACTION==$ACTION_VECGIR3) { PERFORM $ACTION_VECGIR3 position; }
+
+
+
+

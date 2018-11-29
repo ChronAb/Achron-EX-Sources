@@ -1,0 +1,316 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+
+//*
+//
+// FORCE_AUTOPILOT = 0 - unit is idle (default)
+// FORCE_AUTOPILOT = 1 - unit is stuck 
+// FORCE_AUTOPILOT = 2 - unit is attack-moving
+// 
+//* 
+
+if($AUTOPILOT) //only if it's a NON-passive computer player
+{
+    int pX=0; int pY=0;  //int uclass = unit->Class;  //this should be set in the caller's idle script
+    PERFORM GET_CUR_TIME;
+    int curtime = perf_ret;
+    
+	PERFORM RAND; //the chance of running autopilot is 1/8
+    temp1 = 4096;
+    //up the chance by 4x if smart idle is on and damaged 
+    //since this unit is busy requesting a non-existent healer, and doesn't run autopilot as often
+    if ($SMART_IDLE) {
+        int percent = (unit->HP * 100 / unit.MaxHP);     
+        if (percent < 30) { temp1 = 16378; }  //if injured increase the change of running autopilot to 1/2
+    }
+    //1/8 chance, so do this a little more than 2x a second in an 18 t/s scenario, or run it every tick if 'forced'
+	if(perf_ret <= temp1 || FORCE_AUTOPILOT>0) 
+	{
+		int unitPosition = unit->Position;
+		if (unitPosition==-1) { PERFORM NOTHING; } //being carried, so do nothing
+	
+        //mostly pre-scripted first minute and a half of a game
+        if (curtime < 90$seconds) {  
+            #include common/include/autopilot/human_first_90.ais
+        }
+        
+        //first 3:30 of a game
+        if (curtime < 210$seconds) {  
+            #include common/include/autopilot/human_first_210.ais
+        }
+        else { 
+            //anytime after the first 3:30 of a game
+            // marine specific
+            if (uclass<=$MARINE_RAISED_CLASS) { 
+                //look for a importer
+                object u  = QUERY UNIT [unit] MIN [query<_>unit] WHERE [query->Class == $IMPORTER_CLASS];
+                //if found a importer but low on RS, build another importer
+                if (u->IsAlive==1 && player->$ReserveSoldiers < 3) { 
+                    //look for a second importer next to the found one
+                    object importer2  = QUERY UNIT [u] MIN [query<_>u] WHERE [query->Class == $IMPORTER_CLASS && query != u];
+                    //make a second importer by the first one
+                    if (importer2->IsAlive!=1) { 
+                        //build 3 spaces away, in the most open quadrant relative to the found importer
+                        int quaddist = 5; 
+                        #include common/include/unit_auto_quadbuild.ais
+                        PERFORM SET_PARAM location; //returned by unit_auto_quadblid
+						ap[$OBJECTIVE] = $OBJECTIVE_BUILD_IMPORTER;
+                        PERFORM SET_ADDITIONAL_PARAMS ap;
+                        PERFORM SET_OBJECTIVE $OBJECTIVE_BUILD_IMPORTER;
+                        PERFORM NOTHING;
+                    }
+                }
+            }
+        }
+        
+        // 8080 mech specific, only run when Heavy Machinery has been researched
+        if (uclass==$MECH_CLASS && player->Advancements[$HUMAN_ADV_HEAVY]) {
+            #include common/include/autopilot/human_mech_specific.ais
+        }
+    
+        //run autohierarchy 1/8th of the time
+        //except for autopilot air units can set land units as commanders
+        PERFORM RAND; 
+        int auto_rand = perf_ret;
+        if (auto_rand <= 4096) { 
+            #include common/include/autopilot/autohierarchy.ais
+        }
+    
+        //check if a building is requesting assistance (is under attack)
+        #include common/include/autopilot/building_under_attack.ais
+    
+        
+        // forced autopilot or this is a marine unit - look to expand bases
+        if ( FORCE_AUTOPILOT > 0 || uclass<=$MARINE_RAISED_CLASS) {
+            //look for LC or QP patch
+			
+            object patch = 0;
+			int plc = player->$LCrystals;
+			int pqp = player->$QPlasma;
+			int class = 0;
+			if (plc / 4 > pqp ) { // too much lc, look for qp
+				patch = QUERY UNIT [unit] MIN [ query<_>unit ] WHERE [ (class=query->Class)==$QP_CLASS || class==$QP_LARGE_CLASS ];
+			}
+			else if ( pqp / 4 > plc) { //too much qp, look for lc
+				patch = QUERY UNIT [unit] MIN [ query<_>unit ] WHERE [ query->Class==$LC_CLASS];
+			}
+			else { //look for any resource
+				patch = QUERY UNIT [unit] MIN [ query<_>unit ] WHERE [ query.Rank==$RESOURCE_RANK ];
+			}
+			
+			
+            if (patch->IsAlive==1) {
+                //patch found, so see if there is a Resource Processor nearby
+                object rp = QUERY UNIT [unit] MIN [ query<_>unit ] WHERE [ query->Class==$HUMAN_RP_CLASS && query->IsAlly ];
+                //if there is no rp, build a RP f this unit is a marine
+                //otherwise request a marine to come build a RP here
+                if (rp->IsAlive!=1) {
+                    //if this is a marine
+                    if (uclass<=$MARINE_RAISED_CLASS) {
+                        //build a RP for this material patch
+                        PERFORM SET_PARAM patch->Position;
+                        PERFORM SET_OBJECTIVE $OBJECTIVE_BUILD_RP;
+                        PERFORM NOTHING;                        
+                    }
+                    else {
+                        //this unit is not a marine, so request a marine to come here
+                        int flags = $FLAGS;
+						if (!flags[$LOOKUP_BIT]) {
+                            PERFORM SET_PLAYER_CUSTOM_FIELD_2 ($CUSTOMFIELD_TSS | (patch << 16 ));
+                            
+						    flags[$LOOKUP_UNIT] = $MARINE;
+							flags[$LOOKUP_BIT] = 1;
+                            PERFORM SET_PLAYER_CUSTOM_FIELD_3 flags;
+                            PERFORM NOTHING;
+                        }
+                        //stick around and defend the patch for a little bit (until unit decides to move away)
+                        PERFORM SET_ADDITIONAL_PARAMS 0;
+                        PERFORM SET_OBJECTIVE 0;
+                        PERFORM NOTHING; 
+                    }
+                }
+                else {
+                    //there is a RP there already, run logic to see  build more mines
+                    if (uclass<=$MARINE_RAISED_CLASS) {
+                        #include common/include/autopilot/human_marine_specific.ais
+                    }
+                }
+            }
+            
+            // //if cloaker, then cloak when attacking
+            // if ($IS_CLOAKABLE_UNIT) { 
+                // if ((myObjective==$OBJECTIVE_ATTACKING || myObjective==$OBJECTIVE_ATTACKING_UNIT) && 
+				    // !(myStatus[$CLOAK_BIT]) && unit->Energy > 5 ) { 
+                    // PERFORM SET_OBJECTIVE $OBJECTIVE_CLOAK; 
+                    // PERFORM NOTHING; 
+                // }
+            // }
+            
+            //look for Chronoporters about 1/8 times autopilot is run
+            //after the first 210 seconds of the game, and after gates have been researched
+            PERFORM RAND; 
+			int padv = player->Advancements;
+            if (perf_ret < 4096 && curtime > (210$seconds) && (padv[$HUMAN_ADV_GATE] || padv[$GREKIM_ADV_GATE] || padv[$VECGIR_ADV_GATE]) ) {
+                //look for a chronoporter
+                object cporter = QUERY UNIT [unit] MIN [query<_>unit] WHERE [ (query->Class==$CHRONOPORTER_CLASS || query->Class==$SLIPGATE_CLASS) && query->IsAlly==1];
+                //only do chronoport if top of hierarchy and chronoporter is ready (its objective is not 2 - recharging)
+                if ((myCommander->IsAlive!=1 || myCommander==unit) && cporter->IsAlive==1 && cporter->Objective!=2) {  
+                    //calculate relative time to jump to:  max:50+4095/50=130   min:50+0/50=50 
+                    int newtime = curtime - (50 + perf_ret / 50) $seconds; // jump to  -130 +/- 40 seconds
+                    PERFORM SET_PARAM newtime;
+                    //chronoport to that time
+                    PERFORM SET_OBJECTIVE $OBJECTIVE_CHRONOPORT; 
+                    PERFORM $ACTION_PREP_CHRONOPORT newtime;
+                    PERFORM NOTHING;
+                }
+            }
+            
+        }
+
+        //tanks will look to merge 1/8th of the time
+        if (auto_rand <= 4096) { 
+            //mar tank, look for other mar or mar2 tanks
+            if (uclass==$MAR_CLASS) {
+                object u = QUERY UNIT [unit] MIN [unit<_>query] WHERE [((temp2=query->Class)==$MAR_CLASS || temp2==$MAR2_CLASS) && query->IsAlly==1];
+                if (u->IsAlive==1) {
+                    PERFORM SET_PARAM u;
+                    PERFORM SET_OBJECTIVE $OBJECTIVE_MERGE;
+                    PERFORM NOTHING;
+                }
+            }        
+        }
+          
+        //see if a unit is attacking the enemy base and go join them  
+		int flags = $FLAGS;
+        if (flags[$JOINME_BIT] && !flags[$LOOKUP_BIT] && auto_rand < 4096 && FORCE_AUTOPILOT < 2) {
+            object u = $CUSTOMFIELD_LOOKUP;
+            object enemy = 0;
+            if (u->IsAlive==1) {  //the requestor is still alive, so find the enemy it's attacking
+                enemy = QUERY UNIT [u] MIN [u<_>query] WHERE [!(query->IsAlly)]; 
+            }
+			
+			//either the requestor died or it has no visible enemies nearby
+            if ( u->IsAlive!=1 || enemy->IsAlive!=1 ) { //clear out the JOINME 
+                PERFORM SET_PLAYER_CUSTOM_FIELD_2 $CUSTOMFIELD_TSS;
+                flags = $FLAGS;
+                flags[$JOINME_BIT] = 0;
+                PERFORM SET_PLAYER_CUSTOM_FIELD_3 flags;
+            }
+            else {  //go help out - change commander to the requester and go attack that position
+                if (u<_>unit <  4 * $LOOKUP_BOUNDARY  && myObjective != enemy && u->IsAlive==1 && enemy->IsAlive==1 ) {		
+                    PERFORM $ACTION_CHANGE_COMMANDER u;
+                    temp2 = enemy->Position;  
+					temp2[$Zpos] = 0;
+                    PERFORM SET_PARAM temp2;
+                    ap[$OBJECTIVE] = $OBJECTIVE_ATTACKING;
+                    ap[$UNIT_BIT] = 0;
+                    ap[$ATTACK_BIT] = 1;
+					//calculate and store a move counter for this unit based on how fast it moves. the faster the unit, the higher the counter
+					//since it'll take more moves in a set amount of time than a slower unit
+					//this is used by unit_priority_override and unit_common_header.ais to see whether subordinates need to follow their commander
+					int speed = 20;
+					$SPEED_BY_CLASS;
+					int moves = 60 / speed; // how many moves in a 60 tick period
+					ap[$MOVE_COUNTER] = moves;  //store the move counter into the ap field, any subordinates will follow this unit 
+                    PERFORM SET_ADDITIONAL_PARAMS ap;
+                    PERFORM SET_OBJECTIVE $OBJECTIVE_ATTACKING; //go go go
+                    PERFORM NOTHING;
+                }
+            }
+        }
+              
+        //unit is stuck, and stuck counter matches current time, so clear from hierarchy
+		//in an attempt to either find a new commander or acquire new objectives 
+        if (FORCE_AUTOPILOT == 1 && ap[$STUCK_BIT] && ap[28,4] == curtime[0,4]) {
+                PERFORM SET_OBJECTIVE $OBJECTIVE_CLEAR_COMMANDER;
+                PERFORM NOTHING;
+        }
+        
+        if (FORCE_AUTOPILOT < 2) { //dont run this if FORCE_AUTOPILOT is 2 or more (during moving)
+            if( myCommander==0 || myCommander == unit) {  //only do so if no commander or commander is self
+                int subs = 0;
+                if (unit->NextSubordinate) { subs = 1; } //unit has 1 subordinate
+                if (unit->NextSubordinate) { subs = 2; } //unit has 2 (or more ) subordinates
+                PERFORM RAND;
+                //be more 4x reluctant if 0 or 1 subordinates or always run it if this unit is stuck
+                if ( ( subs==2 && perf_ret <= 8192 ) || ( subs < 2 && perf_ret <= 2048 ) || FORCE_AUTOPILOT==1 ) 
+                {
+                    PERFORM GET_MAP_WIDTH;
+                    int map_width = perf_ret;
+                    PERFORM GET_MAP_LENGTH;
+                    int map_length = perf_ret;
+                    
+                    PERFORM RAND; 
+                    //int nx = perf_ret[0,4] - 8; 
+                    int nx = (perf_ret % map_width);
+                    PERFORM RAND; 
+                    //int ny = perf_ret[0,4] - 8;
+                    int ny = (perf_ret % map_length);
+                                        
+                    PERFORM RAND;
+                    if (perf_ret < 8192) {    //1/4 chance go to an edge of the level
+                        if (perf_ret < 2048) {
+                            nx = 6;	 //left edge
+                        }
+                        else if (perf_ret < 4096) {
+                            nx = map_width - 6; //right edge
+                        }
+                        else if (perf_ret < 6144) {
+                            ny = 6; //top edge
+                        }
+                        else {
+                            ny = map_length - 6; //bottom edge
+                        }
+                    }
+
+                    int newlocation = nx; 
+					newlocation[$Ypos] = ny;
+					PERFORM GET_TERRAIN_GROUND_HEIGHT_AT newlocation;
+					newlocation[$Zpos] = perf_ret;
+                    PERFORM GET_PLAYER_VISIBLE_UNIT_AT newlocation;
+                    object o = perf_ret;
+                    if(o->IsAlive!=1 || !(o->IsAlly))
+                    {   		
+                        ap[$OBJECTIVE] = $OBJECTIVE_ATTACKING;
+						ap[$UNIT_BIT] = 0;
+						ap[$PLAYER_BIT] = 1;
+						ap[$ATTACK_BIT] = 1;
+						//calculate and store a move counter for this unit based on how fast it moves. the faster the unit, the higher the counter
+						//since it'll take more moves in a set amount of time than a slower unit
+						//this is used by unit_priority_override and unit_common_header.ais to see whether subordinates need to follow their commander
+						int speed = 20;
+						$SPEED_BY_CLASS;
+						int moves = 60 / speed; // how many moves in a 60 tick period
+						ap[$MOVE_COUNTER] = moves;  //store the move counter into the override field
+                        PERFORM SET_ADDITIONAL_PARAMS ap;
+                        PERFORM SET_PARAM newlocation;
+                        if (myObjective == $OBJECTIVE_ATTACKING || myObjective == $OBJECTIVE_ATTACKING_UNIT) { 
+						    //if already attacking, need priority to override
+                            PERFORM SET_OBJECTIVE $OBJECTIVE_PRIORITY; 
+                        } else {
+                            PERFORM SET_OBJECTIVE $OBJECTIVE_ATTACKING;
+                        }
+                    }
+                }
+            }
+        }
+   }
+}
+
+
+/*
+                                PERFORM GET_MAP_WIDTH;
+                                int map_width = perf_ret;
+                                PERFORM GET_MAP_LENGTH;
+                                int map_length = perf_ret;
+                                int left = map_width / 8;
+                                int right = map_width - left;
+                                int top = map_length / 8;
+                                int bot = map_length - top;
+                                if (u->XPosition < left) { }
+                                if (u->XPosition > right) { }
+                                if (u->YPosition < top) { }
+                                if (u->YPosition > bottom) { }
+*/     
+
+//*/

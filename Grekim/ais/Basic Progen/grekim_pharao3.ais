@@ -1,0 +1,12 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+int PROGEN_CLASS = $PHAROLIGO_CLASS;
+int ENERGY = $GREKIM2_ENERGY;
+#define LC $PHAROLIGO_LC
+#define QP $PHAROLIGO_QP
+
+#include common/include/grekim_progen.ais
+

@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+        <Sounds>
         <Sound>
             <Name>Sound116</Name>
             <FileName>./sfx/base_explode.ogg</FileName>
@@ -5,7 +8,9 @@
             <Is3DSound>1</Is3DSound>
             <ReferenceDistanceHeard>20</ReferenceDistanceHeard>
         </Sound>
+</Sounds>
 
+        <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1100</ClassNumber>
             <Name>Cthulhu (Octoligo)</Name>
@@ -65,6 +70,7 @@
                 <Detector>0</Detector>
                 <Visible>1</Visible>
             </Sensing>
+            <StoppedActionStepss />
             <StoppedActionSteps />
             <ChronoportedActionSteps />
             <ChronoportArrivedActionSteps>
@@ -2200,7 +2206,9 @@
                     </ControlConditions>
                 </ControlShortcut>
             </ControlShortcuts>
+	    </StoppedActionStepss />
         </ObjectClass>
+        </ObjectClasses>
 
 		
                         <Step>
@@ -2290,3 +2298,5 @@
                         </Step>
                     </Steps>
                 </Action>
+            </Actions>
+</ResequenceObjectClassSet>

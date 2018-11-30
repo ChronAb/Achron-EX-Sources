@@ -1,4 +1,6 @@
-		
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+    <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1101</ClassNumber>
             <Name>Angry Cthulhu (Octoligo)</Name>
@@ -58,6 +60,7 @@
                 <Detector>0</Detector>
                 <Visible>1</Visible>
             </Sensing>
+            <StoppedActionStepss />
             <StoppedActionSteps />
             <ChronoportedActionSteps />
             <ChronoportArrivedActionSteps>
@@ -1717,7 +1720,9 @@
                     </ControlConditions>
                 </ControlShortcut>
             </ControlShortcuts>
+	    </StoppedActionStepss />
         </ObjectClass>
+        <ObjectClass>
 
 		
                 <Action>
@@ -1792,3 +1797,5 @@
                     <ObjectiveControlShortcutNumber>0</ObjectiveControlShortcutNumber>
                     <ParameterType>POSITION</ParameterType>
                 </Objective>
+                </Objectivees>
+</ResequenceObjectClassSet>

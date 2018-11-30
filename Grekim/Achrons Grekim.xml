@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+    <ActionStepModifiers>
         <ActionStepModifier>
             <Name>Light AM Projection Cannon</Name>
             <StrengthBase>8</StrengthBase>
@@ -42,8 +45,8 @@
             <EffectSplashRadius>0</EffectSplashRadius>
             <EffectSplashEffectiveRadius>0</EffectSplashEffectiveRadius>
         </ActionStepModifier>
-
-
+    </ActionStepModifiers>
+    <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1039</ClassNumber>
             <Name>Scout Guardian</Name>
@@ -12610,11 +12613,15 @@
                 </ControlShortcut>
             </ControlShortcuts>
         </ObjectClass>
+    </ObjectClasses>
 
-        
+<!--
                         <Step>
                             <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
                             <Target>TARGET_UNIT</Target>
                             <Type>STATUS_COMMJAM</Type>
                             <ActionStepModifier>MFB Recover</ActionStepModifier>
                         </Step>
+-->
+
+</ResequenceObjectClassSet>

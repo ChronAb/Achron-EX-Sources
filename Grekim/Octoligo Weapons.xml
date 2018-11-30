@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+    <ActionStepModifiers>
         <ActionStepModifier>
             <Name>HE S.O.C.</Name>
             <StrengthBase>90</StrengthBase>
@@ -161,3 +164,5 @@
             <SelfStatistic>DamageDealt</SelfStatistic>
             <TargetStatistic>DamageReceived</TargetStatistic>
         </ActionStepModifier>
+    </ActionStepModifiers>
+</ResequenceObjectClassSet>

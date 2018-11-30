@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+    <Sounds>
         <Sound>
             <Name>Sound115</Name>
             <FileName>./sfx/3xMRG_Impact.ogg</FileName>
@@ -5,7 +8,9 @@
             <Is3DSound>1</Is3DSound>
             <ReferenceDistanceHeard>20</ReferenceDistanceHeard>
         </Sound>
+    </Sounds>
 
+    <ActionStepModifiers>
         <ActionStepModifier>
             <Name>HE Plasma Cannon</Name>
             <StrengthBase>100</StrengthBase>
@@ -73,7 +78,9 @@
             <EffectSplashRadius>0</EffectSplashRadius>
             <EffectSplashEffectiveRadius>0</EffectSplashEffectiveRadius>
         </ActionStepModifier>
+    </ActionStepModifiers>
 
+    <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1110</ClassNumber>
             <Name>Medusa (Pharoligo)</Name>
@@ -2301,10 +2308,11 @@
                     </ControlConditions>
                 </ControlShortcut>
             </ControlShortcuts>
-        </ObjectClass>
-
-
-                <Action>
+	</ObjectClass>
+	</ObjectClasses>
+	
+    <Actions>
+		<Action>
                     <ActionNumber>10</ActionNumber>
                     <Identifier>ACTION_STOP</Identifier>
                     <TimeTaken>45</TimeTaken>
@@ -2362,7 +2370,9 @@
                         </Step>
                     </Steps>
                 </Action>
+            </Actions>
 				
+           <Objectives>
                 <Objective>
                     <ObjectiveNumber>20</ObjectiveNumber>
                     <Script>Script418</Script>
@@ -2372,3 +2382,5 @@
 										<Resource6>30</Resource6>
                     <ObjectiveControlShortcutNumber>3</ObjectiveControlShortcutNumber>
                 </Objective>
+           </Objectives>
+</ResequenceObjectClassSet>

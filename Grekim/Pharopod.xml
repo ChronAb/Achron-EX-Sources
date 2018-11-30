@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+    <ActionStepModifiers>
         <ActionStepModifier>
             <Name>Heavy Plasma Missiles</Name>
             <StrengthBase>30</StrengthBase>
@@ -44,7 +47,9 @@
             <SelfStatistic>DamageDealt</SelfStatistic>
             <TargetStatistic>DamageReceived</TargetStatistic>
         </ActionStepModifier>
+    </ActionStepModifiers>
 
+    <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1023</ClassNumber>
             <Name>Vampire (Pharopod)</Name>
@@ -3696,61 +3701,5 @@
                 </ControlShortcut>
             </ControlShortcuts>
         </ObjectClass>
-
-<!--		
-                <Action>
-                    <ActionNumber>10</ActionNumber>
-                    <Identifier>ACTION_RECOVER</Identifier>
-                    <TimeTaken>16</TimeTaken>
-                    <ForceObjectAction>0</ForceObjectAction>
-                    <InterruptCurrentAction>0</InterruptCurrentAction>
-                    <MutexAction>0</MutexAction>
-                    <FailOnInvalidTarget>0</FailOnInvalidTarget>
-                    <PreserveParameter>0</PreserveParameter>
-                    <AIScriptCanRun>0</AIScriptCanRun>
-                    <SetParamZeroTicks>0</SetParamZeroTicks>
-                    <AllowActionWhenStopped>0</AllowActionWhenStopped>
-                    <Conditions>
-                        <Condition>
-                            <Resource>U_ENERGY</Resource>
-                            <Comparison>GEQUAL</Comparison>
-                            <Value>4</Value>
-                        </Condition>
-                    </Conditions>
-                    <Steps>
-                        <Step>
-                            <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-                            <Target>TARGET_UNIT</Target>
-                            <Type>STATUS_STOP</Type>
-                            <ActionStepModifier>Recover</ActionStepModifier>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-                            <Target>TARGET_UNIT</Target>
-                            <Type>STATUS_COMMJAM</Type>
-                            <ActionStepModifier>Recover</ActionStepModifier>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>NANITE_CLEAR</PrimitiveAction>
-                            <Target>TARGET_UNIT</Target>
-                            <ActionStepModifier>Recover</ActionStepModifier>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Type>U_ENERGY</Type>
-                            <ValueEval>ONE</ValueEval>
-                            <Value>4</Value>
-                        </Step>
-                    </Steps>
-                </Action>
-                <Objective>
-                    <ObjectiveNumber>15</ObjectiveNumber>
-                    <Script>Script221</Script>
-                    <Name>Recover</Name>
-                    <Details> \Clear negative status effects:\    Freeze, Comm Jam and Nanites</Details>
-                    <Resource6>4</Resource6>
-                    <ObjectiveControlShortcutNumber>11</ObjectiveControlShortcutNumber>
-                </Objective>
-				
--->
+    </ObjectClasses>
+</ResequenceObjectClassSet>

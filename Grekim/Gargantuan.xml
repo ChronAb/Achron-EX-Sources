@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+        <ActionStepModifiers>
         <ActionStepModifier>
             <Name>Carrier Take Unit</Name>
             <StrengthBase>0</StrengthBase>
@@ -25,6 +28,8 @@
         </ActionStepModifier>
 
 
+</ActionStepModifiers>
+        <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1030</ClassNumber>
             <Name>Gargantuan</Name>
@@ -1593,3 +1598,5 @@
                 </ControlShortcut>
             </ControlShortcuts>
         </ObjectClass>
+    </ObjectClasses>
+</ResequenceObjectClassSet>

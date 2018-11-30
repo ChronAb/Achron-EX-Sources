@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+	      <ActionStepModifiers>
 	      <ActionStepModifier>
             <Name>Todaro Blaster</Name>
             <StrengthBase>12</StrengthBase>
@@ -67,7 +70,9 @@
             <SelfStatistic>DamageDealt</SelfStatistic>
             <TargetStatistic>DamageReceived</TargetStatistic>
         </ActionStepModifier>
+</ActionStepModifiers>
 
+        <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1014</ClassNumber>
             <Name>Cuttle (Todaro)</Name>
@@ -1063,4 +1068,6 @@
                     </ControlConditions>
                 </ControlShortcut>
             </ControlShortcuts>
-				</ObjectClass>
+	</ObjectClass>
+    </ObjectClasses>
+</ResequenceObjectClassSet>

@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+        <ActionStepModifiers>
         <ActionStepModifier>
             <Name>AM Projection Cannon</Name>
             <StrengthBase>2</StrengthBase>
@@ -48,6 +51,8 @@
         </ActionStepModifier>
 
 
+</ActionStepModifiers>
+        <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1028</ClassNumber>
             <Name>Ghost Octopod</Name>
@@ -1554,3 +1559,5 @@
                 </ControlShortcut>
             </ControlShortcuts>
         </ObjectClass>
+        </ObjectClasses>
+</ResequenceObjectClassSet>

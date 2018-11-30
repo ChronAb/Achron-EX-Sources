@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+        <ActionStepModifiers>
         <ActionStepModifier>
             <Name>AM Energy Beam</Name>
             <StrengthBase>12</StrengthBase>
@@ -44,7 +47,9 @@
             <SelfStatistic>DamageDealt</SelfStatistic>
             <TargetStatistic>DamageReceived</TargetStatistic>
         </ActionStepModifier>
+        </ActionStepModifiers>
 
+        <ObjectClasses>
         <ObjectClass>
             <ClassNumber>1005</ClassNumber>
             <Name>Squiddy (Sepi)</Name>
@@ -2638,173 +2643,5 @@
             <Objectives />
             <ControlShortcuts />
         </ObjectClass>
-
-<!--
-		<Animation>
-                    <Identifier>ACTION_IDLE_GENERATE_HP</Identifier>
-                    <AnimationNum>0</AnimationNum>
-                    <Sound>Sound0</Sound>
-                    <AnimationTime>0</AnimationTime>
-                    <ShowProgress>1</ShowProgress>
-                    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-                    <LobProjectilePath>0</LobProjectilePath>
-                    <RenderModelExplode>0</RenderModelExplode>
-                    <Conditions>
-                        <Condition>
-                            <Resource>U_ACTION</Resource>
-                            <Comparison>EQUAL</Comparison>
-                            <Value>45</Value>
-                        </Condition>
-                    </Conditions>
-                </Animation>
-
-                <Animation>
-                    <Identifier>ACTION_MORPH_COMM</Identifier>
-                    <AnimationNum>1</AnimationNum>
-                    <Sound>Sound0</Sound>
-                    <VertShaderEffect>XZ_PLANE_CLAMPED_VERT_SCALE</VertShaderEffect>
-                    <FragShaderEffect>TELEPORT_BUILD</FragShaderEffect>
-                    <AnimationTime>0</AnimationTime>
-                    <ShowProgress>1</ShowProgress>
-                    <MorphFromActionParameterClass>1</MorphFromActionParameterClass>
-                    <LobProjectilePath>0</LobProjectilePath>
-                    <RenderModelExplode>0</RenderModelExplode>
-                    <Conditions>
-                        <Condition>
-                            <Resource>U_ACTION</Resource>
-                            <Comparison>EQUAL</Comparison>
-                            <Value>26</Value>
-                        </Condition>
-                    </Conditions>
-                </Animation>
-                <Action>
-                    <ActionNumber>26</ActionNumber>
-                    <Identifier>ACTION_MORPH_COMM</Identifier>
-                    <TimeTaken>540</TimeTaken>
-                    <ForceObjectAction>0</ForceObjectAction>
-                    <InterruptCurrentAction>0</InterruptCurrentAction>
-                    <MutexAction>0</MutexAction>
-                    <FailOnInvalidTarget>0</FailOnInvalidTarget>
-                    <PreserveParameter>1</PreserveParameter>
-                    <AIScriptCanRun>0</AIScriptCanRun>
-                    <SetParamZeroTicks>0</SetParamZeroTicks>
-                    <AllowActionWhenStopped>0</AllowActionWhenStopped>
-                    <Conditions>
-                        <Condition>
-                            <Resource>P_Q_PLASMA</Resource>
-                            <Comparison>GEQUAL</Comparison>
-                            <Value>0</Value>
-                        </Condition>
-                        <Condition>
-                            <Resource>U_STATUS</Resource>
-                            <Comparison>BITMASK_NOT</Comparison>
-                            <Value>2</Value>
-                        </Condition>
-                    </Conditions>
-                    <Steps>
-                        <Step>
-                            <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Type>P_Q_PLASMA</Type>
-                            <ValueEval>ONE</ValueEval>
-                            <Value>0</Value>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Type>U_HP</Type>
-                            <ValueEval>ONE</ValueEval>
-                            <Value>-30</Value>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Type>STATUS_CLOAKED</Type>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Type>U_ARMOUR</Type>
-                            <ValueEval>SET_TO_VALUE</ValueEval>
-                            <Value>0</Value>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>CHANGE_CLASS</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Value>1064</Value>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Type>U_ENERGY</Type>
-                            <ValueEval>SET_TO_VALUE</ValueEval>
-                            <Value>160</Value>
-                        </Step>
-                        <Step>
-                            <PrimitiveAction>ACCUM_STATISTIC</PrimitiveAction>
-                            <Target>SELF</Target>
-                            <Type>UnitsCreated</Type>
-                            <ValueEval>ONE</ValueEval>
-                            <Value>1</Value>
-                        </Step>
-                    </Steps>
-                </Action>
-                <Objective>
-                    <ObjectiveNumber>18</ObjectiveNumber>
-                    <Script>Script305</Script>
-                    <Name>Morph: Mound</Name>
-                    <Details>Robust tech/comm and raider building\Performs tech tree and comm upgrades\Detects cloaked units in a small radius\Produces Cuttles: \ultra-light scout/raider aircraft</Details>
-                    <Resource4>0</Resource4>
-                    <ObjectiveControlShortcutNumber>9</ObjectiveControlShortcutNumber>
-                </Objective>
-                <ControlShortcut>
-                    <ControlNumber>9</ControlNumber>
-                    <ControlObjectiveNumber>18</ControlObjectiveNumber>
-                    <ParameterType>POSITION_CLASS</ParameterType>
-                    <Parameter>1064</Parameter>
-                    <KeyboardShortcut>$AchronKBCommMound</KeyboardShortcut>
-                    <Flags>
-                        <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
-                        <EstTimeConstIsStart>0</EstTimeConstIsStart>
-                        <ButtonDisabled>0</ButtonDisabled>
-                        <UserControlsCustom>0</UserControlsCustom>
-                        <ButtonInvisible>0</ButtonInvisible>
-                        <SelectTarget>0</SelectTarget>
-                    </Flags>
-                    <EstTimeConst>540</EstTimeConst>
-                    <EstTimeDist>6</EstTimeDist>
-                    <Sound>Sound0</Sound>
-                    <ControlConditions>
-                        <ControlCondition>
-                            <Resource>SCENARIO_CONSTRAINTS</Resource>
-                            <Comparison>BITMASK_NOT</Comparison>
-                            <Value>8</Value>
-                        </ControlCondition>
-                        <ControlCondition>
-                            <Resource>U_IS_CARRIED</Resource>
-                            <Comparison>EQUAL</Comparison>
-                            <Value>0</Value>
-                        </ControlCondition>
-                    </ControlConditions>
-                </ControlShortcut>
-								
-
-
-				
-                <Objective>
-                    <ObjectiveNumber>11</ObjectiveNumber>
-                    <Script>Script304</Script>
-                    <Name>Morph: Reaph</Name>
-                    <Details>Defensive support building\Heals nearby units\ \Launches plasma and chrono bombs\  (require Weapons, Chronoport Tech)</Details>
-                    <Resource4>50</Resource4>
-                    <ObjectiveControlShortcutNumber>3</ObjectiveControlShortcutNumber>
-                </Objective>
-                <Objective>
-                    <ObjectiveNumber>18</ObjectiveNumber>
-                    <Script>Script305</Script>
-                    <Name>Morph: Mound</Name>
-                    <Details> \Robust tech/comm and raider building\Performs tech tree and comm upgrades\Detects cloaked units in a wide radius\Produces Cuttles: ultra-light scout/raider aircraft</Details>
-                    <Resource4>100</Resource4>
-                    <ObjectiveControlShortcutNumber>9</ObjectiveControlShortcutNumber>
-                </Objective>
--->
+</ObjectClasses>
+</ResequenceObjectClassSet>

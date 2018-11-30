@@ -1,5 +1,27 @@
 #!/usr/bin/python
 
+'''
+build_xml.py is a script to reconstruct the Achron.ocs.xml file from all the source files in this repo.
+
+The sources files are organized by race/unit/concept, this aides makeing changes as it provides some organization to the sources,
+making it eaiser to find and make approapirate edits.
+
+However these files to need to be combined into a single large file Achron.ocs.xml that can be compiled by the game moding tools.
+
+Therefore each source XML file can contain the 8 toplevel elements:
+
+    AIScripts
+    Sounds
+    EffectsResources
+    GlobalGameResources
+    TimelineStatistics
+    UnitLists
+    ActionStepModifiers
+    ObjectClasses
+
+The subelements from each source file will be combined into the single Achron.ocs.xml.
+'''
+
 from lxml import etree
 
 parser = etree.XMLParser(remove_blank_text=True)
@@ -19,6 +41,9 @@ elementRoots = {}
 for child in achron:
     elementRoots[child.tag] = child
 
+# For now each source file must be listed here
+# Evenatually we can use glob */*.xml to find all the XML files,
+# but this explicit list makes development easier for now as not all files are safe XML yet.
 filenames = [
 #   'Grekim/Achrons Grekim.xml',
    'Grekim/Cuttle.xml',
@@ -45,6 +70,7 @@ filenames = [
 ]
 
 
+# Parse each file and append its top level elements to the achon tree.
 for f in filenames:
     dom = etree.parse(f, parser).getroot()
     for element, root in elementRoots.items():
@@ -53,5 +79,6 @@ for f in filenames:
             for child in parent:
                 root.append(child)
 
+# Write out the Achron.ocs.xml file
 with open('Achron.ocs.xml', 'wb') as f:
     etree.ElementTree(achron).write(f, pretty_print=True, encoding="UTF-8", xml_declaration=True)

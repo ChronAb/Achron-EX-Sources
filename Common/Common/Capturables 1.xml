@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<ResequenceObjectClassSet>
+        <ObjectClasses>
         <ObjectClass>
             <ClassNumber>4020</ClassNumber>
             <Name>Subspace Amplifier Relay</Name>
@@ -3417,3 +3420,5 @@
                 </ControlShortcut>
             </ControlShortcuts>
         </ObjectClass>
+        </ObjectClasses>
+</ResequenceObjectClassSet>

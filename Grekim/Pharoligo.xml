@@ -2385,4 +2385,9 @@ Can progenerate base Octo and Sepi pair</Description>
       <ObjectiveControlShortcutNumber>3</ObjectiveControlShortcutNumber>
     </Objective>
   </Objectives>
+  <AIScripts/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

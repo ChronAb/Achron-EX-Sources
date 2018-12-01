@@ -2478,4 +2478,10 @@ Detects cloaked units&#13;
       </Steps>
     </Action>
   </Actions>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

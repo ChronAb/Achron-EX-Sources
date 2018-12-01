@@ -163,4 +163,11 @@
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
   </ActionStepModifiers>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ObjectClasses/>
 </ResequenceObjectClassSet>

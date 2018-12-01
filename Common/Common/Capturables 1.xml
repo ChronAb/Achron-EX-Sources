@@ -3436,4 +3436,11 @@ Can convert Power to QP</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
 </ResequenceObjectClassSet>

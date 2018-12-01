@@ -1602,4 +1602,10 @@ Can mass produce base-class</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

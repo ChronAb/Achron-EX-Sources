@@ -23,6 +23,7 @@ The subelements from each source file will be combined into the single Achron.oc
 '''
 
 from lxml import etree
+import sys
 
 parser = etree.XMLParser(remove_blank_text=True)
 achron = etree.XML('''<?xml version="1.0" ?>
@@ -45,22 +46,33 @@ for child in achron:
 # Evenatually we can use glob */*.xml to find all the XML files,
 # but this explicit list makes development easier for now as not all files are safe XML yet.
 filenames = [
-#   'Grekim/Achrons Grekim.xml',
-   'Grekim/Cuttle.xml',
-   'Grekim/Gargantuan.xml',
-   'Grekim/Ghost.xml',
-   'Grekim/Octoligo Angry.xml',
-   'Grekim/Octoligo Weapons.xml',
-   'Grekim/Octoligo.xml',
-   'Grekim/Octopod.xml',
-   'Grekim/Octo.xml',
-   'Grekim/Pharoligo.xml',
-   'Grekim/Pharopod.xml',
-   'Grekim/Pharo.xml',
-   'Grekim/Primordial.xml',
-   'Grekim/Sepiligo.xml',
-   'Grekim/Sepipod.xml',
-   'Grekim/Sepi.xml',
+    'Common/Common/All Scripts.xml',
+    'Common/Common/Capturables 1.xml',
+    'Common/Common/Capturables 2.xml',
+    'Common/Common/New Scripts.xml',
+    'Common/Common/New Weapons ALL.xml',
+    'Common/Common/New Weapons.xml',
+    'Common/Common/Obs Hub.xml',
+    'Common/Common/Resources Crates.xml',
+    'Common/Common/Species Selection for AI.xml',
+    'Common/Common/Species Selection.xml',
+    'Common/Common/Subversive.xml',
+    'Grekim/Achrons Grekim.xml',
+    'Grekim/Cuttle.xml',
+    'Grekim/Gargantuan.xml',
+    'Grekim/Ghost.xml',
+    'Grekim/Octoligo Angry.xml',
+    'Grekim/Octoligo Weapons.xml',
+    'Grekim/Octoligo.xml',
+    'Grekim/Octopod.xml',
+    'Grekim/Octo.xml',
+    'Grekim/Pharoligo.xml',
+    'Grekim/Pharopod.xml',
+    'Grekim/Pharo.xml',
+    'Grekim/Primordial.xml',
+    'Grekim/Sepiligo.xml',
+    'Grekim/Sepipod.xml',
+    'Grekim/Sepi.xml',
 #   'Grekim/xOcto 120.xml',
 #   'Grekim/xOcto 180.xml',
 #   'Grekim/xOctoligo.xml',
@@ -69,10 +81,28 @@ filenames = [
 #   'Grekim/xSepi.xml',
 ]
 
+def validate(dom):
+    '''
+    Validate that the dom's toplevel children are all standard.
+    When the dom is invalid false is returned along with the extra tag,
+    otherwise True, None is returned.
+    '''
+    for child in dom:
+        if child.tag is etree.Comment:
+            continue #ignore comments
+        if child.tag not in elementRoots:
+            return False, child.tag
+    return True, None
+
+
 
 # Parse each file and append its top level elements to the achon tree.
 for f in filenames:
     dom = etree.parse(f, parser).getroot()
+    valid, tag = validate(dom)
+    if not valid:
+        sys.stderr.write("file {} has extra top level element {}\n".format(f, tag))
+        continue
     for element, root in elementRoots.items():
         parent = dom.find(element)
         if parent is not None:

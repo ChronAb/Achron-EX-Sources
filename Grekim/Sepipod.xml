@@ -2378,4 +2378,10 @@ Can deploy Chronobomb (req. Specials)</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

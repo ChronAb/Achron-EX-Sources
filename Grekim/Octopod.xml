@@ -1937,4 +1937,9 @@ Morphs into Ghost</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

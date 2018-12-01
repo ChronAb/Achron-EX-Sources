@@ -226,4 +226,12 @@
     </Objective>
   </Objectives>
   <ControlShortcuts/>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
+  <ObjectClasses/>
 </ObjectClass>

@@ -2640,4 +2640,9 @@ Weapons: 2X  regen. [+360 hp, +36/s]</Description>
       <ControlShortcuts/>
     </ObjectClass>
   </ObjectClasses>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

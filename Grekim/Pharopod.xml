@@ -3715,4 +3715,10 @@ Self-Cloaks and Heals; Mists to avoid death</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

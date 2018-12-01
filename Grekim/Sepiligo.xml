@@ -2220,4 +2220,10 @@ Can progenerate base Octo and Pharo pair</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

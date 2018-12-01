@@ -824,4 +824,11 @@ Self-destructs if enemies are detected.</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
 </ResequenceObjectClassSet>

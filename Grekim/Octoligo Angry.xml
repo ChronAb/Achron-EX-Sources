@@ -1801,4 +1801,11 @@ Reverts after 20 s</Description>
       </Objective>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
 </ResequenceObjectClassSet>

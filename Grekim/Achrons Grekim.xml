@@ -12693,4 +12693,10 @@ Maintains Achron continuity in the event&#13;
     <Type>STATUS_COMMJAM</Type>
     <ActionStepModifier>MFB Recover</ActionStepModifier>
   </Step>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

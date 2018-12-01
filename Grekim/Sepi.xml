@@ -2648,4 +2648,10 @@ Cloaks when moving; must decloak to fire</Description>
       <ControlShortcuts/>
     </ObjectClass>
   </ObjectClasses>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
 </ResequenceObjectClassSet>

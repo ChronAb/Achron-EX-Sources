@@ -2300,4 +2300,10 @@ Can progenerate (req. Loligo tech)</Description>
       </Step>
     </Steps>
   </Action>
+  <AIScripts/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
 </ResequenceObjectClassSet>

@@ -1238,4 +1238,12 @@ Intangible agent of chaos</Description>
       </ControlConditions>
     </ControlShortcut>
   </ControlShortcuts>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
+  <ObjectClasses/>
 </ObjectClass>

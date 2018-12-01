@@ -2705,4 +2705,11 @@ Can move itself&#13;
     <ValueEval>ONE</ValueEval>
     <Value>1</Value>
   </Step>
+  <AIScripts/>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
 </ResequenceObjectClassSet>

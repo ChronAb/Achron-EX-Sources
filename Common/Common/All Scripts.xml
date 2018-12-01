@@ -1702,4 +1702,11 @@
       <Path>./ais/unknown.abn</Path>
     </AIScript>
   </AIScripts>
+  <Sounds/>
+  <EffectsResources/>
+  <GlobalGameResources/>
+  <TimelineStatistics/>
+  <UnitLists/>
+  <ActionStepModifiers/>
+  <ObjectClasses/>
 </ResequenceObjectClassSet>

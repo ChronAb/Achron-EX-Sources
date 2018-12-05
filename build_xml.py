@@ -47,6 +47,12 @@ for child in achron:
 # but this explicit list makes development easier for now as not all files are safe XML yet.
 filenames = [
     'Common/Common/All Scripts.xml',
+    'Common/Common/Sounds.xml',
+    'Common/Common/EffectsResources.xml',
+    'Common/Common/GlobalGameResources.xml',
+    'Common/Common/TimelineStatistics.xml',
+    'Common/Common/UnitLists.xml',
+    'Common/Common/ObjectClasses.xml',
     'Common/Common/Capturables 1.xml',
     'Common/Common/Capturables 2.xml',
     'Common/Common/New Scripts.xml',
@@ -73,12 +79,27 @@ filenames = [
     'Grekim/Sepiligo.xml',
     'Grekim/Sepipod.xml',
     'Grekim/Sepi.xml',
-#   'Grekim/xOcto 120.xml',
-#   'Grekim/xOcto 180.xml',
-#   'Grekim/xOctoligo.xml',
-#   'Grekim/xOctopod.xml',
-#   'Grekim/xPharo.xml',
-#   'Grekim/xSepi.xml',
+    'Grekim/xOcto 120.xml',
+    'Grekim/xOcto 180.xml',
+    'Grekim/xOctoligo.xml',
+    'Grekim/xOctopod.xml',
+    'Grekim/xPharo.xml',
+    'Grekim/xSepi.xml',
+    'Human/ATHC.xml',
+    'Human/Beam Tank.xml',
+    'Human/Blackbird.xml',
+    'Human/Caltrop mine.xml',
+    'Human/Cruiser.xml',
+    'Human/Frigate.xml',
+    'Human/Heavy Tank.xml',
+    'Human/Lancer.xml',
+    'Human/Marine.xml',
+    'Human/MAR Tank.xml',
+    'Human/Mech.xml',
+    'Human/MFB.xml',
+    'Human/SOP.xml',
+    'Human/Super MAR.xml',
+    'Human/Tornade.xml',
 ]
 
 def validate(dom):
@@ -102,12 +123,14 @@ for f in filenames:
     valid, tag = validate(dom)
     if not valid:
         sys.stderr.write("file {} has extra top level element {}\n".format(f, tag))
-        continue
     for element, root in elementRoots.items():
         parent = dom.find(element)
         if parent is not None:
             for child in parent:
                 root.append(child)
+
+for element in achron.iter():
+    element.tail = None
 
 # Write out the Achron.ocs.xml file
 with open('Achron.ocs.xml', 'wb') as f:

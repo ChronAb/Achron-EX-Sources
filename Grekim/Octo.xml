@@ -12,6 +12,29 @@
   </AIScripts>
   <ActionStepModifiers>
     <ActionStepModifier>
+      <Name>Overcharged Disruptors</Name>
+      <StrengthBase>38</StrengthBase>
+      <StrengthRange>0</StrengthRange>
+      <StrengthCount>0</StrengthCount>
+      <Flags>
+        <Permeating>1</Permeating>
+        <LimitDistance>1</LimitDistance>
+        <SetLastAttackedDirection>1</SetLastAttackedDirection>
+        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
+      </Flags>
+      <AccuracyMultiplier>1</AccuracyMultiplier>
+      <EffectTimeout>0</EffectTimeout>
+      <MinEffectRadius>0</MinEffectRadius>
+      <EffectRadius>2</EffectRadius>
+      <EffectHeight>4</EffectHeight>
+      <MaxEffectAngle>180</MaxEffectAngle>
+      <EffectSplashHeight>0</EffectSplashHeight>
+      <EffectSplashRadius>0</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>1</EffectSplashEffectiveRadius>
+      <SelfStatistic>DamageDealt</SelfStatistic>
+      <TargetStatistic>DamageReceived</TargetStatistic>
+    </ActionStepModifier>
+    <ActionStepModifier>
       <Name>Plasma Disruptors</Name>
       <StrengthBase>2</StrengthBase>
       <StrengthRange>0</StrengthRange>
@@ -54,29 +77,6 @@
       <EffectSplashHeight>3</EffectSplashHeight>
       <EffectSplashRadius>3</EffectSplashRadius>
       <EffectSplashEffectiveRadius>4</EffectSplashEffectiveRadius>
-      <SelfStatistic>DamageDealt</SelfStatistic>
-      <TargetStatistic>DamageReceived</TargetStatistic>
-    </ActionStepModifier>
-    <ActionStepModifier>
-      <Name>Overcharged Disruptors</Name>
-      <StrengthBase>38</StrengthBase>
-      <StrengthRange>0</StrengthRange>
-      <StrengthCount>0</StrengthCount>
-      <Flags>
-        <Permeating>1</Permeating>
-        <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>1</SetLastAttackedDirection>
-        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
-      </Flags>
-      <AccuracyMultiplier>1</AccuracyMultiplier>
-      <EffectTimeout>0</EffectTimeout>
-      <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>2</EffectRadius>
-      <EffectHeight>4</EffectHeight>
-      <MaxEffectAngle>180</MaxEffectAngle>
-      <EffectSplashHeight>0</EffectSplashHeight>
-      <EffectSplashRadius>0</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>1</EffectSplashEffectiveRadius>
       <SelfStatistic>DamageDealt</SelfStatistic>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>

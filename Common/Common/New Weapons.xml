@@ -8,10 +8,55 @@
   <UnitLists/>
   <ActionStepModifiers>
     <ActionStepModifier>
-      <Name>Nanite Infect</Name>
-      <StrengthBase>0</StrengthBase>
+      <Name>Big Pop</Name>
+      <StrengthBase>120</StrengthBase>
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
+      <Flags>
+        <Permeating>1</Permeating>
+        <LimitDistance>1</LimitDistance>
+        <SetLastAttackedDirection>0</SetLastAttackedDirection>
+        <ContinueActionOnStepFailure>1</ContinueActionOnStepFailure>
+      </Flags>
+      <AccuracyMultiplier>1</AccuracyMultiplier>
+      <EffectTimeout>0</EffectTimeout>
+      <MinEffectRadius>0</MinEffectRadius>
+      <EffectRadius>10</EffectRadius>
+      <EffectHeight>8</EffectHeight>
+      <MaxEffectAngle>360</MaxEffectAngle>
+      <EffectSplashHeight>8</EffectSplashHeight>
+      <EffectSplashRadius>12</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>13</EffectSplashEffectiveRadius>
+      <TargetStatistic>DamageReceived</TargetStatistic>
+    </ActionStepModifier>
+    <ActionStepModifier>
+      <Name>Big Pop</Name>
+      <StrengthBase>30</StrengthBase>
+      <StrengthRange>20</StrengthRange>
+      <StrengthCount>1</StrengthCount>
+      <Flags>
+        <Permeating>1</Permeating>
+        <LimitDistance>1</LimitDistance>
+        <SetLastAttackedDirection>1</SetLastAttackedDirection>
+        <ContinueActionOnStepFailure>1</ContinueActionOnStepFailure>
+      </Flags>
+      <AccuracyMultiplier>1</AccuracyMultiplier>
+      <EffectTimeout>0</EffectTimeout>
+      <MinEffectRadius>0</MinEffectRadius>
+      <EffectRadius>10</EffectRadius>
+      <EffectHeight>8</EffectHeight>
+      <MaxEffectAngle>360</MaxEffectAngle>
+      <EffectSplashHeight>6</EffectSplashHeight>
+      <EffectSplashRadius>10</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>20</EffectSplashEffectiveRadius>
+      <SelfStatistic>DamageDealt</SelfStatistic>
+      <TargetStatistic>DamageReceived</TargetStatistic>
+    </ActionStepModifier>
+    <ActionStepModifier>
+      <Name>Large Suicide</Name>
+      <StrengthBase>50</StrengthBase>
+      <StrengthRange>10</StrengthRange>
+      <StrengthCount>2</StrengthCount>
       <Flags>
         <Permeating>1</Permeating>
         <LimitDistance>1</LimitDistance>
@@ -21,56 +66,34 @@
       <AccuracyMultiplier>1</AccuracyMultiplier>
       <EffectTimeout>0</EffectTimeout>
       <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>42</EffectRadius>
-      <EffectHeight>31</EffectHeight>
+      <EffectRadius>4</EffectRadius>
+      <EffectHeight>12</EffectHeight>
+      <MaxEffectAngle>180</MaxEffectAngle>
+      <EffectSplashHeight>8</EffectSplashHeight>
+      <EffectSplashRadius>8</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>10</EffectSplashEffectiveRadius>
+      <TargetStatistic>DamageReceived</TargetStatistic>
+    </ActionStepModifier>
+    <ActionStepModifier>
+      <Name>Little Stalking</Name>
+      <StrengthBase>0</StrengthBase>
+      <StrengthRange>0</StrengthRange>
+      <StrengthCount>0</StrengthCount>
+      <Flags>
+        <Permeating>0</Permeating>
+        <LimitDistance>1</LimitDistance>
+        <SetLastAttackedDirection>0</SetLastAttackedDirection>
+        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
+      </Flags>
+      <AccuracyMultiplier>1</AccuracyMultiplier>
+      <EffectTimeout>0</EffectTimeout>
+      <MinEffectRadius>0</MinEffectRadius>
+      <EffectRadius>20</EffectRadius>
+      <EffectHeight>30</EffectHeight>
       <MaxEffectAngle>360</MaxEffectAngle>
       <EffectSplashHeight>0</EffectSplashHeight>
       <EffectSplashRadius>0</EffectSplashRadius>
       <EffectSplashEffectiveRadius>0</EffectSplashEffectiveRadius>
-    </ActionStepModifier>
-    <ActionStepModifier>
-      <Name>Tiny Pop</Name>
-      <StrengthBase>16</StrengthBase>
-      <StrengthRange>0</StrengthRange>
-      <StrengthCount>0</StrengthCount>
-      <Flags>
-        <Permeating>1</Permeating>
-        <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>0</SetLastAttackedDirection>
-        <ContinueActionOnStepFailure>1</ContinueActionOnStepFailure>
-      </Flags>
-      <AccuracyMultiplier>1</AccuracyMultiplier>
-      <EffectTimeout>0</EffectTimeout>
-      <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>10</EffectRadius>
-      <EffectHeight>8</EffectHeight>
-      <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>6</EffectSplashHeight>
-      <EffectSplashRadius>7</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>8</EffectSplashEffectiveRadius>
-      <TargetStatistic>DamageReceived</TargetStatistic>
-    </ActionStepModifier>
-    <ActionStepModifier>
-      <Name>Small Pop</Name>
-      <StrengthBase>30</StrengthBase>
-      <StrengthRange>0</StrengthRange>
-      <StrengthCount>0</StrengthCount>
-      <Flags>
-        <Permeating>1</Permeating>
-        <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>0</SetLastAttackedDirection>
-        <ContinueActionOnStepFailure>1</ContinueActionOnStepFailure>
-      </Flags>
-      <AccuracyMultiplier>1</AccuracyMultiplier>
-      <EffectTimeout>0</EffectTimeout>
-      <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>10</EffectRadius>
-      <EffectHeight>8</EffectHeight>
-      <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>6</EffectSplashHeight>
-      <EffectSplashRadius>9</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>10</EffectSplashEffectiveRadius>
-      <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
       <Name>Med Pop</Name>
@@ -92,28 +115,6 @@
       <EffectSplashHeight>6</EffectSplashHeight>
       <EffectSplashRadius>9</EffectSplashRadius>
       <EffectSplashEffectiveRadius>10</EffectSplashEffectiveRadius>
-      <TargetStatistic>DamageReceived</TargetStatistic>
-    </ActionStepModifier>
-    <ActionStepModifier>
-      <Name>Big Pop</Name>
-      <StrengthBase>120</StrengthBase>
-      <StrengthRange>0</StrengthRange>
-      <StrengthCount>0</StrengthCount>
-      <Flags>
-        <Permeating>1</Permeating>
-        <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>0</SetLastAttackedDirection>
-        <ContinueActionOnStepFailure>1</ContinueActionOnStepFailure>
-      </Flags>
-      <AccuracyMultiplier>1</AccuracyMultiplier>
-      <EffectTimeout>0</EffectTimeout>
-      <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>10</EffectRadius>
-      <EffectHeight>8</EffectHeight>
-      <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>8</EffectSplashHeight>
-      <EffectSplashRadius>12</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>13</EffectSplashEffectiveRadius>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
@@ -139,10 +140,10 @@
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
-      <Name>Large Suicide</Name>
-      <StrengthBase>50</StrengthBase>
-      <StrengthRange>10</StrengthRange>
-      <StrengthCount>2</StrengthCount>
+      <Name>Nanite Infect</Name>
+      <StrengthBase>0</StrengthBase>
+      <StrengthRange>0</StrengthRange>
+      <StrengthCount>0</StrengthCount>
       <Flags>
         <Permeating>1</Permeating>
         <LimitDistance>1</LimitDistance>
@@ -152,11 +153,32 @@
       <AccuracyMultiplier>1</AccuracyMultiplier>
       <EffectTimeout>0</EffectTimeout>
       <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>4</EffectRadius>
-      <EffectHeight>12</EffectHeight>
-      <MaxEffectAngle>180</MaxEffectAngle>
-      <EffectSplashHeight>8</EffectSplashHeight>
-      <EffectSplashRadius>8</EffectSplashRadius>
+      <EffectRadius>42</EffectRadius>
+      <EffectHeight>31</EffectHeight>
+      <MaxEffectAngle>360</MaxEffectAngle>
+      <EffectSplashHeight>0</EffectSplashHeight>
+      <EffectSplashRadius>0</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>0</EffectSplashEffectiveRadius>
+    </ActionStepModifier>
+    <ActionStepModifier>
+      <Name>Small Pop</Name>
+      <StrengthBase>30</StrengthBase>
+      <StrengthRange>0</StrengthRange>
+      <StrengthCount>0</StrengthCount>
+      <Flags>
+        <Permeating>1</Permeating>
+        <LimitDistance>1</LimitDistance>
+        <SetLastAttackedDirection>0</SetLastAttackedDirection>
+        <ContinueActionOnStepFailure>1</ContinueActionOnStepFailure>
+      </Flags>
+      <AccuracyMultiplier>1</AccuracyMultiplier>
+      <EffectTimeout>0</EffectTimeout>
+      <MinEffectRadius>0</MinEffectRadius>
+      <EffectRadius>10</EffectRadius>
+      <EffectHeight>8</EffectHeight>
+      <MaxEffectAngle>360</MaxEffectAngle>
+      <EffectSplashHeight>6</EffectSplashHeight>
+      <EffectSplashRadius>9</EffectSplashRadius>
       <EffectSplashEffectiveRadius>10</EffectSplashEffectiveRadius>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
@@ -183,35 +205,14 @@
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
-      <Name>Little Stalking</Name>
-      <StrengthBase>0</StrengthBase>
+      <Name>Tiny Pop</Name>
+      <StrengthBase>16</StrengthBase>
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
       <Flags>
-        <Permeating>0</Permeating>
-        <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>0</SetLastAttackedDirection>
-        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
-      </Flags>
-      <AccuracyMultiplier>1</AccuracyMultiplier>
-      <EffectTimeout>0</EffectTimeout>
-      <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>20</EffectRadius>
-      <EffectHeight>30</EffectHeight>
-      <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>0</EffectSplashHeight>
-      <EffectSplashRadius>0</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>0</EffectSplashEffectiveRadius>
-    </ActionStepModifier>
-    <ActionStepModifier>
-      <Name>Big Pop</Name>
-      <StrengthBase>30</StrengthBase>
-      <StrengthRange>20</StrengthRange>
-      <StrengthCount>1</StrengthCount>
-      <Flags>
         <Permeating>1</Permeating>
         <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>1</SetLastAttackedDirection>
+        <SetLastAttackedDirection>0</SetLastAttackedDirection>
         <ContinueActionOnStepFailure>1</ContinueActionOnStepFailure>
       </Flags>
       <AccuracyMultiplier>1</AccuracyMultiplier>
@@ -221,9 +222,8 @@
       <EffectHeight>8</EffectHeight>
       <MaxEffectAngle>360</MaxEffectAngle>
       <EffectSplashHeight>6</EffectSplashHeight>
-      <EffectSplashRadius>10</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>20</EffectSplashEffectiveRadius>
-      <SelfStatistic>DamageDealt</SelfStatistic>
+      <EffectSplashRadius>7</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>8</EffectSplashEffectiveRadius>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
   </ActionStepModifiers>

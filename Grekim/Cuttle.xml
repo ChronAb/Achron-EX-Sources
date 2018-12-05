@@ -2,8 +2,8 @@
 <ResequenceObjectClassSet>
   <ActionStepModifiers>
     <ActionStepModifier>
-      <Name>Todaro Blaster</Name>
-      <StrengthBase>12</StrengthBase>
+      <Name>Todaro Air LastHit</Name>
+      <StrengthBase>60</StrengthBase>
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
       <Flags>
@@ -15,12 +15,12 @@
       <AccuracyMultiplier>1</AccuracyMultiplier>
       <EffectTimeout>0</EffectTimeout>
       <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>9</EffectRadius>
-      <EffectHeight>30</EffectHeight>
-      <MaxEffectAngle>180</MaxEffectAngle>
-      <EffectSplashHeight>3</EffectSplashHeight>
-      <EffectSplashRadius>2</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>3</EffectSplashEffectiveRadius>
+      <EffectRadius>2</EffectRadius>
+      <EffectHeight>6</EffectHeight>
+      <MaxEffectAngle>90</MaxEffectAngle>
+      <EffectSplashHeight>0</EffectSplashHeight>
+      <EffectSplashRadius>0</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>0</EffectSplashEffectiveRadius>
       <SelfStatistic>DamageDealt</SelfStatistic>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
@@ -48,8 +48,8 @@
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
-      <Name>Todaro Air LastHit</Name>
-      <StrengthBase>60</StrengthBase>
+      <Name>Todaro Blaster</Name>
+      <StrengthBase>12</StrengthBase>
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
       <Flags>
@@ -61,12 +61,12 @@
       <AccuracyMultiplier>1</AccuracyMultiplier>
       <EffectTimeout>0</EffectTimeout>
       <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>2</EffectRadius>
-      <EffectHeight>6</EffectHeight>
-      <MaxEffectAngle>90</MaxEffectAngle>
-      <EffectSplashHeight>0</EffectSplashHeight>
-      <EffectSplashRadius>0</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>0</EffectSplashEffectiveRadius>
+      <EffectRadius>9</EffectRadius>
+      <EffectHeight>30</EffectHeight>
+      <MaxEffectAngle>180</MaxEffectAngle>
+      <EffectSplashHeight>3</EffectSplashHeight>
+      <EffectSplashRadius>2</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>3</EffectSplashEffectiveRadius>
       <SelfStatistic>DamageDealt</SelfStatistic>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>

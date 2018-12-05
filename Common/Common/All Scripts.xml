@@ -6,396 +6,8 @@
       <Path>./ais/grekim_factory_idle2.abn</Path>
     </AIScript>
     <AIScript>
-      <Name>Script2</Name>
-      <Path>./ais/grekim_factory_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script3</Name>
-      <Path>./ais/common_vecgir_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script4</Name>
-      <Path>./ais/general_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script5</Name>
-      <Path>./ais/factory_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script6</Name>
-      <Path>./ais/importer_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script7</Name>
-      <Path>./ais/cport_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script8</Name>
-      <Path>./ais/tank_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script9</Name>
-      <Path>./ais/bastion_attack.abn</Path>
-    </AIScript>
-    <AIScript>
       <Name>Script10</Name>
       <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script11</Name>
-      <Path>./ais/building_common_off.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script12</Name>
-      <Path>./ais/common_human_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script13</Name>
-      <Path>./ais/building_common_relocate.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script14</Name>
-      <Path>./ais/human_building_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script15</Name>
-      <Path>./ais/commc_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script16</Name>
-      <Path>./ais/8080_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script17</Name>
-      <Path>./ais/carrier_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script18</Name>
-      <Path>./ais/marine_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script19</Name>
-      <Path>./ais/lancer_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script20</Name>
-      <Path>./ais/pickmeup.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script21</Name>
-      <Path>./ais/move_dispatch.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script22</Name>
-      <Path>./ais/move.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script23</Name>
-      <Path>./ais/simple_move.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script24</Name>
-      <Path>./ais/simple_move_dispatch.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script25</Name>
-      <Path>./ais/greyout.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script26</Name>
-      <Path>./ais/vecgir_build.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script27</Name>
-      <Path>./ais/vecgir_repair_indepot.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script28</Name>
-      <Path>./ais/pharao3_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script29</Name>
-      <Path>./ais/spyre_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script30</Name>
-      <Path>./ais/chooser_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script31</Name>
-      <Path>./ais/gargantuan_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script32</Name>
-      <Path>./ais/vcarrier_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script33</Name>
-      <Path>./ais/armory_marine.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script34</Name>
-      <Path>./ais/greyout.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script35</Name>
-      <Path>./ais/armory_sop.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script36</Name>
-      <Path>./ais/greyout.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script37</Name>
-      <Path>./ais/human_tank_postmerge.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script38</Name>
-      <Path>./ais/blank.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script39</Name>
-      <Path>./ais/blank.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script40</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script41</Name>
-      <Path>./ais/acc_annex_constructing.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script42</Name>
-      <Path>./ais/macrofab_reload_hcG.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script43</Name>
-      <Path>./ais/macrofab_reload_hc.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script44</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script45</Name>
-      <Path>./ais/armory_hmechG.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script46</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script47</Name>
-      <Path>./ais/mine_mine.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script48</Name>
-      <Path>./ais/mine_pickmine.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script49</Name>
-      <Path>./ais/unknown_bldg.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script50</Name>
-      <Path>./ais/armory_hmech.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script51</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script52</Name>
-      <Path>./ais/armory_upgrade_groundG.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script53</Name>
-      <Path>./ais/armory_upgrade_ground.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script54</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script55</Name>
-      <Path>./ais/armory_extras.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script56</Name>
-      <Path>./ais/armory_extrasG.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script57</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script58</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script59</Name>
-      <Path>./ais/armory_gate.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script60</Name>
-      <Path>./ais/armory_gateG.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script61</Name>
-      <Path>./ais/unknown_bldg.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script62</Name>
-      <Path>./ais/armory_upgrade_aerospace.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script63</Name>
-      <Path>./ais/armory_upgrade_aerospaceG.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script64</Name>
-      <Path>./ais/unknown_bldg.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script65</Name>
-      <Path>./ais/unknown_bldg.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script66</Name>
-      <Path>./ais/tport_out.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script67</Name>
-      <Path>./ais/turret_attack.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script68</Name>
-      <Path>./ais/slingshot_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script69</Name>
-      <Path>./ais/turret_defend.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script70</Name>
-      <Path>./ais/tport_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script71</Name>
-      <Path>./ais/tport_setactive.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script72</Name>
-      <Path>./ais/tport_move.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script73</Name>
-      <Path>./ais/human_build.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script74</Name>
-      <Path>./ais/cancel.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script75</Name>
-      <Path>./ais/marine_mining.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script76</Name>
-      <Path>./ais/marine_importer.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script77</Name>
-      <Path>./ais/marine_lfactory.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script78</Name>
-      <Path>./ais/marine_armory.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script79</Name>
-      <Path>./ais/marine_commc.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script80</Name>
-      <Path>./ais/8080_macrofab.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script81</Name>
-      <Path>./ais/8080_turret.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script82</Name>
-      <Path>./ais/tport_active.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script83</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script84</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script85</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script86</Name>
-      <Path>./ais/8080_sslingshot.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script87</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script88</Name>
-      <Path>./ais/8080_teleporter.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script89</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script90</Name>
-      <Path>./ais/8080_chronoporter.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script91</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script92</Name>
-      <Path>./ais/8080_carrier.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script93</Name>
-      <Path>./ais/mech_importer.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script94</Name>
-      <Path>./ais/mech_armory.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script95</Name>
-      <Path>./ais/macrofab_mfb.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script96</Name>
-      <Path>./ais/macrofab_blackbird.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script97</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script98</Name>
-      <Path>./ais/researched.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script99</Name>
-      <Path>./ais/pulser_idle.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script100</Name>
@@ -438,6 +50,10 @@
       <Path>./ais/foundation_idle.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script11</Name>
+      <Path>./ais/building_common_off.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script110</Name>
       <Path>./ais/foundation_new_upleft.abn</Path>
     </AIScript>
@@ -476,6 +92,10 @@
     <AIScript>
       <Name>Script119</Name>
       <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script12</Name>
+      <Path>./ais/common_human_idle.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script120</Name>
@@ -518,6 +138,10 @@
       <Path>./ais/depot_s_halcyon.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script13</Name>
+      <Path>./ais/building_common_relocate.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script130</Name>
       <Path>./ais/unknown.abn</Path>
     </AIScript>
@@ -556,6 +180,10 @@
     <AIScript>
       <Name>Script139</Name>
       <Path>./ais/annex_halcyon.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script14</Name>
+      <Path>./ais/human_building_idle.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script140</Name>
@@ -598,6 +226,10 @@
       <Path>./ais/researched.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script15</Name>
+      <Path>./ais/commc_idle.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script150</Name>
       <Path>./ais/unknown.abn</Path>
     </AIScript>
@@ -636,6 +268,10 @@
     <AIScript>
       <Name>Script159</Name>
       <Path>./ais/clearnanite.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script16</Name>
+      <Path>./ais/8080_idle.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script160</Name>
@@ -678,6 +314,10 @@
       <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script17</Name>
+      <Path>./ais/carrier_idle.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script170</Name>
       <Path>./ais/foundation_bastion.abn</Path>
     </AIScript>
@@ -716,6 +356,10 @@
     <AIScript>
       <Name>Script179</Name>
       <Path>./ais/greyout.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script18</Name>
+      <Path>./ais/marine_idle.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script180</Name>
@@ -758,6 +402,10 @@
       <Path>./ais/startmove.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script19</Name>
+      <Path>./ais/lancer_idle.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script190</Name>
       <Path>./ais/unknown.abn</Path>
     </AIScript>
@@ -796,6 +444,14 @@
     <AIScript>
       <Name>Script199</Name>
       <Path>./ais/patrol.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script2</Name>
+      <Path>./ais/grekim_factory_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script20</Name>
+      <Path>./ais/pickmeup.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script200</Name>
@@ -838,6 +494,10 @@
       <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script21</Name>
+      <Path>./ais/move_dispatch.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script210</Name>
       <Path>./ais/chronoportme.abn</Path>
     </AIScript>
@@ -876,6 +536,10 @@
     <AIScript>
       <Name>Script219</Name>
       <Path>./ais/releaseAll.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script22</Name>
+      <Path>./ais/move.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script220</Name>
@@ -918,6 +582,10 @@
       <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script23</Name>
+      <Path>./ais/simple_move.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script230</Name>
       <Path>./ais/stopfreeze.abn</Path>
     </AIScript>
@@ -956,6 +624,10 @@
     <AIScript>
       <Name>Script239</Name>
       <Path>./ais/tank_release.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script24</Name>
+      <Path>./ais/simple_move_dispatch.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script240</Name>
@@ -998,6 +670,10 @@
       <Path>./ais/vecgir_pilot_pulser.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script25</Name>
+      <Path>./ais/greyout.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script250</Name>
       <Path>./ais/vecgir_pilot_tercher.abn</Path>
     </AIScript>
@@ -1022,6 +698,10 @@
       <Path>./ais/vecgir_upgradeskip.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script256</Name>
+      <Path>./ais/grekim_split_down.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script257</Name>
       <Path>./ais/unknown.abn</Path>
     </AIScript>
@@ -1032,6 +712,10 @@
     <AIScript>
       <Name>Script259</Name>
       <Path>./ais/octo_dome.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script26</Name>
+      <Path>./ais/vecgir_build.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script260</Name>
@@ -1074,6 +758,10 @@
       <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script27</Name>
+      <Path>./ais/vecgir_repair_indepot.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script270</Name>
       <Path>./ais/grekim_sepia2.abn</Path>
     </AIScript>
@@ -1112,6 +800,10 @@
     <AIScript>
       <Name>Script279</Name>
       <Path>./ais/grekim_sepia3.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script28</Name>
+      <Path>./ais/pharao3_idle.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script280</Name>
@@ -1154,6 +846,10 @@
       <Path>./ais/factory_athc.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script29</Name>
+      <Path>./ais/spyre_idle.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script290</Name>
       <Path>./ais/unknown_bldg.abn</Path>
     </AIScript>
@@ -1188,6 +884,22 @@
     <AIScript>
       <Name>Script298</Name>
       <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script299</Name>
+      <Path>./ais/grekim_build.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script3</Name>
+      <Path>./ais/common_vecgir_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script30</Name>
+      <Path>./ais/chooser_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script300</Name>
+      <Path>./ais/grekim_build_fast.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script301</Name>
@@ -1226,20 +938,8 @@
       <Path>./ais/sepiligo_gargantuan.abn</Path>
     </AIScript>
     <AIScript>
-      <Name>Script332</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script256</Name>
-      <Path>./ais/grekim_split_down.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script299</Name>
-      <Path>./ais/grekim_build.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script300</Name>
-      <Path>./ais/grekim_build_fast.abn</Path>
+      <Name>Script31</Name>
+      <Path>./ais/gargantuan_idle.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script310</Name>
@@ -1282,6 +982,10 @@
       <Path>./ais/arcticus_relink.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script32</Name>
+      <Path>./ais/vcarrier_idle.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script320</Name>
       <Path>./ais/arcticus_dispatch_move.abn</Path>
     </AIScript>
@@ -1322,12 +1026,20 @@
       <Path>./ais/greyout.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script33</Name>
+      <Path>./ais/armory_marine.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script330</Name>
       <Path>./ais/clearnanite.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script331</Name>
       <Path>./ais/tss.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script332</Name>
+      <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script333</Name>
@@ -1356,6 +1068,10 @@
     <AIScript>
       <Name>Script339</Name>
       <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script34</Name>
+      <Path>./ais/greyout.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script340</Name>
@@ -1398,6 +1114,10 @@
       <Path>./ais/reaph_extrasG.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script35</Name>
+      <Path>./ais/armory_sop.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script350</Name>
       <Path>./ais/researched.abn</Path>
     </AIScript>
@@ -1436,6 +1156,10 @@
     <AIScript>
       <Name>Script359</Name>
       <Path>./ais/tercher2_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script36</Name>
+      <Path>./ais/greyout.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script360</Name>
@@ -1478,6 +1202,10 @@
       <Path>./ais/rp_skip.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script37</Name>
+      <Path>./ais/human_tank_postmerge.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script370</Name>
       <Path>./ais/unknown.abn</Path>
     </AIScript>
@@ -1516,6 +1244,10 @@
     <AIScript>
       <Name>Script379</Name>
       <Path>./ais/uc_create_unit.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script38</Name>
+      <Path>./ais/blank.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script380</Name>
@@ -1558,6 +1290,10 @@
       <Path>./ais/auto_reactivate.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script39</Name>
+      <Path>./ais/blank.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script390</Name>
       <Path>./ais/building_common_relocate.abn</Path>
     </AIScript>
@@ -1596,6 +1332,14 @@
     <AIScript>
       <Name>Script399</Name>
       <Path>./ais/arcticus_dispatch_dome.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script4</Name>
+      <Path>./ais/general_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script40</Name>
+      <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script400</Name>
@@ -1638,6 +1382,10 @@
       <Path>./ais/elder_idle.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script41</Name>
+      <Path>./ais/acc_annex_constructing.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script410</Name>
       <Path>./ais/achron_idle.abn</Path>
     </AIScript>
@@ -1678,6 +1426,10 @@
       <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
+      <Name>Script42</Name>
+      <Path>./ais/macrofab_reload_hcG.abn</Path>
+    </AIScript>
+    <AIScript>
       <Name>Script420</Name>
       <Path>./ais/simple_morph.abn</Path>
     </AIScript>
@@ -1700,6 +1452,254 @@
     <AIScript>
       <Name>Script425</Name>
       <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script43</Name>
+      <Path>./ais/macrofab_reload_hc.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script44</Name>
+      <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script45</Name>
+      <Path>./ais/armory_hmechG.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script46</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script47</Name>
+      <Path>./ais/mine_mine.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script48</Name>
+      <Path>./ais/mine_pickmine.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script49</Name>
+      <Path>./ais/unknown_bldg.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script5</Name>
+      <Path>./ais/factory_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script50</Name>
+      <Path>./ais/armory_hmech.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script51</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script52</Name>
+      <Path>./ais/armory_upgrade_groundG.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script53</Name>
+      <Path>./ais/armory_upgrade_ground.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script54</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script55</Name>
+      <Path>./ais/armory_extras.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script56</Name>
+      <Path>./ais/armory_extrasG.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script57</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script58</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script59</Name>
+      <Path>./ais/armory_gate.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script6</Name>
+      <Path>./ais/importer_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script60</Name>
+      <Path>./ais/armory_gateG.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script61</Name>
+      <Path>./ais/unknown_bldg.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script62</Name>
+      <Path>./ais/armory_upgrade_aerospace.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script63</Name>
+      <Path>./ais/armory_upgrade_aerospaceG.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script64</Name>
+      <Path>./ais/unknown_bldg.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script65</Name>
+      <Path>./ais/unknown_bldg.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script66</Name>
+      <Path>./ais/tport_out.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script67</Name>
+      <Path>./ais/turret_attack.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script68</Name>
+      <Path>./ais/slingshot_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script69</Name>
+      <Path>./ais/turret_defend.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script7</Name>
+      <Path>./ais/cport_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script70</Name>
+      <Path>./ais/tport_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script71</Name>
+      <Path>./ais/tport_setactive.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script72</Name>
+      <Path>./ais/tport_move.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script73</Name>
+      <Path>./ais/human_build.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script74</Name>
+      <Path>./ais/cancel.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script75</Name>
+      <Path>./ais/marine_mining.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script76</Name>
+      <Path>./ais/marine_importer.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script77</Name>
+      <Path>./ais/marine_lfactory.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script78</Name>
+      <Path>./ais/marine_armory.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script79</Name>
+      <Path>./ais/marine_commc.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script8</Name>
+      <Path>./ais/tank_idle.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script80</Name>
+      <Path>./ais/8080_macrofab.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script81</Name>
+      <Path>./ais/8080_turret.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script82</Name>
+      <Path>./ais/tport_active.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script83</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script84</Name>
+      <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script85</Name>
+      <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script86</Name>
+      <Path>./ais/8080_sslingshot.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script87</Name>
+      <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script88</Name>
+      <Path>./ais/8080_teleporter.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script89</Name>
+      <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script9</Name>
+      <Path>./ais/bastion_attack.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script90</Name>
+      <Path>./ais/8080_chronoporter.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script91</Name>
+      <Path>./ais/unknown.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script92</Name>
+      <Path>./ais/8080_carrier.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script93</Name>
+      <Path>./ais/mech_importer.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script94</Name>
+      <Path>./ais/mech_armory.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script95</Name>
+      <Path>./ais/macrofab_mfb.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script96</Name>
+      <Path>./ais/macrofab_blackbird.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script97</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script98</Name>
+      <Path>./ais/researched.abn</Path>
+    </AIScript>
+    <AIScript>
+      <Name>Script99</Name>
+      <Path>./ais/pulser_idle.abn</Path>
     </AIScript>
   </AIScripts>
   <Sounds/>

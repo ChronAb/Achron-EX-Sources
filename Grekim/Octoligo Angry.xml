@@ -2,6 +2,79 @@
 <ResequenceObjectClassSet>
   <ObjectClasses>
     <ObjectClass>
+      <Action>
+        <ActionNumber>4</ActionNumber>
+        <Identifier>ACTION_ATTACK_W1</Identifier>
+        <TimeTaken>18</TimeTaken>
+        <ForceObjectAction>0</ForceObjectAction>
+        <InterruptCurrentAction>0</InterruptCurrentAction>
+        <MutexAction>1</MutexAction>
+        <FailOnInvalidTarget>0</FailOnInvalidTarget>
+        <PreserveParameter>1</PreserveParameter>
+        <AIScriptCanRun>0</AIScriptCanRun>
+        <SetParamZeroTicks>0</SetParamZeroTicks>
+        <AllowActionWhenStopped>0</AllowActionWhenStopped>
+        <Conditions>
+          <Condition>
+            <Resource>U_AMMO</Resource>
+            <Comparison>GEQUAL</Comparison>
+            <Value>50</Value>
+          </Condition>
+          <Condition>
+            <Resource>U_HP</Resource>
+            <Comparison>GREATER</Comparison>
+            <Value>20</Value>
+          </Condition>
+        </Conditions>
+        <Steps>
+          <Step>
+            <PrimitiveAction>ATTACK</PrimitiveAction>
+            <Target>TARGET_UNIT</Target>
+            <Probability>0.6</Probability>
+            <ValueEval>ONE</ValueEval>
+            <Value>0</Value>
+            <ActionStepModifier>HE E AA S.O.C.</ActionStepModifier>
+          </Step>
+          <Step>
+            <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
+            <Target>SELF</Target>
+            <Type>U_HP</Type>
+            <ValueEval>ONE</ValueEval>
+            <Value>20</Value>
+          </Step>
+        </Steps>
+      </Action>
+      <Action>
+        <ActionNumber>27</ActionNumber>
+        <Identifier>ACTION_Attack_w1_delay</Identifier>
+        <TimeTaken>18</TimeTaken>
+        <ForceObjectAction>1</ForceObjectAction>
+        <InterruptCurrentAction>0</InterruptCurrentAction>
+        <MutexAction>1</MutexAction>
+        <FailOnInvalidTarget>0</FailOnInvalidTarget>
+        <PreserveParameter>1</PreserveParameter>
+        <AIScriptCanRun>0</AIScriptCanRun>
+        <SetParamZeroTicks>0</SetParamZeroTicks>
+        <AllowActionWhenStopped>0</AllowActionWhenStopped>
+        <Conditions>
+          <Condition>
+            <Resource>U_ACTION</Resource>
+            <Comparison>EQUAL</Comparison>
+            <Value>4</Value>
+          </Condition>
+        </Conditions>
+        <Steps/>
+      </Action>
+      <Objective>
+        <ObjectiveNumber>2</ObjectiveNumber>
+        <Script>Script196</Script>
+        <Name>Attack</Name>
+        <Details>Attack target or Attack-Move to location\ \[Weapons Avg Damage/10secs ]\Gnd: 500,  R 16,  SR 4,  Sta C\Air: 300,  R 10,  SR 1,  Sta C</Details>
+        <ObjectiveControlShortcutNumber>0</ObjectiveControlShortcutNumber>
+        <ParameterType>POSITION</ParameterType>
+      </Objective>
+    </ObjectClass>
+    <ObjectClass>
       <ClassNumber>1101</ClassNumber>
       <Name>Angry Cthulhu (Octoligo)</Name>
       <Description>ANGRY CTHULHU/OCTOLIGO:&#13;
@@ -1726,79 +1799,6 @@ Reverts after 20 s</Description>
           </ControlConditions>
         </ControlShortcut>
       </ControlShortcuts>
-    </ObjectClass>
-    <ObjectClass>
-      <Action>
-        <ActionNumber>4</ActionNumber>
-        <Identifier>ACTION_ATTACK_W1</Identifier>
-        <TimeTaken>18</TimeTaken>
-        <ForceObjectAction>0</ForceObjectAction>
-        <InterruptCurrentAction>0</InterruptCurrentAction>
-        <MutexAction>1</MutexAction>
-        <FailOnInvalidTarget>0</FailOnInvalidTarget>
-        <PreserveParameter>1</PreserveParameter>
-        <AIScriptCanRun>0</AIScriptCanRun>
-        <SetParamZeroTicks>0</SetParamZeroTicks>
-        <AllowActionWhenStopped>0</AllowActionWhenStopped>
-        <Conditions>
-          <Condition>
-            <Resource>U_AMMO</Resource>
-            <Comparison>GEQUAL</Comparison>
-            <Value>50</Value>
-          </Condition>
-          <Condition>
-            <Resource>U_HP</Resource>
-            <Comparison>GREATER</Comparison>
-            <Value>20</Value>
-          </Condition>
-        </Conditions>
-        <Steps>
-          <Step>
-            <PrimitiveAction>ATTACK</PrimitiveAction>
-            <Target>TARGET_UNIT</Target>
-            <Probability>0.6</Probability>
-            <ValueEval>ONE</ValueEval>
-            <Value>0</Value>
-            <ActionStepModifier>HE E AA S.O.C.</ActionStepModifier>
-          </Step>
-          <Step>
-            <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-            <Target>SELF</Target>
-            <Type>U_HP</Type>
-            <ValueEval>ONE</ValueEval>
-            <Value>20</Value>
-          </Step>
-        </Steps>
-      </Action>
-      <Action>
-        <ActionNumber>27</ActionNumber>
-        <Identifier>ACTION_Attack_w1_delay</Identifier>
-        <TimeTaken>18</TimeTaken>
-        <ForceObjectAction>1</ForceObjectAction>
-        <InterruptCurrentAction>0</InterruptCurrentAction>
-        <MutexAction>1</MutexAction>
-        <FailOnInvalidTarget>0</FailOnInvalidTarget>
-        <PreserveParameter>1</PreserveParameter>
-        <AIScriptCanRun>0</AIScriptCanRun>
-        <SetParamZeroTicks>0</SetParamZeroTicks>
-        <AllowActionWhenStopped>0</AllowActionWhenStopped>
-        <Conditions>
-          <Condition>
-            <Resource>U_ACTION</Resource>
-            <Comparison>EQUAL</Comparison>
-            <Value>4</Value>
-          </Condition>
-        </Conditions>
-        <Steps/>
-      </Action>
-      <Objective>
-        <ObjectiveNumber>2</ObjectiveNumber>
-        <Script>Script196</Script>
-        <Name>Attack</Name>
-        <Details>Attack target or Attack-Move to location\ \[Weapons Avg Damage/10secs ]\Gnd: 500,  R 16,  SR 4,  Sta C\Air: 300,  R 10,  SR 1,  Sta C</Details>
-        <ObjectiveControlShortcutNumber>0</ObjectiveControlShortcutNumber>
-        <ParameterType>POSITION</ParameterType>
-      </Objective>
     </ObjectClass>
   </ObjectClasses>
   <AIScripts/>

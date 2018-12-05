@@ -2,10 +2,10 @@
 <ResequenceObjectClassSet>
   <ActionStepModifiers>
     <ActionStepModifier>
-      <Name>HE S.O.C.</Name>
-      <StrengthBase>90</StrengthBase>
-      <StrengthRange>60</StrengthRange>
-      <StrengthCount>1</StrengthCount>
+      <Name>Chronoton Cascade</Name>
+      <StrengthBase>15</StrengthBase>
+      <StrengthRange>0</StrengthRange>
+      <StrengthCount>0</StrengthCount>
       <Flags>
         <Permeating>1</Permeating>
         <LimitDistance>1</LimitDistance>
@@ -15,12 +15,35 @@
       <AccuracyMultiplier>1</AccuracyMultiplier>
       <EffectTimeout>0</EffectTimeout>
       <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>18</EffectRadius>
+      <EffectRadius>32</EffectRadius>
       <EffectHeight>30</EffectHeight>
       <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>6</EffectSplashHeight>
-      <EffectSplashRadius>6</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>9</EffectSplashEffectiveRadius>
+      <EffectSplashHeight>8</EffectSplashHeight>
+      <EffectSplashRadius>15</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>16</EffectSplashEffectiveRadius>
+      <SelfStatistic>DamageDealt</SelfStatistic>
+      <TargetStatistic>DamageReceived</TargetStatistic>
+    </ActionStepModifier>
+    <ActionStepModifier>
+      <Name>HE AA S.O.C.</Name>
+      <StrengthBase>40</StrengthBase>
+      <StrengthRange>20</StrengthRange>
+      <StrengthCount>1</StrengthCount>
+      <Flags>
+        <Permeating>0</Permeating>
+        <LimitDistance>1</LimitDistance>
+        <SetLastAttackedDirection>1</SetLastAttackedDirection>
+        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
+      </Flags>
+      <AccuracyMultiplier>1</AccuracyMultiplier>
+      <EffectTimeout>0</EffectTimeout>
+      <MinEffectRadius>0</MinEffectRadius>
+      <EffectRadius>32</EffectRadius>
+      <EffectHeight>30</EffectHeight>
+      <MaxEffectAngle>360</MaxEffectAngle>
+      <EffectSplashHeight>2</EffectSplashHeight>
+      <EffectSplashRadius>1</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>2</EffectSplashEffectiveRadius>
       <SelfStatistic>DamageDealt</SelfStatistic>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
@@ -48,55 +71,9 @@
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
-      <Name>Chronoton Cascade</Name>
-      <StrengthBase>15</StrengthBase>
-      <StrengthRange>0</StrengthRange>
-      <StrengthCount>0</StrengthCount>
-      <Flags>
-        <Permeating>1</Permeating>
-        <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>1</SetLastAttackedDirection>
-        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
-      </Flags>
-      <AccuracyMultiplier>1</AccuracyMultiplier>
-      <EffectTimeout>0</EffectTimeout>
-      <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>32</EffectRadius>
-      <EffectHeight>30</EffectHeight>
-      <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>8</EffectSplashHeight>
-      <EffectSplashRadius>15</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>16</EffectSplashEffectiveRadius>
-      <SelfStatistic>DamageDealt</SelfStatistic>
-      <TargetStatistic>DamageReceived</TargetStatistic>
-    </ActionStepModifier>
-    <ActionStepModifier>
-      <Name>HE S.O.C. Crit</Name>
-      <StrengthBase>90</StrengthBase>
-      <StrengthRange>40</StrengthRange>
-      <StrengthCount>1</StrengthCount>
-      <Flags>
-        <Permeating>1</Permeating>
-        <LimitDistance>1</LimitDistance>
-        <SetLastAttackedDirection>1</SetLastAttackedDirection>
-        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
-      </Flags>
-      <AccuracyMultiplier>1</AccuracyMultiplier>
-      <EffectTimeout>0</EffectTimeout>
-      <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>18</EffectRadius>
-      <EffectHeight>30</EffectHeight>
-      <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>3</EffectSplashHeight>
-      <EffectSplashRadius>4</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>6</EffectSplashEffectiveRadius>
-      <SelfStatistic>DamageDealt</SelfStatistic>
-      <TargetStatistic>DamageReceived</TargetStatistic>
-    </ActionStepModifier>
-    <ActionStepModifier>
-      <Name>HE AA S.O.C.</Name>
-      <StrengthBase>40</StrengthBase>
-      <StrengthRange>20</StrengthRange>
+      <Name>HE E AA S.O.C.</Name>
+      <StrengthBase>50</StrengthBase>
+      <StrengthRange>100</StrengthRange>
       <StrengthCount>1</StrengthCount>
       <Flags>
         <Permeating>0</Permeating>
@@ -107,7 +84,7 @@
       <AccuracyMultiplier>1</AccuracyMultiplier>
       <EffectTimeout>0</EffectTimeout>
       <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>32</EffectRadius>
+      <EffectRadius>12</EffectRadius>
       <EffectHeight>30</EffectHeight>
       <MaxEffectAngle>360</MaxEffectAngle>
       <EffectSplashHeight>2</EffectSplashHeight>
@@ -140,12 +117,12 @@
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
-      <Name>HE E AA S.O.C.</Name>
-      <StrengthBase>50</StrengthBase>
-      <StrengthRange>100</StrengthRange>
+      <Name>HE S.O.C.</Name>
+      <StrengthBase>90</StrengthBase>
+      <StrengthRange>60</StrengthRange>
       <StrengthCount>1</StrengthCount>
       <Flags>
-        <Permeating>0</Permeating>
+        <Permeating>1</Permeating>
         <LimitDistance>1</LimitDistance>
         <SetLastAttackedDirection>1</SetLastAttackedDirection>
         <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
@@ -153,12 +130,35 @@
       <AccuracyMultiplier>1</AccuracyMultiplier>
       <EffectTimeout>0</EffectTimeout>
       <MinEffectRadius>0</MinEffectRadius>
-      <EffectRadius>12</EffectRadius>
+      <EffectRadius>18</EffectRadius>
       <EffectHeight>30</EffectHeight>
       <MaxEffectAngle>360</MaxEffectAngle>
-      <EffectSplashHeight>2</EffectSplashHeight>
-      <EffectSplashRadius>1</EffectSplashRadius>
-      <EffectSplashEffectiveRadius>2</EffectSplashEffectiveRadius>
+      <EffectSplashHeight>6</EffectSplashHeight>
+      <EffectSplashRadius>6</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>9</EffectSplashEffectiveRadius>
+      <SelfStatistic>DamageDealt</SelfStatistic>
+      <TargetStatistic>DamageReceived</TargetStatistic>
+    </ActionStepModifier>
+    <ActionStepModifier>
+      <Name>HE S.O.C. Crit</Name>
+      <StrengthBase>90</StrengthBase>
+      <StrengthRange>40</StrengthRange>
+      <StrengthCount>1</StrengthCount>
+      <Flags>
+        <Permeating>1</Permeating>
+        <LimitDistance>1</LimitDistance>
+        <SetLastAttackedDirection>1</SetLastAttackedDirection>
+        <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>
+      </Flags>
+      <AccuracyMultiplier>1</AccuracyMultiplier>
+      <EffectTimeout>0</EffectTimeout>
+      <MinEffectRadius>0</MinEffectRadius>
+      <EffectRadius>18</EffectRadius>
+      <EffectHeight>30</EffectHeight>
+      <MaxEffectAngle>360</MaxEffectAngle>
+      <EffectSplashHeight>3</EffectSplashHeight>
+      <EffectSplashRadius>4</EffectSplashRadius>
+      <EffectSplashEffectiveRadius>6</EffectSplashEffectiveRadius>
       <SelfStatistic>DamageDealt</SelfStatistic>
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>

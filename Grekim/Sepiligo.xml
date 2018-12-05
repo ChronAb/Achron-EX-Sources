@@ -2,8 +2,8 @@
 <ResequenceObjectClassSet>
   <ActionStepModifiers>
     <ActionStepModifier>
-      <Name>Heavy Beam Cannons (grnd)</Name>
-      <StrengthBase>3</StrengthBase>
+      <Name>Heavy Beam Cannons</Name>
+      <StrengthBase>10</StrengthBase>
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
       <Flags>
@@ -25,8 +25,8 @@
       <TargetStatistic>DamageReceived</TargetStatistic>
     </ActionStepModifier>
     <ActionStepModifier>
-      <Name>Heavy Beam Cannons</Name>
-      <StrengthBase>10</StrengthBase>
+      <Name>Heavy Beam Cannons (grnd)</Name>
+      <StrengthBase>3</StrengthBase>
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
       <Flags>

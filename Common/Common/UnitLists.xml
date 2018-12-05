@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ResequenceObjectClassSet>
+  <UnitLists>
+    <UnitList>
+      <Rule>
+        <Condition>
+          <Resource>U_UNIT_NUMBER</Resource>
+          <Comparison>IS_SELECTED_UNIT</Comparison>
+          <Value>0</Value>
+        </Condition>
+      </Rule>
+    </UnitList>
+    <UnitList>
+      <Rule>
+        <Condition>
+          <Resource>U_CARRIER</Resource>
+          <Comparison>EQUAL</Comparison>
+          <ValueResource>SELECTED_UNIT_NUMBER</ValueResource>
+        </Condition>
+      </Rule>
+    </UnitList>
+    <UnitList>
+      <Rule>
+        <Condition>
+          <Resource>U_COMMANDER</Resource>
+          <Comparison>EQUAL</Comparison>
+          <ValueResource>SELECTED_UNIT_NUMBER</ValueResource>
+        </Condition>
+      </Rule>
+    </UnitList>
+    <UnitList>
+      <Rule>
+        <Condition>
+          <Resource>U_PRIORITY_SELECTION_RANK</Resource>
+          <Comparison>NOT_EQUAL</Comparison>
+          <Value>0</Value>
+        </Condition>
+      </Rule>
+    </UnitList>
+  </UnitLists>
+</ResequenceObjectClassSet>

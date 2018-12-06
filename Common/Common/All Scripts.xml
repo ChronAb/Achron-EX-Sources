@@ -922,10 +922,6 @@
       <Path>./ais/octo_dome.abn</Path>
     </AIScript>
     <AIScript>
-      <Name>Script308</Name>
-      <Path>./ais/simple_morph.abn</Path>
-    </AIScript>
-    <AIScript>
       <Name>Script309</Name>
       <Path>./ais/sepiligo_gargantuan.abn</Path>
     </AIScript>
@@ -1214,14 +1210,6 @@
       <Path>./ais/chooser_human.abn</Path>
     </AIScript>
     <AIScript>
-      <Name>Script374</Name>
-      <Path>./ais/chooser_vecgir.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script375</Name>
-      <Path>./ais/chooser_grekim.abn</Path>
-    </AIScript>
-    <AIScript>
       <Name>Script376</Name>
       <Path>./ais/chooser_random.abn</Path>
     </AIScript>
@@ -1382,68 +1370,8 @@
       <Path>./ais/achron_idle.abn</Path>
     </AIScript>
     <AIScript>
-      <Name>Script411</Name>
-      <Path>./ais/cloak.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script412</Name>
-      <Path>./ais/uncloak.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script413</Name>
-      <Path>./ais/set_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script414</Name>
-      <Path>./ais/vendor_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script415</Name>
-      <Path>./ais/offspring_dispatch.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script416</Name>
-      <Path>./ais/repeat_progen.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script417</Name>
-      <Path>./ais/set_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script418</Name>
-      <Path>./ais/stopfreezebeam.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script419</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
       <Name>Script42</Name>
       <Path>./ais/macrofab_reload_hcG.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script420</Name>
-      <Path>./ais/simple_morph.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script421</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script422</Name>
-      <Path>./ais/wreckage_idle.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script423</Name>
-      <Path>./ais/annex_weapons.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script424</Name>
-      <Path>./ais/unknown.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script425</Name>
-      <Path>./ais/unknown.abn</Path>
     </AIScript>
     <AIScript>
       <Name>Script43</Name>

@@ -918,14 +918,6 @@
       <Path>./ais/sepi_reaph.abn</Path>
     </AIScript>
     <AIScript>
-      <Name>Script305</Name>
-      <Path>./ais/octo_rp.abn</Path>
-    </AIScript>
-    <AIScript>
-      <Name>Script306</Name>
-      <Path>./ais/sepi_mound.abn</Path>
-    </AIScript>
-    <AIScript>
       <Name>Script307</Name>
       <Path>./ais/octo_dome.abn</Path>
     </AIScript>

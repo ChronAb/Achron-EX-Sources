@@ -24,6 +24,7 @@ The subelements from each source file will be combined into the single Achron.oc
 
 from lxml import etree
 import sys
+from sort import sortTree
 
 parser = etree.XMLParser(remove_blank_text=True)
 achron = etree.XML('''<?xml version="1.0" ?>
@@ -129,9 +130,14 @@ for f in filenames:
             for child in parent:
                 root.append(child)
 
+# Remove extra whitespace
 for element in achron.iter():
     element.tail = None
 
+# Sort the tree for easy diffing
+tree = etree.ElementTree(achron)
+sortTree(tree)
+
 # Write out the Achron.ocs.xml file
 with open('Achron.ocs.xml', 'wb') as f:
-    etree.ElementTree(achron).write(f, pretty_print=True, encoding="UTF-8", xml_declaration=True)
+    tree.write(f, pretty_print=True, encoding="UTF-8", xml_declaration=True)

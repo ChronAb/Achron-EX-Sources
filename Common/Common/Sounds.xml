@@ -799,19 +799,5 @@
       <Is3DSound>1</Is3DSound>
       <ReferenceDistanceHeard>25</ReferenceDistanceHeard>
     </Sound>
-    <Sound>
-      <Name>Sound115</Name>
-      <FileName>./sfx/3xMRG_Impact.ogg</FileName>
-      <NumLoops>0</NumLoops>
-      <Is3DSound>1</Is3DSound>
-      <ReferenceDistanceHeard>20</ReferenceDistanceHeard>
-    </Sound>
-    <Sound>
-      <Name>Sound116</Name>
-      <FileName>./sfx/base_explode.ogg</FileName>
-      <NumLoops>0</NumLoops>
-      <Is3DSound>1</Is3DSound>
-      <ReferenceDistanceHeard>20</ReferenceDistanceHeard>
-    </Sound>
   </Sounds>
 </ResequenceObjectClassSet>

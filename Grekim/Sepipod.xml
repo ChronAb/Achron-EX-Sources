@@ -1905,42 +1905,6 @@ Can deploy Chronobomb (req. Specials)</Description>
             </ControlCondition>
           </ControlConditions>
         </ControlShortcut>
-        <!--ControlShortcut>
-                    <ControlNumber>1</ControlNumber>
-                    <ControlObjectiveNumber>37</ControlObjectiveNumber>
-                    <MouseInputType>SHORTCUT_QUICK_2</MouseInputType>
-                    <ParameterType>POSITION_CLASS</ParameterType>
-                    <Parameter>4007</Parameter>
-                    <KeyboardShortcut>$AchronKBFactoryMode</KeyboardShortcut>
-                    <Flags>
-                        <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
-                        <EstTimeConstIsStart>0</EstTimeConstIsStart>
-                        <ButtonDisabled>0</ButtonDisabled>
-                        <UserControlsCustom>0</UserControlsCustom>
-                        <ButtonInvisible>0</ButtonInvisible>
-                        <SelectTarget>0</SelectTarget>
-                    </Flags>
-                    <EstTimeConst>90</EstTimeConst>
-                    <EstTimeDist>2</EstTimeDist>
-                    <Sound>Sound0</Sound>
-                    <ControlConditions>
-                        <ControlCondition>
-                            <Resource>SCENARIO_CONSTRAINTS</Resource>
-                            <Comparison>BITMASK_NOT</Comparison>
-                            <Value>4</Value>
-                        </ControlCondition>
-                        <ControlCondition>
-                            <Resource>NUM_UNITS_SELECTED</Resource>
-                            <Comparison>EQUAL</Comparison>
-                            <Value>1</Value>
-                        </ControlCondition>
-                        <ControlCondition>
-                            <Resource>U_IS_CARRIED</Resource>
-                            <Comparison>EQUAL</Comparison>
-                            <Value>0</Value>
-                        </ControlCondition>
-                    </ControlConditions>
-                </ControlShortcut-->
         <ControlShortcut>
           <ControlNumber>2</ControlNumber>
           <ControlObjectiveNumber>3</ControlObjectiveNumber>

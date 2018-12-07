@@ -918,11 +918,6 @@ Weapons: 2X  regen. [+360 hp, +36/s]</Description>
               <Comparison>BITMASK</Comparison>
               <Value>64</Value>
             </Condition>
-            <!--Condition>
-                            <Resource>P_ADVANCEMENTS</Resource>
-                            <Comparison>BITMASK</Comparison>
-                            <Value>512</Value>
-                        </Condition-->
             <Condition>
               <Resource>U_STATUS</Resource>
               <Comparison>BITMASK_NOT</Comparison>
@@ -1852,12 +1847,6 @@ Weapons: 2X  regen. [+360 hp, +36/s]</Description>
           <Name>Stop</Name>
           <Details> \Interrupt current objective\and return to idling</Details>
         </Objective>
-        <!--Objective>
-                    <ObjectiveNumber>17</ObjectiveNumber>
-                    <Script>Script332</Script>
-                    <Name>Morph: Resource Processor</Name>
-                    <Details>   Not Available \    Requires Adv Structures upgrade</Details>
-                </Objective-->
         <Objective>
           <ObjectiveNumber>18</ObjectiveNumber>
           <Script>Script305</Script>
@@ -2186,11 +2175,6 @@ Weapons: 2X  regen. [+360 hp, +36/s]</Description>
               <Comparison>BITMASK</Comparison>
               <Value>64</Value>
             </ControlCondition>
-            <!--ControlCondition>
-                            <Resource>P_ADVANCEMENTS</Resource>
-                            <Comparison>BITMASK</Comparison>
-                            <Value>512</Value>
-                        </ControlCondition-->
             <ControlCondition>
               <Resource>U_IS_CARRIED</Resource>
               <Comparison>EQUAL</Comparison>

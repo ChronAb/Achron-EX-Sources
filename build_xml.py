@@ -66,7 +66,6 @@ filenames = [
     'Grekim/Cuttle.xml',
     'Grekim/Gargantuan.xml',
     'Grekim/Ghost.xml',
-    'Grekim/Octoligo Angry.xml',
     'Grekim/Octoligo Weapons.xml',
     'Grekim/Octoligo.xml',
     'Grekim/Octopod.xml',

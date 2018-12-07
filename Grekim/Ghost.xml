@@ -628,7 +628,7 @@ Heals all units and structures</Description>
         <Action>
           <ActionNumber>15</ActionNumber>
           <Identifier>ACTION_SELF_UPGRADE</Identifier>
-          <TimeTaken>72</TimeTaken>
+          <TimeTaken>54</TimeTaken>
           <ForceObjectAction>0</ForceObjectAction>
           <InterruptCurrentAction>0</InterruptCurrentAction>
           <MutexAction>0</MutexAction>

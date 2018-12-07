@@ -76,7 +76,6 @@ Can progenerate (req. Loligo tech)</Description>
         <Detector>0</Detector>
         <Visible>1</Visible>
       </Sensing>
-      <StoppedActionStepss/>
       <StoppedActionSteps/>
       <ChronoportedActionSteps/>
       <ChronoportArrivedActionSteps>

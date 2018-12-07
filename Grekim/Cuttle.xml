@@ -498,12 +498,19 @@ Limited lifespan</Description>
               <ValueEval>ONE</ValueEval>
               <Value>1</Value>
             </Step>
+            <Step>
+              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
+              <Target>SELF</Target>
+              <Type>U_HP</Type>
+              <ValueEval>ONE</ValueEval>
+              <Value>1</Value>
+            </Step>
           </Steps>
         </Action>
         <Action>
           <ActionNumber>4</ActionNumber>
           <Identifier>ACTION_ATTACK_W1</Identifier>
-          <TimeTaken>18</TimeTaken>
+          <TimeTaken>15</TimeTaken>
           <ForceObjectAction>0</ForceObjectAction>
           <InterruptCurrentAction>0</InterruptCurrentAction>
           <MutexAction>1</MutexAction>
@@ -520,6 +527,13 @@ Limited lifespan</Description>
               <ValueEval>ONE</ValueEval>
               <Value>0</Value>
               <ActionStepModifier>Todaro Air Melee</ActionStepModifier>
+            </Step>
+            <Step>
+              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
+              <Target>SELF</Target>
+              <Type>U_HP</Type>
+              <ValueEval>ONE</ValueEval>
+              <Value>1</Value>
             </Step>
             <Step>
               <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
@@ -863,7 +877,7 @@ Limited lifespan</Description>
           <ObjectiveNumber>2</ObjectiveNumber>
           <Script>Script196</Script>
           <Name>Attack</Name>
-          <Details>Attack target or Attack-Move to location \60 damage air last-hit \[Weapons Avg Damage/10secs ]\Gnd: 120,  R 8,  SR 2,  Sta C\Air: 20,  R 1,  Sta C</Details>
+          <Details>Attack target or Attack-Move to location \60 damage air last-hit \[Weapons Avg Damage/10secs ]\Gnd: 240,  R 8,  SR 2,  Sta C\Air: 60,  R 1,  Sta C</Details>
           <ObjectiveControlShortcutNumber>0</ObjectiveControlShortcutNumber>
           <ParameterType>POSITION</ParameterType>
         </Objective>

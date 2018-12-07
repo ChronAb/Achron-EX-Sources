@@ -37,26 +37,6 @@
       <Scale>1</Scale>
       <Offset>0</Offset>
     </GlobalGameResource>
-    <TimelineStatistic>
-      <Name>Special Used</Name>
-      <Identifier>Specials</Identifier>
-      <Row>2</Row>
-      <RowHeight>0.2</RowHeight>
-      <ColorR>255</ColorR>
-      <ColorG>220</ColorG>
-      <ColorB>90</ColorB>
-      <ColorA>100</ColorA>
-      <GraphType>BAR_UP</GraphType>
-      <AccumulationType>TOTAL</AccumulationType>
-      <NormalizationGroup>Specials</NormalizationGroup>
-      <TextureFileName>./skins/images/timeline_stat_bar</TextureFileName>
-      <TextureHorizontalScale>1</TextureHorizontalScale>
-      <FlashWhen>GREATER</FlashWhen>
-      <FlashColorR>255</FlashColorR>
-      <FlashColorG>220</FlashColorG>
-      <FlashColorB>90</FlashColorB>
-      <FlashColorA>255</FlashColorA>
-    </TimelineStatistic>
   </GlobalGameResources>
   <AIScripts>
     <AIScript>

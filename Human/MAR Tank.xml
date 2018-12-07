@@ -110,7 +110,7 @@
     </ActionStepModifier>
     <ActionStepModifier>
       <Name>Railgun Charge Up</Name>
-      <StrengthBase>4</StrengthBase>
+      <StrengthBase>2</StrengthBase>
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
       <Flags>

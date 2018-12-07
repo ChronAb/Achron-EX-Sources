@@ -30,7 +30,7 @@
       <StrengthRange>0</StrengthRange>
       <StrengthCount>0</StrengthCount>
       <Flags>
-        <Permeating>0</Permeating>
+        <Permeating>1</Permeating>
         <LimitDistance>1</LimitDistance>
         <SetLastAttackedDirection>0</SetLastAttackedDirection>
         <ContinueActionOnStepFailure>0</ContinueActionOnStepFailure>

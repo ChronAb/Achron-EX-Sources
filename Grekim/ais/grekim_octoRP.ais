@@ -1,0 +1,15 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+//script used by base-class progen units to make an OCTO which will be auto-dispatched to morph into an RP
+
+int uclass = unit->Class;
+int PROGEN_CLASS = $OCTO_CLASS;
+int ENERGY = $GREKIM1_ENERGY;
+#define $LC $OCTO_LC
+#define $QP 0
+
+#include common/include/grekim_progen.ais
+
+

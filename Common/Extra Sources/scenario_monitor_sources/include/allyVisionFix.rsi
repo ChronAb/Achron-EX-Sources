@@ -1,0 +1,22 @@
+/**********************************************
+* Sets shared vision based on alliances set in editor
+* Quick fix until editor allows editing of vision sharing
+*
+**********************************************/
+
+if(current == 1){
+	//Set ally vision
+
+	int allymask = 0;
+	int x = 0;
+	
+	for (x = 0; x < 15; x=x+1) {
+	
+		player = x;
+		
+		if ( (enabled>>x)&1) {
+			allymask = player->Allies;
+			PERFORM SET_PLAYER_VISIBILITY_SHARING allymask;
+		}
+	}
+}

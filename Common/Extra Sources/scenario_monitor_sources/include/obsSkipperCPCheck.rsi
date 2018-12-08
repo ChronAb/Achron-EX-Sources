@@ -1,0 +1,27 @@
+// --- To be used in conjuction with obsSkipper.rsi
+//     //Uses LastTick to insert a discontinuity record to the discontinuity list
+//      USES:
+//          //$ListStart      used to mark the start of the usable list
+//          //$MaxFields      used to mark the end of the usable list
+//      INPUT:
+//          //LastTick =      the time to be recorded as a discontinuity
+//          //FIndex          has to be initialised, primarily as a result of obsSkipperCheck.rsi
+// 
+// This code has been created by IphStich, who reserves all copyright.
+
+
+
+// - 0) initialise variables
+if (current%24==0) {int FIndex=$MaxFields+1;int term=current/* + 24-(current%24)*/;
+// - 1) find the appripriate index to insert
+while (1) {
+    PERFORM GET_ACHRONAL_FIELD FIndex;
+    if (perf_ret<term||FIndex>$MaxCP) {break;} else {FIndex=FIndex+2;} // if: found index: end; else: continue
+    if (perf_ret == term) {
+        PERFORM GET_ACHRONAL_FIELD (FIndex-1);
+        int LastTick=perf_ret;//player=0;say"PLACE";
+        #include include/obsSkipperNew.rsi
+    }
+}
+}
+//player=0;say "new: ",LastTick," ",present;

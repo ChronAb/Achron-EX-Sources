@@ -1,0 +1,180 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.ais
+
+int energy = 60;
+if (uclass == 1025) { //pharao2
+    energy = 4;
+}
+
+target = unit->ObjectiveParameters;
+
+if (target->IsAlive==1) {
+
+    int tstatus = target->Status;
+
+    if (unit->Energy < energy || tstatus[$TSS_BIT]) {
+       if (ap[$OBJECTIVE]==$OBJECTIVE_PICKMEUP) {
+			PERFORM SET_OBJECTIVE $OBJECTIVE_PICKMEUP;
+		}
+		else {
+			PERFORM SET_OBJECTIVE 0;
+		}
+        $SAY_RECOVER
+        if (unit->Energy < energy) $SAY_ENERGY
+        else $SAY_TSSED
+        PERFORM $ACTION_ERROR2;
+		//if right clicked on a building , walk towards it
+		if (myObjective==0) { 
+			#include common/include/unit_walkToBuilding.ais
+		}
+		$SET_AP
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+        PERFORM NOTHING;
+    }
+
+	
+	// if (target.Rank < $BUILDINGS_RANK && !tstatus[$FROZEN_BIT] && !tstatus[$COMMJAM_BIT]) {
+		// //if right clicked on a building , walk towards it
+		// #include common/include/unit_walkToBuilding.ais
+	// }
+	
+	
+
+    if (target<_>unit <= 144 && target<^>unit <= 900 ) { //recover has a range of 12/30
+		PERFORM $ACTION_RECOVER target;
+		
+		//either I or some other unit just recovered this target, so clear myself out of the smart idle field
+		if ($SMART_IDLE && $CUSTOMFIELD_RECOVER==unit) {
+			int flags = $FLAGS;
+			flags[$RECOVER_BIT] = 0;
+			PERFORM SET_PLAYER_CUSTOM_FIELD_3 flags;
+			PERFORM SET_PLAYER_CUSTOM_FIELD_1 $CUSTOMFIELD_HEAL; //clear out the recover field
+		}
+		
+		ap[$UNIT_BIT] = 0;
+
+		if (ap[$OBJECTIVE]==$OBJECTIVE_PICKMEUP) {
+			PERFORM SET_OBJECTIVE $OBJECTIVE_PICKMEUP;
+		} else {
+			PERFORM SET_PARAM 0;
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+			PERFORM SET_OBJECTIVE 0;
+		}
+
+		PERFORM SET_ADDITIONAL_PARAMS ap;
+		PERFORM NOTHING;
+    }
+    else {
+		PERFORM RAND;
+		if (perf_ret < $LAD_CLEAR) {
+			PERFORM CLEAR_LAST_ATTACKED_DIRECTION; 
+		}
+		int BANK_TURNING = 0;
+		int counter = unit->AdditionalParameters2; //move counter to move in the same direction
+		if (counter>0) {           //more than 0 means already moving in a direction
+			counter = counter - 1; //decrease the counter
+			int rot = unit->Rotation; //get the unit's current rotation
+			$DIR_FROM_ROT             //set the dir to move to based on that unit's rotation
+		}
+		else {  //no move counter stored, so query where to move to next
+		
+			int rot = unit->Rotation;
+			$DIR_FROM_ROT;
+			int old_dir = dir;
+			int old_rot = rot;
+			
+			int position = target->Position;
+			int uZ = unit->ZPosition;
+			if (uZ > 0 && position[$Zpos] == 0) { //air unit recovering a ground unit
+				PERFORM GET_MAP_NEXT_Z_POSITION_UP position;
+
+				if (unit <^> perf_ret > 900) {  //unit is way too high, go down to the 1 level above
+					position = perf_ret;
+				}
+				else {
+					position[$Zpos] = uZ |> perf_ret[$Zpos]; //take the max height of current level and one above ground unit
+				}
+			}
+
+			ignore_collision_with_unit = target;
+			dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ (position <=> query) * 2 ] WHERE [1];    
+
+			if (dir[0,8] >= 16) { counter = 0; } //moving up or down, so don't store counter
+			else {
+				counter = dir[16,8]; 			  //the counter is stored in the 3rd byte of dir
+				if (counter > 7) { $MAX_COUNTER_VALUE } //cap it at 7 since AdditionalParameters2 only has 3 bits
+			}
+			//check to see if the unit is rotating
+			if(old_dir != dir[0,8]) { 
+				int new_dir = dir; //backup new value
+				dir = dir[0,8]; 
+				$ROT_FROM_DIR;
+				dir = new_dir; //restore value
+				
+				
+				
+				int diff = rot - old_rot;
+				if(diff > 0) {
+					if(diff <= 4) { 
+						BANK_TURNING = 1; //left
+					}
+					else {
+						BANK_TURNING = 2; //right
+					}
+				}
+				else if(diff < 0) {
+					if(diff >= -4) {
+						BANK_TURNING = 2; //right
+					}
+					else {
+						BANK_TURNING = 1; //left
+					}
+				}
+			}			
+		}
+
+		dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+		if (dir && dir != $QUERY_EXHAUSTED) {
+
+			if (counter>1) {
+				$UPDATE_SPEED_FOR_FAST_UNITS
+			}
+			//store the updated move counter
+			PERFORM SET_ADDITIONAL_PARAMS2 counter;		
+			
+			if(BANK_TURNING && $IS_BANKING_FLYER ) {
+				dir[8,8] = 2; //2 extra tiles per move
+				if(BANK_TURNING == 1) { PERFORM $ACTION_BANK_RIGHT dir; } 
+				else { PERFORM $ACTION_BANK_LEFT dir; } 
+				//if failed to bank-move because of obstacle or something, attempt to move normally
+				if(!perf_ret) {
+					PERFORM $ACTION_MOVE dir;
+				}
+			}
+			else {
+				PERFORM $ACTION_MOVE dir; 
+			}
+			if ( perf_ret!=1) { 
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+			}
+			$SET_AP
+		}
+		else {
+			PERFORM SET_ADDITIONAL_PARAMS2 counter;
+		}
+
+		PERFORM NOTHING;
+    }
+}
+
+if (ap[$OBJECTIVE]==$OBJECTIVE_PICKMEUP) {
+	PERFORM SET_OBJECTIVE $OBJECTIVE_PICKMEUP;
+}
+else {
+	PERFORM SET_PARAM 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_OBJECTIVE 0;
+}
+
+$SET_AP

@@ -1,0 +1,46 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+// chronobomb_act.ais - chronobomb 'explode' script
+
+#include common/include/unit_common_header.aih
+
+
+if (unit->Ammo==17) { PERFORM $ACTION_REPEL; } //do the sucktion animation once, when full on ammo
+
+PERFORM GET_MAX_CHRONOPORT_DISTANCE;
+int maxDist = perf_ret;
+
+PERFORM GET_RECHRONOPORT_DELAY;  //get the rechronoport delay in ticks
+int delay = perf_ret;
+
+PERFORM GET_CUR_TIME;
+int current = perf_ret;
+
+PERFORM RAND;
+int rand  = perf_ret % 16; //random 0-15 
+
+int time = current + $TPS * (85 + rand); // 85-100 seconds into future 
+
+//if maximum chronoport distance is less than destination time, set it to max cport distance
+if (abs (time - current) >= maxDist) {
+	time = current + maxDist - 7;
+}
+
+int tc = 0;
+int timeSinceLastChronoport = 0;
+//don't work on hero units
+target = QUERY UNIT [unit] MIN [ unit <=> query ] WHERE [ !(query->IsStasis) && query->Owner!=15 &&  ! (
+		(tc=query->Class)==$HOLLOWAY_CLASS || tc==$HOLLOWAY_RAISED_CLASS || tc==$WINTERS_CLASS || tc==$WINTERS_RAISED_CLASS ||
+		 tc==$TYR_MFB_CLASS || tc==$TYR_DISABLED_CLASS || tc==$TYR_CARRIER_CLASS || tc==$DJELT_CLASS || tc==$DJELT_RAISED_CLASS || 
+		 tc==$KILDEN_CLASS || tc==$KILDEN_RAISED_CLASS || tc==$DAMATH_CLASS || tc==$DAMATH_RAISED_CLASS ||
+		 tc==$OCTOLIGO_GUARD_CLASS || tc==$GUARDIAN_CLASS || tc==$GUARDIAN_ELDER_CLASS || tc==$ELDER_CLASS ||
+		 tc==$HUMAN_ACHRON_CLASS || tc==$GREKIM_ACHRON_CLASS || tc==$VECGIR_ACHRON_CLASS) &&
+		 ( (timeSinceLastChronoport = query->TimeSinceLastChronoport) == -1 || timeSinceLastChronoport > delay ) //ignore units mid-rechronoport delay
+		 && query->Action != $EVENT_TIME_TRAVEL_DEPART //ignore units already being chronoported
+		 ];
+
+
+if (target->IsAlive==1) {
+	PERFORM $ACTION_SEND time;
+}
+

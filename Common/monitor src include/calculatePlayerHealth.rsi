@@ -1,0 +1,36 @@
+
+int playerHealth = 0;
+
+//function to calculate player health ignoring non-unit producing buildings
+if (PLAYER_DEAD_MODE == $NON_PRODUCING) {
+	
+	int achronHealth =  1; //default achron health to always be 1
+	
+	/*if(pre_game_settings[$MP_ASSASSIN_MODE]) {
+		int qrank = 0;
+		//if the player hasn't choser a species yet, they won't have an Achron unit yet
+		//therefore we consider the species chooser as the Achron unit replacement until a species is selected
+		achronHealth = QUERY VALUE [unit] SUM [1] WHERE [ query->Owner == playerNum && ((qrank=query.Rank) == $ACHRON_RANK || qrank==$RACE_CHOOSER_RANK || qrank==99)];
+		//Rank 99 is Achrons with the emergency Chrono-Shield active
+	}*/
+	
+	//only check other units if the achron is not dead (it's never dead when not playing ASSASSIN)
+	if(achronHealth!=0) {
+		playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == playerNum && !(query->IsStop) 
+					&& (((class = query.Rank) >= $FACTORY_RANK  && class != $ACHRON_RANK) //ignore all buildings that are not unit producing or turrets
+					|| class == $RACE_CHOOSER_RANK)
+					]; 
+	}
+}					
+
+//function to calculate player health ignoring non-unit producing buildings except for gates (slingshots, teleporters and chronoporters)
+if (PLAYER_DEAD_MODE == $NON_PRODUCING_NON_GATES) {
+
+	playerHealth = QUERY VALUE [unit] SUM [query->HP] WHERE [query->Owner == playerNum && !(query->IsStop) 
+					&& (((class = query.Rank) >= $FACTORY_RANK  && class != $ACHRON_RANK) //ignore all buildings that are not unit producing or turrets
+						|| (class >= $SLINGSHOT_RANK && class <= $CHRONOPORTER_RANK)  //do not ignore gates
+						|| class == $RACE_CHOOSER_RANK )
+					]; 					
+}
+
+

@@ -1,0 +1,109 @@
+
+
+/*  How ASSASSIN MODE works:
+1) player sets the persistent skin/configuration variable 'assassinMode' in the pre-game lobby. [ File: menu.sks ]
+2) on game start, the multiplayerMonitor stores the configuration var into $PRE_GAME_SETTINGS_AF (pre_game_settings) achronal field. [ File: checkConnected.rsi ]
+3) at all times, multiplayerMonitor has access to the 'pre_game_settings' variable by reading in the $PRE_GAME_SETTINGS_AF achronal field. [ File: displayRelativeTime.rsi ]
+4) on game start, after apre_game_settingsa are stored, if 'assassinMode' is set, it loops through all the enabled players and sets the 4th bit of player->GlobalFlags. [ File: checkConnected.rsi ]
+5) in game, each of the speciesChooser units have a forced action to create the appropriate Achron unit on species select if player->GlobalFlags[3] is true. [ File: Achron.ocs.xml, classes: 4042,4043,4044 ]
+6) in game, multiplayerMonitor continuously checks if each player's Achron is alive, otherwise it sets the 'SMBlackout' skin var, blacking out the screen for that player. [ Files: assassinCheck.rsi, skin1.sks ]
+7) in game, multiplayerMonitor continuously calculates each player's total health, if the mode is 'assassinMode', the Achron being alive supercedes all other units.  [ File: calculatePlayerHealth.rsi ]
+*/
+
+if(pre_game_settings[$MP_ASSASSIN_MODE]) {
+
+	//run this about once a second
+	if(current%17==0) {
+		PERFORM GET_TIME_WINDOW_START;
+		int windowStart = perf_ret;
+
+		PERFORM GET_TIME_WINDOW_DURATION;
+		int windowDuration = perf_ret;
+
+		int windowEnd = windowStart + windowDuration;
+
+		PERFORM GET_ACTIVE_PLAYERS;
+		int active = perf_ret;       //bitmask of active players
+
+		PERFORM GET_TIMELINE_CONTROLS_PLAYERS;
+		int timelineControllers = perf_ret;
+
+		//bits 0-15 are used to mark the player as defeated
+		//bits 16-30 are used to mark the Achron dead (black-out the screen)
+		int additionalParams = unit->AdditionalParameters; 
+		
+		int x=0;
+		//loop through the possible 15 players
+		for (x=0;x<=15;x=x+1) {
+			//get each ACTIVE player's time
+			if ( ((active | timelineControllers & (~nonPlayer))>>x)&1 ) {
+				PERFORM GET_PLAYER_TIME x; 
+				int pt = perf_ret;
+				
+				
+				//Achronal Field 81-95 are used for storage of Achron deaths
+				//to store the timestamp of Achron's earliest death
+				PERFORM GET_ACHRONAL_FIELD (81 + x);
+				int AFvip = perf_ret; //stores unit lost time
+				int VIPDiedTime = AFvip;
+				
+				int qrank = 0;
+				//if the player hasn't choser a species yet, they won't have an Achron unit yet
+				//therefore we consider the species chooser as the Achron unit replacement until a species is selected
+				int VIPAlive = QUERY VALUE [unit] SUM [1] WHERE [ query->Owner == x && ((qrank=query.Rank) == $ACHRON_RANK || qrank==$RACE_CHOOSER_RANK)];
+				
+				if (current == VIPDiedTime && VIPAlive == 1) {
+					AFvip = 0; //clear out Achron lost time
+					target = 81 + x; PERFORM SET_ACHRONAL_FIELD AFvip;	
+					VIPDiedTime = 0;		
+				}			
+				
+				if(VIPAlive == 0) {	
+					int updateFields = 0;
+					if (!(additionalParams & (1 << (x+16))) ) { //AP bit for this vip isn't set
+						additionalParams = additionalParams | (1 << (x+16) ); //AP bit set means VIP is dead at this time
+						updateFields = 1;
+					}
+					
+					if (updateFields) {
+						//store current time as unit's death time if no death time is stored or 
+						//current time is further in the past (less) than the stored time
+						if (VIPDiedTime==0 || current < VIPDiedTime) {
+							target = 81 + x; PERFORM SET_ACHRONAL_FIELD current;
+						} 				
+						PERFORM SET_ADDITIONAL_PARAMS additionalParams;
+					}	
+				}
+
+				if(current==pt) {
+					//direct which player should be viewing the skin messages
+					player = x;
+					if ( additionalParams>>(x+16) & 1 ) {  //Achron is dead at this point in time
+						$UI_BLACKOUT_SCREEN_ASSASSIN;
+					} 
+					else {
+						$UI_CLEAR_BLACKOUT_SCREEN_ASSASSIN; 		
+					}
+				}
+				
+	
+				if (current == present) { //only the present updater gives the warning this
+					if (current % 357  == 0) { //run this every 20 seconds (21 * 17 = 357 ticks)
+						if (VIPDiedTime > 0 && VIPDiedTime <= pt) { //only if player is at or after the death
+							say_to_var "SMVipDefSound";
+							say 1;
+							say_to_var "";
+							player = x;
+							say "WARNING: Your Achron died at ";
+							int totalSecs = VIPDiedTime / $TPS;
+							$CALCULATE_MIN_SEC_HOUR
+							$SAY_CALCULATED_TIME 
+							say_to_var "";
+						}
+					}
+				}
+	
+			}
+		}
+	}
+}

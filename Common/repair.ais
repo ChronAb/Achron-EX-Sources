@@ -1,0 +1,164 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.ais
+
+int energy = 5;  
+
+//blackbirds can't fix biological units
+if (uclass==$BLACKBIRD_CLASS) {
+	energy = 10;
+	if(target.Type==$TYPE_BIOLOGICAL) {
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	}
+}
+
+target = unit->ObjectiveParameters;
+if (target->IsAlive==1) {
+    if (unit->Energy >= energy && !(target->IsStasis) && !(target->IsStop) && (target->HP < target.MaxHP)) {
+
+        PERFORM RAND;
+        if (perf_ret < $LAD_CLEAR) {
+            PERFORM CLEAR_LAST_ATTACKED_DIRECTION; 
+        }   
+
+		if (ap[$UNIT_BIT]) {
+			ap[$UNIT_BIT] = 0;
+			setAdditionalParameters = 1;
+		}
+		if (ap[$MOVE_BIT]) {
+			ap[$MOVE_BIT] = 0;
+			setAdditionalParameters = 1;
+		}
+		if (ap[$ATTACK_BIT]) {
+			ap[$ATTACK_BIT] = 0;
+			setAdditionalParameters = 1;
+		}
+        
+        if (target<_>unit <= 900 && target<^>unit <= 900 ) { //repair has a range of 30/30
+            PERFORM $ACTION_REPAIR target; 
+			$SET_AP
+            PERFORM NOTHING;
+        }
+        else {
+			
+			int BANK_TURNING = 0;
+			
+			int counter = unit->AdditionalParameters2; //move counter to move in the same direction
+			if (counter>0) {           //more than 0 means already moving in a direction
+				counter = counter - 1; //decrease the counter
+				PERFORM SET_ADDITIONAL_PARAMS2 counter;
+				int rot = unit->Rotation; //get the unit's current rotation
+				$DIR_FROM_ROT             //set the dir to move to based on that unit's rotation
+			}
+			else {  //no move counter stored, so query where to move to next
+				
+				int rot = unit->Rotation;
+				$DIR_FROM_ROT;
+				int old_dir = dir;
+				int old_rot = rot;
+				
+				int position = target->Position;
+				if (uclass == $BLACKBIRD_CLASS) {
+					if (position[$Zpos] == 0) { //repairing a ground unit
+						PERFORM GET_MAP_NEXT_Z_POSITION_UP position;
+
+						if (unit <^> perf_ret > 900) {  //unit is way too high, go down to the 1 level above
+							position = perf_ret;
+						}
+						else {
+							position[$Zpos] = unit->ZPosition |> perf_ret[$Zpos]; //take the max height of current level and one above ground unit
+						}
+					}
+				}	
+				
+				ignore_collision_with_unit = target;
+				dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ position <=> query ] WHERE [1];    
+				
+
+				if (dir[0,8] >= 16) { counter = 0; } //moving up or down, so don't store counter
+				else {
+					counter = dir[16,8]; 			  //the counter is stored in the 3rd byte of dir
+					if (counter > 7) { counter = 7; } //cap it at 7 since AdditionalParameters2 only has 3 bits
+				}
+				PERFORM SET_ADDITIONAL_PARAMS2 counter;
+				
+					//check to see if the unit is rotating
+				if(old_dir != dir[0,8]) { 
+					int new_dir = dir; //backup new value
+					dir = dir[0,8]; 
+					$ROT_FROM_DIR;
+					dir = new_dir; //restore value
+					
+					
+					
+					int diff = rot - old_rot;
+					if(diff > 0) {
+						if(diff <= 4) { 
+							BANK_TURNING = 1; //left
+						}
+						else {
+							BANK_TURNING = 2; //right
+						}
+					}
+					else if(diff < 0) {
+						if(diff >= -4) {
+							BANK_TURNING = 2; //right
+						}
+						else {
+							BANK_TURNING = 1; //left
+						}
+					}
+				}
+				
+			}
+
+			dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+			if (dir && dir != $QUERY_EXHAUSTED) {
+			
+				
+				if(BANK_TURNING && $IS_BANKING_FLYER ) {
+					dir[8,8] = 2; //2 extra tiles per move
+					if(BANK_TURNING == 1) { PERFORM $ACTION_BANK_RIGHT dir; } 
+					else { PERFORM $ACTION_BANK_LEFT dir; } 
+					//if failed to bank-move because of obstacle or something, attempt to move normally
+					if(!perf_ret) {
+						PERFORM $ACTION_MOVE dir;
+					}
+				}
+				else {
+					PERFORM $ACTION_MOVE dir; 
+				}
+				if ( perf_ret!=1) { 
+					PERFORM SET_ADDITIONAL_PARAMS2 0;
+				}
+				$SET_AP
+			}
+			else {
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+				PERFORM SET_ADDITIONAL_PARAMS 0;
+				PERFORM SET_OBJECTIVE 0;
+			}
+			PERFORM NOTHING;
+        }
+    }
+    else {
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+        PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_OBJECTIVE 0;
+        if (unit->Energy < energy) {  }
+        else if (target->HP >= target.MaxHP) { } //target does not need repair
+        else { 
+            $SAY_REPAIR
+            say "Target is TSSed or Frozen"; 
+            PERFORM $ACTION_ERROR2; 
+        }
+        
+    }
+}
+
+PERFORM SET_ADDITIONAL_PARAMS2 0;
+PERFORM SET_ADDITIONAL_PARAMS 0;
+PERFORM SET_OBJECTIVE 0;

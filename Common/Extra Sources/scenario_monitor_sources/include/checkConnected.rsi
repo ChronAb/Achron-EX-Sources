@@ -1,0 +1,154 @@
+
+
+//deal with connected/disconnected players, only run this check by the timewave at present
+//at the start of game (current==1), load up configuration values specified in pre-game lobby to set in-game logic based off those parameters
+if (current==present) {
+	PERFORM GET_CONNECTED_PLAYERS;
+	int connected = perf_ret;		
+
+	if (current==1) {  //one-time setup at start of level
+	
+	
+//*** CHRONOPORT ALERTS
+		config_property_int "chronoportAlerts";
+		int chronoportAlerts = perf_ret;
+		int init_settings = 0;
+
+		if (chronoportAlerts) { 			
+			init_settings[$MP_CHRONOPORT_ALERTS] = 1; 
+		}
+//*********************
+		
+
+//*** FOLLOWING COMMANDER VIA CHRONOPORT
+		config_property_int "chronoportWithCommander";
+		if (perf_ret==1) {
+			init_settings[$GLOBAL_CHRONOPORT_WITH_COMMANDER_BIT] = 1;
+		}
+//*********************
+		
+		
+//*** MORPHING DURING RECHRONOPORT DELAY
+		config_property_int "morphDuringRechronoport";
+		if (perf_ret==1) {
+			init_settings[$GLOBAL_MORPH_DURING_RECHRONOPORT_BIT] = 1;
+		}
+//*********************
+		
+		
+//*** CLEAR ORDER QUEUE AFTER A CHRONOPORT
+		config_property_int "clearQueueAfterChronoport";
+		if (perf_ret==1) {
+			init_settings[$GLOBAL_CLEAR_QUEUE_AFTER_CHRONOPORT_BIT] = 1;
+		}
+//*********************
+		
+		
+//*** ASSASSIN MODE
+		config_property_int "assassinMode";
+		if (perf_ret==1) {
+			init_settings[$MP_ASSASSIN_MODE] = 1;
+		}
+//*********************
+		
+		target = $PRE_GAME_SETTINGS_AF; PERFORM SET_ACHRONAL_FIELD init_settings;
+		pre_game_settings = init_settings;
+		
+		//store whoever is connected 1 tick into the match as the original connected
+		af2[0,15] = connected;
+		target = 1; PERFORM SET_ACHRONAL_FIELD  af2;
+		player = 0;
+	} 
+	else if (current > 1) {
+		int original = af2[0,15]; //get the originally connected players
+		//check currently connected to stored connected
+		if (connected != original) { //if they mismatch, someone disconnected
+		//loop through all stored players and find out who disconnected
+			int x=0;
+			int disconnectedPlayer = 0;
+			//loop through the 15 possible original players
+			for (x=0;x<=15;x=x+1) {
+				if ( ( original >> x) & 1 == 1 ) {  //player number x was originally connected
+					if (( ( connected >> x) & 1) == 0 ) {  //but is no longer connected
+						disconnectedPlayer = x + 1;   //don't display 0-based numbers to users, shows 1-15 instead
+						af2 = af2 & ~(1 << x); //clear out the connected bit for that player
+						target = 1; PERFORM SET_ACHRONAL_FIELD  af2;
+						x = 16; // same as 'break;'
+					}
+				}
+			}
+			if (disconnectedPlayer) {
+				for (x=0;x<=15;x=x+1) { //notify all players of this player's disconnect
+					if ( ( connected >> x) & 1 == 1 ) {  
+						player = x;
+						say_to_var "";
+						say "UPDATE:   Player ", disconnectedPlayer, " has disconnected";
+					}
+				}
+			}
+		}
+	}
+	
+	
+	if(current==3) {
+		if(pre_game_settings[$MP_ASSASSIN_MODE]) {
+			int x = 0;
+			for (x=0;x<=15;x=x+1) {
+				if ( (enabled >> x) & 1 ) {
+					player = x;			
+					say_to_var "SMAssassin";
+					say 1;
+					say_to_var "";
+				}
+			}
+		}
+	}
+	
+}
+
+
+
+
+//set the CHRONAL field consistently based on pre-game settings
+if (current==2) {
+	
+	int global_chronal_properties = 0;
+	
+	//*** FOLLOWING COMMANDER VIA CHRONOPORT
+	if (pre_game_settings[$GLOBAL_CHRONOPORT_WITH_COMMANDER_BIT]) {
+		global_chronal_properties[$GLOBAL_CHRONOPORT_WITH_COMMANDER_BIT] = 1;
+	}
+	
+	
+	//*** MORPHING DURING RECHRONOPORT DELAY
+	if (pre_game_settings[$GLOBAL_MORPH_DURING_RECHRONOPORT_BIT]) {
+		global_chronal_properties[$GLOBAL_MORPH_DURING_RECHRONOPORT_BIT] = 1;
+	}
+	
+	//*** CLEAR ORDER QUEUE AFTER A CHRONOPORT
+		
+	if (pre_game_settings[$GLOBAL_CLEAR_QUEUE_AFTER_CHRONOPORT_BIT]) {
+		global_chronal_properties[$GLOBAL_CLEAR_QUEUE_AFTER_CHRONOPORT_BIT] = 1;
+	}
+		
+	
+	
+	target = 0; PERFORM SET_CHRONAL_FIELD global_chronal_properties;
+	
+	
+	if(pre_game_settings[$MP_ASSASSIN_MODE]) {
+		int x = 0;
+		for (x=0;x<=15;x=x+1) {
+			if ( (enabled >> x) & 1 ) {			
+				target = $GET_UNIT [query->Owner == x]; //get any unit by that player
+				if(target->IsAlive==1) {				//only players with units should have this set (unlike observers without units)
+					PERFORM $SET_PLAYER_FLAG_BIT_4;  //set player->GlobalFlags 4th bit to 1
+				}
+			}
+		}
+	}
+	
+}
+
+
+

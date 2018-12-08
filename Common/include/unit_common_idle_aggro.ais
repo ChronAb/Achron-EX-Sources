@@ -1,0 +1,519 @@
+// Assume Copyright (C) 2002-2011 Hazardous Software Inc.
+
+//Dallas Joder, 2014
+//Achron EX, **Unit Common Idle Aggro Script**
+//Sub-script of unit_common_idle.ais
+
+/* ** LOGIC: BEING ATTACKED or ATTACKING WHILE IDLE
+
+(1)
+if (!AP_DISTANCE) 
+	if attacked, set LAHD, set AP_DISTANCE, clear HOLD_TARGET_BIT, set COUNTER to 7, store unitPosition into OP
+}
+
+(2)
+if (AP_ATTACK) {	
+	if target, set HOLDMOVE_BIT, set HOLD_TARGET_BIT [set HOLDATTACK_BIT]. 
+			if in range, attack target
+			if out of range, move towards target
+	if no target, clear AP_ATTACK; 
+	occasionally check if a subordinate needs help, if so, set everything as with aP_DISTANCE, and the HOLDATTACK_BIT
+							
+}
+
+(3)
+if (AP_DISTANCE) {
+	if new LAHD, reset COUNTER to 7
+	if found enemy, set AP_ATTACK, attack enemy
+	if HOLDMOVE_BIT, at OP (returned), clear everything (AP_DISTANCE, COUNTER, HOLDMOVE_BIT, LAHD, HOLD_TARGET_BIT [HOLDATTACK_BIT])
+	if HOLDMOVE_BIT, not at OP, return to OP
+	if !HOLDMOVE_BIT, move, decrease COUNTER
+	if COUNTER is 0, 
+		if HOLDATTACK_BIT, if HOLD_COMMANDER_BIT, check if commander needs help, if so, reset counter to continue moving
+		if HOLDATTACK_BIT, but NO HOLD_COMMANDER_BIT, check if a subordinate needs help, if so, reset counter to continue moving
+		set HOLDMOVE_BIT to return to original spot
+}
+
+if idle, and commander needs assistance, set everything as with AP_DISTPANCE, and both HOLDATTACK_BIT and HOLD_COMMANDER_BIT
+
+*/
+
+
+//(1)*** Check to see if was attacked by anyone, and if so, start moving towards that direction
+if ( !AP_DISTANCE && !AP_UNIT) {
+	//if attacked, set the move counter and bits to go find who attacked 
+	int attackedVertical = unit->LastAttackedVDirection;
+	if (attackedVertical) {
+	
+		int obj1 = 0;
+        object traitor = QUERY UNIT [unit] MIN [unit<=>query] WHERE [ query->IsAlly==1  && query->ObjectiveParameters==unit && 
+																	 ((obj1 = query->Objective) ==$OBJECTIVE_ATTACKING || obj1==$OBJECTIVE_ATTACKING_UNIT ) ];
+        if (traitor>0) {
+			temp = traitor;
+            PERFORM RAND;
+            if (perf_ret < 8192) {
+                if (traitor->Owner != unit->Owner) {
+                    $SAY_TRAITOR
+                }
+            }
+			//PERFORM CLEAR_LAST_ATTACKED_DIRECTION;
+		}
+		else {       
+			int lahd = unit->LastAttackedHDirection;
+			float direction = rottorad(lahd) + 3.1415926;	//find the opposite direction
+			int sindir = 10.0 * sin(direction);
+			int cosdir = 10.0 * cos(direction);
+			int uX = unitPosition[$Xpos];
+			int uY = unitPosition[$Ypos];
+			int y = uY - sindir;
+			int x = uX + cosdir;
+			PERFORM CLEAR_LAST_ATTACKED_DIRECTION;
+
+			//ground units that can't retaliate try to run away by attack-moving away from the air-attacker
+			if ($IS_GROUND_ONLY_UNIT && attackedVertical != $LAST_ATTACKED_V_DIRECTION_SAME ){
+						
+				//get the map boundaries
+				PERFORM GET_MAP_WIDTH;
+				int mapwidth = perf_ret;
+				PERFORM GET_MAP_LENGTH;
+				int maplength = perf_ret;
+				if (x < 5) x = 5;
+				if (y < 5) y = 5;
+				if (x > mapwidth - 5) x = mapwidth - 5;
+				if (y > maplength -5) y = maplength - 5;
+				int awaydir = 0;
+				awaydir[$Xpos] = x; awaydir[$Ypos] = y; 
+				ap=0;
+				ap[$ATTACK_BIT] = 1;
+				ap[$OBJECTIVE] = $OBJECTIVE_ATTACKING;
+				PERFORM SET_ADDITIONAL_PARAMS ap;
+				PERFORM SET_PARAM awaydir;
+				PERFORM SET_OBJECTIVE $OBJECTIVE_ATTACKING; 
+				PERFORM NOTHING;
+			}
+			
+			setAdditionalParameters = 1;
+			ap[$DISTANCE_BIT] = 1;
+			ap[$HOLDMOVE_BIT] = 0; //not returning
+			ap[$HOLD_TARGET_BIT] = 0; //no enemy found
+			ap[$HOLD_COUNTER] = 7;    //max counter
+			ap[$HOLD_LAHD] = lahd; //lahd 
+			ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] = 0; 
+			PERFORM SET_PARAM unitPosition;            //set unit's own location to its OP
+			AP_DISTANCE = 1;	
+		}
+	}
+	
+}
+
+//(2)*** ATTACK WHILE IDLE LOGIC
+// query for attackable enemies or for tssed enemies every other time
+PERFORM RAND;
+if (perf_ret < 16384 || AP_ATTACK) { //if currently attacking something while idle, keep doing so
+    PERFORM RAND;
+    if (perf_ret < 8192 && !AP_ATTACK) { // 1/2 * 1/4 = this is run 1/8th of the time, and not attacking something
+        if (smart) { //smart idle
+            if (!($IS_BREAKTSS_UNIT)) {
+                target = QUERY UNIT [unit] MIN [ unit <=> query ]
+                        WHERE [!(query->IsAlly) && (query->IsStasis==1) ];
+                #include common/include/unit_tss_request.ais
+            }
+        }
+    } 
+    else if (perf_ret > 24576 || AP_ATTACK) { // 1/2 * 1/4 = this is run 1/8th of the time
+		
+		object closestenemy=0; 
+		#include common/include/unit_common_basic_aggro.ais
+
+		
+
+		int enemyAlive = closestenemy->IsAlive;
+		query_vis_distance = -1; //reset query vis range
+		
+		
+		//IF TARGET WAS FOUND, MOVE TO ENGAGE
+    if (enemyAlive==1) {
+		
+			//grounded air units will try to lift up first before attacking
+			if (airunit) {
+				if (unitPosition[$Zpos] == 0) {
+					//if unit is on the ground 
+	
+					PERFORM GET_MAP_NEXT_Z_POSITION_UP unitPosition;  //get the spot above the unit's position
+					temp1 = perf_ret; //store it into temp
+					
+					target = uclass;
+					PERFORM CAN_CLASS_FIT_AT temp1; //check if the unit can fit at the spot directly above
+					 //only move up if it can fit there	with its current rotation
+					if ( perf_ret & ( 1 << (unit->Rotation) ) ) {
+						dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ temp1 <=> query ] WHERE [1];
+						dir[16,8]=0; //clear out the 3rd byte that stores the counter
+						if (dir && dir != $QUERY_EXHAUSTED) {
+							PERFORM $ACTION_MOVE dir;
+							$SET_AP
+							PERFORM SET_ADDITIONAL_PARAMS2 0;
+							PERFORM NOTHING;
+						}
+					}
+				}
+			}
+		
+            //shoot it if it's within weapon range
+			target = closestenemy;
+			int position = target->Position;
+			int targetIsOnGround = target->IsTerrainGround;
+			#include common/include/common_weapons.ais  
+			int weapon_range = 0;	
+			PERFORM GET_MAX_ACTION_RANGE_RADIUS weaponAction;
+			weapon_range = perf_ret;
+			int moveCloser = 0;
+			
+			//since GET_CLOSEST_TARGET_POSITION_WITHIN_RANGE is somewhat cpu intensive, we first 
+			//try to move closer if unit is definitely not close enough to attack
+			int distToEnemy = unit<_>closestenemy;
+			//melee units should start checking if unit is attackable earlier, only blindly move closer when truly way out of range
+			if($IS_MELEE) { 
+				if ( distToEnemy > (weapon_range+6) * (weapon_range+6) ) {
+					moveCloser = 1;
+				}
+			}
+			else if ( distToEnemy > (weapon_range+3) * (weapon_range+3) ) {
+				moveCloser = 1;
+			}
+			
+
+			//it may be close enough, check if it actually can attack from here
+			if (!moveCloser) {
+				PERFORM GET_CLOSEST_TARGET_POSITION_WITHIN_RANGE weaponAction; 
+				position = perf_ret; 
+			}
+
+			if (!moveCloser && position!=$INVALID_POSITION) { 
+				//already close enough to shoot, so shoot the damn thing
+				temp = target; //backup target
+				target = position;
+				PERFORM IS_POSITION_WITHIN_ACTION_ANGLE weaponAction;
+				if (perf_ret>0) { //target is attackable in this direction
+				
+					//tanks that are carrying troops auto-release them before firing
+					if ($IS_CARRIER_TANK && unit->Ammo > 0) {
+						PERFORM RAND;
+						if (perf_ret < 16384) { //50% chance of blind-releasing the carried soldier
+							PERFORM SET_OBJECTIVE $OBJECTIVE_RELEASEUNIT;
+							PERFORM NOTHING;
+						}
+						else { //50% of checking whether the carried soldier can be released in the first place
+							target = $MARINE_CLASS;
+							PERFORM CAN_PUT_CLASS;
+							if (perf_ret==1) {
+								PERFORM SET_OBJECTIVE $OBJECTIVE_RELEASEUNIT;
+								PERFORM NOTHING;	
+							}
+							target = temp;
+						}
+					}
+				
+					//PERFORM SET_PARAM target;
+					target_is_position = 1;
+					target = position;
+					if (temp1 == 0) { PERFORM $ACTION_ATTACK position; }
+					else { PERFORM $ACTION_ATTACK_W1 position; }
+					
+					
+					ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] = 0;
+					//setAdditionalParameters = 1; 
+					
+					if (!AP_ATTACK) { //set the attacking bit, so that thisidle script will keep attacking
+						ap[$ATTACK_BIT] = 1; 
+					}
+					if (AP_DISTANCE) { //was moving towards target
+						ap[$HOLDMOVE_BIT] = 1;    //free to return to original location
+						ap[$HOLD_TARGET_BIT] = 1; //found a target						
+					}
+					
+					int constraints = player.ScenarioConstraints;
+					int computer = player->IsComputerPlayer;
+					// if ($IS_CLOAKABLE_UNIT) { 
+						// //auto-cloak-level OR passive ai being run by computer 
+						// if ((constraints[11] || !constraints[1]) && computer) {						
+							// if ( !(myStatus[$CLOAK_BIT]) && unit->Energy > 5 ) { 
+								// PERFORM SET_OBJECTIVE $OBJECTIVE_CLOAK; 
+								// PERFORM SET_ADDITIONAL_PARAMS ap;
+								// PERFORM NOTHING; 
+							// }
+						// }
+					// }
+					
+					//summon others on attack on buildings
+					if (!constraints[1] && computer) { //$AUTOPILOT	
+						target = temp;
+						int tr = target.Rank;
+						int flags = $FLAGS;
+						if (tr < $BUILDINGS_RANK && !(target->IsAlly) && !flags[$JOINME_BIT] && !flags[$LOOKUP_BIT]) {
+							PERFORM SET_PLAYER_CUSTOM_FIELD_2 ($CUSTOMFIELD_TSS | (unit << 16 ));
+							int flags = $FLAGS;
+							flags[$JOINME_BIT] = 1;
+							PERFORM SET_PLAYER_CUSTOM_FIELD_3 flags;
+						}
+					}
+					
+					PERFORM SET_ADDITIONAL_PARAMS ap;
+					PERFORM NOTHING;
+				}
+				else {
+					
+					target = uclass; //needs to be the unit's class for CAN_CLASS_FIT_AT
+					PERFORM CAN_CLASS_FIT_AT unitPosition;
+					int fitRotations = perf_ret;
+					PERFORM GET_BEST_POSITION_ATTACK_DIRECTION position;
+					int enemyDirection = perf_ret;
+					if  ( fitRotations &  ( 1 << (enemyDirection)  )  ) { //target can fit there rotated towards the target			
+						PERFORM $ACTION_ROTATE enemyDirection; //rotate towards the enemy
+						$SET_AP
+						PERFORM SET_ADDITIONAL_PARAMS2 0;
+						PERFORM NOTHING;
+					}
+				}
+            } 
+			else {
+				moveCloser = 1;
+
+				//if unit got stuck, do not approach enemies that are within weapon range, but are not attackable
+				if (distToEnemy <= weapon_range*weapon_range) {
+					target = closestenemy;
+					PERFORM IS_TARGET_WITHIN_ACTION_RANGE weaponAction;
+					if (ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] && perf_ret!=1)  { moveCloser = 0; } 
+				}				
+			}
+			
+      if (moveCloser) { //outside of weapon range, need to move closer to the enemy 
+			
+				if (!AP_DISTANCE) { //haven't start moving yet towards enemy
+					setAdditionalParameters = 1;
+					ap[$DISTANCE_BIT] = 1;
+					ap[$HOLDMOVE_BIT] = 0;
+					ap[$HOLD_TARGET_BIT] = 1; //found a target
+					PERFORM SET_PARAM unitPosition;            //set unit's own location to its OP
+				}
+				
+
+				int uZ = unitPosition[$Zpos];
+				int position = closestenemy->Position;
+
+				if ( uZ > 0 ) { //check if this is an air unit
+					if (position[$Zpos] == 0) { //the target is on the ground
+						PERFORM GET_MAP_NEXT_Z_POSITION_UP position;
+						if (uZ > perf_ret[$Zpos]) { perf_ret[$Zpos] = uZ; } //allow the air unit to remain on its height level
+						position = perf_ret;
+					}
+				} 
+				
+				ignore_collision_with_unit = closestenemy;
+				dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [query <=> position] WHERE [1];
+	
+				dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+				if (dir && dir != $QUERY_EXHAUSTED) {
+
+					ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] = 0;
+					setAdditionalParameters = 1;
+					PERFORM $ACTION_MOVE dir;
+					PERFORM SET_ADDITIONAL_PARAMS2 0;
+				} 
+				else { //could not get closer, mark self as stuck/give up
+
+					ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] = 1;
+					setAdditionalParameters = 1;
+				}
+				$SET_AP
+				PERFORM NOTHING;
+			
+      }
+		}
+        
+		
+		if (AP_ATTACK) {   //the attackHold bit is still set, even though no enemy was found, clear it here
+			AP_ATTACK = 0;
+			ap[$ATTACK_BIT] = 0;
+			if (AP_DISTANCE) {  //if was moving, start returning
+				ap[$HOLDMOVE_BIT] = 1;
+			}
+			setAdditionalParameters = 1;
+			PERFORM CLEAR_LAST_ATTACKED_DIRECTION;          
+		}
+	        
+		//check if one of the subordinates was attacked
+        PERFORM RAND;
+        if (perf_ret < 8192) {
+            object sub=0;
+            int num = 0;
+            int s_count = 0;
+            while (!s_count) { //cycle through subordinates
+                if(!$IS_GREKIM) { sub = unit->NextSubordinate; }
+                else { sub = myCommander->NextSubordinate; } //grekim cycle through arcticus's subordinates
+                num = num + 1;  
+                if (num == 1) { temp = sub; }
+                else if (temp == sub) { s_count = 1; }
+                 //while (sub = unit->NextSubordinate) {  
+                if (sub && sub->LastAttackedVDirection>0) {  //if one of them has been attacked
+                    target = sub->ObjectiveParameters; //get its target
+					int tisAlive = target->IsAlive;
+                    if (tisAlive!=1 || (tisAlive==1 && target->IsAlly==1) ) {
+                        //don't look for buildings except turrets
+						target = QUERY UNIT [sub] MIN [sub<=>query] WHERE [!(query->IsAlly) && query.Rank>=$TURRET_RANK ];  
+						if ( target->IsAlive==1 ) { tisAlive = 1; }
+                    }
+                    
+                    if (tisAlive==1) {
+						if (!AP_DISTANCE) { //store original position
+							PERFORM SET_PARAM unitPosition;
+							ap[$DISTANCE_BIT] = 1;
+						}
+
+						ap[$HOLDATTACK_BIT] = 1; //moving to help out subordinate
+						ap[$HOLD_COMMANDER_BIT]  = 0; 
+						PERFORM GET_BEST_POSITION_ATTACK_DIRECTION target->Position;
+						ap[$HOLD_LAHD] = perf_ret; //store directon of subordinate's enemy
+						ap[$HOLD_COUNTER] = 7;  //max counter to move that direction
+						ap[$HOLDMOVE_BIT] = 0;  //don't return yet
+						ap[$HOLD_TARGET_BIT] = 1; //found the target
+                        PERFORM SET_ADDITIONAL_PARAMS ap;
+                        PERFORM NOTHING;
+                    }
+                }
+            } 
+        }
+    }  
+}
+//***
+
+//(3)*** moving to attack while IDLE (either enemy was found or was attacked and looking for enemy)
+// i.e. the unit is/was in a fight, what radius should it scan for enemies to decide that the fight is over and return to position
+if ( AP_DISTANCE && !AP_UNIT ) {
+	//check if attacked from a different spot, if so, reset counter
+	int lahd = unit->LastAttackedHDirection;
+	if ( lahd && lahd != ap[$HOLD_LAHD] ) {
+		ap[$HOLDMOVE_BIT] = 0;
+		ap[$HOLD_TARGET_BIT] = 0;
+		ap[$HOLD_COUNTER] = 7;    //max counter
+		ap[$HOLD_LAHD] = lahd; //lahd 
+	}
+	
+	//look for any enemies
+	int qmaxHP = 0; //cache query.MaxHP
+	//MAR2 have a significantly large variance between anti-air and anti-ground range and strength and deserve a special one-off
+	if (uclass==$MAR2_CLASS && 0) {
+		/*int qz = 0;
+		int qdist = 0;
+		query_vis_distance = 40; //look for ground targets first
+		int mndmg = 0;
+		target =  QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - mndmg)**2 ] WHERE [!(query->IsAlly) && query->ZPosition==0 && !(query->IsStasis) && (qmaxHP=query.MaxHP)>0];  
+		if (target > 0) {
+			ap[$ATTACK_BIT] = 1;
+			ap[$HOLD_TARGET_BIT] = 1; //found a target
+			PERFORM SET_ADDITIONAL_PARAMS ap;
+			PERFORM NOTHING;
+		}									
+		
+		query_vis_distance = 20; //look for air targets last
+		target =  QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - mndmg)**2 ] WHERE [!(query->IsAlly) && query->ZPosition > 0 && !(query->IsStasis) && (qmaxHP=query.MaxHP)>0];  
+		if (target > 0) {
+			ap[$ATTACK_BIT] = 1;
+			ap[$HOLD_TARGET_BIT] = 1; //found a target
+			PERFORM SET_ADDITIONAL_PARAMS ap;
+			PERFORM NOTHING;
+		}									
+		
+		query_vis_distance = -1; //reset*/
+	} 
+	else if ( $IS_ANTI_AIR && 0) {  //these units are anti-air the same way mar2 is anti-ground
+		/*int qz = 0;
+		int qdist = 0;
+		//look for air targets first
+		query_vis_distance = 26; //mech, teth_vir and sepi 
+		if (uclass==$PULSER_T_CLASS) { query_vis_distance = 30; } 
+		if (uclass==$OCTOLIGO_CLASS) { query_vis_distance = 40; } 
+		
+		target =  QUERY UNIT [unit] MIN [ unit <_> query * (query->HP)**2 ] WHERE [!(query->IsAlly) && query->ZPosition > 0 && !(query->IsStasis) && (qmaxHP=query.MaxHP)>0];  
+		if (target > 0) {
+			ap[$ATTACK_BIT] = 1;
+			ap[$HOLD_TARGET_BIT] = 1; //found a target
+			PERFORM SET_ADDITIONAL_PARAMS ap;
+			PERFORM NOTHING;
+		}									
+		
+		//look for ground next
+		query_vis_distance = 20; //teth vir
+		int mndmg = 0;
+		if(uclass==$SEPI_CLASS) { query_vis_distance = 29; }
+		if (uclass==$MECH_CLASS) { query_vis_distance = 17;  }
+		if (uclass==$PULSER_T_CLASS) { query_vis_distance = 18; } 
+		if (uclass==$OCTOLIGO_CLASS) { query_vis_distance = 24; mndmg = 128; } 
+		
+		target =  QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - mndmg)**2 ] WHERE [!(query->IsAlly) && query->ZPosition==0 && !(query->IsStasis) && (qmaxHP=query.MaxHP)>0];  
+		if (target > 0) {
+			ap[$ATTACK_BIT] = 1;
+			ap[$HOLD_TARGET_BIT] = 1; //found a target
+			PERFORM SET_ADDITIONAL_PARAMS ap;
+			PERFORM NOTHING;
+		}		
+
+		//Expand search for ground or air
+		if (uclass!=$OCTOLIGO_CLASS){
+			int query_range =  unit.SightHRange - 3;
+			#include common/include/unit_common_weapon_query_range.ais
+			query_vis_distance = query_range;
+			
+			target =  QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - mndmg)**2 ] WHERE [!(query->IsAlly) && !(query->IsStasis) && (qmaxHP=query.MaxHP)>0];  
+			if (target > 0) {
+				ap[$ATTACK_BIT] = 1;
+				ap[$HOLD_TARGET_BIT] = 1; //found a target
+				PERFORM SET_ADDITIONAL_PARAMS ap;
+				PERFORM NOTHING;
+			}
+		}
+		
+		query_vis_distance = -1; //reset
+		*/
+	} 
+	else {
+		int mndmg = 0;
+		if ($IS_MELEE ) { query_vis_distance = 25; } //shorten the idle query range for melee units
+		else {
+			/*int vis_h_range = unit.SightHRange;
+			int query_range =  vis_h_range - 3; 
+			extend query_range for units that can fire at or past their vision range
+			#include common/include/unit_common_weapon_query_range.ais
+			query_vis_distance = query_range; 
+			*/
+			query_vis_distance = 40; //in EX everything non-melee just uses 40
+		}
+		if ( $IS_GROUND_ONLY_UNIT ){
+			target =  QUERY UNIT [unit] MIN [ unit <_> query ] WHERE [!(query->IsAlly) && (query->IsStasis != 1) && query->ZPosition==0 && (qmaxHP=query.MaxHP)>0];
+		}
+		else {
+			target =  QUERY UNIT [unit] MIN [ unit <_> query ] WHERE [!(query->IsAlly) && (query->IsStasis != 1) && (qmaxHP=query.MaxHP)>0];
+		}
+		query_vis_distance = -1; //reset
+
+		if (target > 0) {
+			//if unit got stuck going after this target since they aren't attackable but within range, don't go after them
+			int weapon_range = 100;
+			int weaponAction = $ACTION_ATTACK;
+			if(!target->IsTerrainGround && !$IS_GROUND_ONLY_UNIT) {
+				weaponAction = $ACTION_ATTACK_W1;
+			}
+			PERFORM GET_MAX_ACTION_RANGE_RADIUS weaponAction;
+			weapon_range = perf_ret;
+			
+			PERFORM IS_TARGET_WITHIN_ACTION_RANGE weaponAction;
+			if ( perf_ret!=1 && ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] && target<_>unit <= weapon_range*weapon_range) { }
+			else {
+				ap[$ATTACK_BIT] = 1;
+				ap[$HOLD_TARGET_BIT] = 1; //found a target
+				PERFORM SET_ADDITIONAL_PARAMS ap;
+				PERFORM NOTHING;
+			}
+		}
+	}
+}
+	//next, return back to original position

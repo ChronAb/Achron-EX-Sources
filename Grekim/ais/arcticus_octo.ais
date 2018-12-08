@@ -1,0 +1,20 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//  arcticus_octo.ais - create octo unit script for arcticus and gargantuans
+
+#include common/include/unit_common_header.aih
+
+int ammo = unit->Ammo;
+int uclass = unit->Class;
+if ( uclass!=4043) {//Arcticus and Garg
+	if ( player->$LCrystals < $ARCTICUS_OCTO_LC || player->$QPlasma < $ARCTICUS_OCTO_QP || ammo<5) {
+			if (ammo < 5) $SAY_PROGEN_RESERVES
+			else $SAY_RESOURCES
+			PERFORM $ACTION_ERROR2;
+			PERFORM SET_OBJECTIVE 0;
+			PERFORM NOTHING;
+	} 
+}
+
+PERFORM $ACTION_CREATE_OCTO;
+PERFORM SET_OBJECTIVE 0;

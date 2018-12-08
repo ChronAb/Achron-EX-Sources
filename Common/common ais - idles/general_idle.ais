@@ -1,0 +1,59 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//this is the general, NON-species specific idle script. (mostly used by Grekim)
+//for species-specific general idle scripts, use  common_<species>_idle.ais scripts
+#include common/include/unit_common_header.ais
+#include common/include/unit_common_idle.ais
+
+//grekim check if they have an idle leader that's attacking something, if so, go help
+if ($IS_GREKIM) {
+	PERFORM RAND;
+	if (perf_ret < 11000 && myCommander > 0) {
+		object leader = myCommander->Commander;
+		
+		if (leader > 0 && leader.Rank != $ARCTICUS_RANK ) {
+
+			//leader must be attacking something while idle
+			if ( leader->Objective == 0 && (leader->AdditionalParameters)[$ATTACK_BIT] ) {
+
+				target = leader->ObjectiveParameters;  //get its target
+
+				int tisAlive = target->IsAlive;
+				if (tisAlive!=1 || (tisAlive==1 && target->IsAlly==1) ) {
+					//don't look for buildings except turrets
+					target = QUERY UNIT [ leader ] MIN [ leader <=> query] WHERE [!(query->IsAlly) ];  
+					tisAlive = 0;
+					if ( target->IsAlive==1 ) { tisAlive = 1; }
+				}
+				
+				if (tisAlive==1) {
+					if (!AP_DISTANCE) { //store original position
+						PERFORM SET_PARAM unitPosition;
+						ap[$DISTANCE_BIT] = 1;
+					}
+
+					ap[$HOLDATTACK_BIT] = 1; //moving to help out heirarchy personel
+					ap[$HOLD_COMMANDER_BIT] = 1; //moving to help out commander and not a subordinate
+					PERFORM GET_BEST_POSITION_ATTACK_DIRECTION target->Position;
+					ap[$HOLD_LAHD] = perf_ret; //store directon of buddy's enemy
+					ap[$HOLD_COUNTER] = 7;  //max counter to move that direction
+					ap[$HOLDMOVE_BIT] = 0;  //don't return yet
+					ap[$HOLD_TARGET_BIT] = 1; //found the target
+					PERFORM SET_ADDITIONAL_PARAMS ap;
+					PERFORM NOTHING;
+				}
+
+			}
+		}
+	}
+	
+	if (uclass==$GHOST_CLASS){
+		#include common/include/ghost_heal.ais
+	}
+}
+
+
+
+#include common/include/unit_autopilot.ais
+
+$SET_AP

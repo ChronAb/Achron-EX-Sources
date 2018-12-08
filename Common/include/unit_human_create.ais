@@ -1,0 +1,181 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//unit_human_create.ais - general human unit creation script
+//this is called by each individual create script, that predefines the unit (OBJECT) being created
+//and the CREATE_ACTION as the actual action to do the creation, as well as the CREATE_TIME (ETA)
+// human creation flow:
+// 1) verify resources, siphon reserve soldiers, insta-make the carried unit [ this script ]
+// 2) make the unit inside using a time consuming action, showing progress bar  [ deploy.ais & predeploy.ais]
+// 3) release the unit  [ deploy.ais ]
+
+int ap = unit->AdditionalParameters;
+
+//verify that the newly created unit can fit into the building and is not over capacity
+if ($OBJECT::Size + unit->TotalCarriedSize > unit.CarryingCapacity) {
+    $SAY_ENQUEUE
+	//play error sound only if nothing else is enqued, since if there is, it's being deployed
+	//and we can't execute two actions at the same time
+    if (!(ap[$OBJ_BLDG_CONTINUE_DEPLOYBIT])) { 
+        PERFORM $ACTION_ERROR2; 
+        PERFORM SET_OBJECTIVE 0;
+    }
+    else {  //return to deploying the current unit
+        PERFORM SET_OBJECTIVE $OBJ_BLDG_DEPLOY;
+    }
+    PERFORM NOTHING;
+}
+
+//unit resource costs
+int lcrystals=0;
+int qplasma=0;
+int hpcost=0;
+int reserve = 1;
+
+if ($OBJECT == $MARINE_CLASS) { //marine
+  lcrystals = $MARINE_LC;
+  qplasma = $MARINE_QP;
+  hpcost = $MARINE_HP;
+}
+if ($OBJECT == $SOP_CLASS) { //sop
+  lcrystals = $SOP_LC;
+  qplasma = $SOP_QP;
+  hpcost = $SOP_HP;
+}
+if ($OBJECT == $MECH_CLASS) { // mech
+  lcrystals = $MECH_LC;
+  qplasma = $MECH_QP;
+  hpcost = $MECH_HP;
+  reserve = -1000;
+}
+if ($OBJECT == $TANK_CLASS) { //ab tank
+  lcrystals = $TANK_LC;
+  qplasma = $TANK_QP;
+  hpcost = $TANK_HP;
+}
+if ($OBJECT == $MFB_CLASS) { //mfb
+  lcrystals = $MFB_LC;
+  qplasma = $MFB_QP;
+  hpcost = $MFB_HP;
+}
+if ($OBJECT == $TORNADE_CLASS) { //tornade
+  lcrystals = $TORNADE_LC;
+  qplasma = $TORNADE_QP;
+  hpcost = $TORNADE_HP;
+}
+if ($OBJECT == $CRUISER_CLASS) { //heavyc
+  lcrystals = $CRUISER_LC;
+  qplasma = $CRUISER_QP;
+  hpcost = $CRUISER_HP;
+}
+if ($OBJECT == $BLACKBIRD_CLASS) { //blackbird
+  lcrystals = $BLACKBIRD_LC;
+  qplasma = $BLACKBIRD_QP;
+  hpcost = $BLACKBIRD_HP;
+}
+if ($OBJECT == $ATHC_CLASS) { //athc
+  lcrystals = $ATHC_LC;
+  qplasma =  $ATHC_QP;
+  hpcost = $ATHC_HP;
+}
+if ($OBJECT == $MAR_CLASS) { //mar
+  lcrystals = $MAR_LC;
+  qplasma = $MAR_QP;
+  hpcost = $MAR_HP;
+}
+if ($OBJECT == $LANCER_CLASS) { //lancer
+  lcrystals = $LANCER_LC;
+  qplasma = $LANCER_QP;
+  hpcost = $LANCER_HP;
+}
+if ($OBJECT == $FRIGATE_CLASS) { //frigate
+  lcrystals = $FRIGATE_LC;
+  qplasma = $FRIGATE_QP;
+  hpcost = $FRIGATE_HP;
+}
+
+
+//verify that the player has enough resources to make this unit
+if ( player->$LCrystals >= lcrystals && player->$QPlasma >= qplasma && unit->HP >= hpcost) {
+
+	//this new unit requires a reserve soldier, so siphon it 
+	if (reserve == 1 && player->$ReserveSoldiers >= 1) {
+		//transfer(AdditionalParameters4) field is 0 and an importer to siphon from exists
+		if (unit->AdditionalParameters4==0) {
+			target = player->CustomField4;
+			if (target != 0 ) { //importer with RS are stored in customfield4
+				
+				//if the importer in the field is dead, clear it out, and try it with another one
+				//since another importer will automatically place itself there if it has RS
+				if (target->IsAlive!=1||target->IsStop) {
+					PERFORM SET_PLAYER_CUSTOM_FIELD_4 0;
+					PERFORM NOTHING;
+				}
+				if (target->Ammo>0) {
+					if(target->IsStasis) {
+						PERFORM $ACTION_SIPHON_TSS target; //siphon the reserve soldier from a TSS'd importer
+					}
+					else {
+						PERFORM $ACTION_SUMMON_TROOPS target; //siphon the reserve soldier
+					}
+				}
+				else { //switch to another importer
+					PERFORM SET_PLAYER_CUSTOM_FIELD_4 0;
+					PERFORM NOTHING;
+				}
+			} else { //wait for another importer to switch
+
+				if(unit->UnitAIServiceTime <= 0) { //not in the middle of deploying a unit
+					object next = unit->NextCarriedUnit;
+					if (next->IsAlive==1) {
+						//enqueue the current objective since it actually failed to execute and
+						//go delpoy the current unit
+						int unitObjective = unit->Objective;
+						PERFORM SET_OBJECTIVE $OBJ_BLDG_DEPLOY; //deploy the unit that needs it
+						perf_ret = unit->ObjectiveParameters; //remember the rally point 
+						PERFORM ENQUEUE_OBJECTIVE unitObjective; //return back to trying to create this unit
+					}
+				}
+				
+				PERFORM NOTHING;
+			}
+		}
+	}
+
+    if ( unit->AdditionalParameters4>= reserve) { //transfer field is set
+        PERFORM SET_OBJECTIVE $OBJ_BLDG_PREDEPLOY;
+        //set the 'first unit' bit, specifying to start auto-deployment
+		ap[$OBJ_BLDG_INTERRUPTBIT] = 1;
+		ap[$OBJ_BLDG_CONTINUE_DEPLOYBIT] = 1;
+        PERFORM SET_ADDITIONAL_PARAMS ap;
+        
+		//display the ETA by adding CREATE_TIME to current ETA in queue
+        PERFORM GET_CUR_TIME;
+        int eta = perf_ret;
+        if ((unit->NextCarriedUnit)->IsAlive==1) { //if already has a queue, add to it
+            eta =  unit->ActionParameters;
+        } 
+        eta = eta + $CREATE_TIME;
+        
+        PERFORM $ACTION_OUTPUT eta; //perserve action parameter
+
+        PERFORM $CREATE_ACTION eta; //insta-make the carried unit
+        PERFORM NOTHING;
+    }
+    else $SAY_RESERVES
+}
+else {
+    $SAY_ENOUGH
+    $SAY_ENOUGHR
+}
+
+//play error sound only if nothing else is enqued, since if there is, it's being deployed
+//and we can't execute two actions at the same time
+if (!ap[$OBJ_BLDG_CONTINUE_DEPLOYBIT]) { 
+    PERFORM SET_ADDITIONAL_PARAMS (ap & ~7);
+    PERFORM $ACTION_ERROR2; 
+    PERFORM SET_OBJECTIVE 0;
+}
+else { //return to deploying the current unit in the queue
+    PERFORM SET_OBJECTIVE $OBJ_BLDG_DEPLOY;
+}
+PERFORM NOTHING;

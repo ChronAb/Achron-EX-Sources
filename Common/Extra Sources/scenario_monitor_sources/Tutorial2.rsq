@@ -1,0 +1,1012 @@
+#include include/monitorHeader.rsh
+
+//save at the 3:00 mark - the level is actuall the save
+
+/* ***************************************
+* DO NOT MODIFY ANYTHING BELOW THIS LINE *    
+**************************************** */  
+
+#include include/commonStatsAndPlayerUpdates.rsi
+
+PERFORM GET_PLAYER_TIME 0;
+int player1time = perf_ret;
+
+//default 'say' output to show to the first player
+player = 0;
+#define PLAYER 0
+#define ARMORY 7
+
+// run a check 30 seconds in front of the edge of the timewindow (present is at +180) 
+// to see if the mech or tank are dead. if they are, end the tutorial
+if (current == present - (150 * $TPS) ) {
+    int mech = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$MECH_CLASS && query->Owner==0];
+    int tank = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$TANK_CLASS && query->Owner==0];
+    if (mech==0 || tank==0) {
+		say_to_var "SMObjectiveFailText";
+		say "Mission Failed: The ";
+		if (mech==0) { say "MECH"; }
+		else { say "TANK"; }
+		say " must not be destroyed!";
+		say_to_var "";
+        PERFORM PLAYER_LOST 1;
+        PERFORM END_SCENARIO;
+		PERFORM EXIT_ENGINE;
+    }
+}
+
+_uclass = $UNITCREATOR_CLASS; _uowner = 1; $INITIALIZE_UNIT_CREATOR_AND_UI
+
+
+if (current==present && present<=1) { //reset the AP and AF to 0 when the level first starts out
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM NOTHING;
+}
+
+
+
+if (current==6) {  //create 1  athc
+	_create_action = $UC_CREATE_ATHC; $UNIT_CREATOR_CREATE_UNIT
+}
+if (current>=9 && current<=15 && current % 3 == 0) { //create  3 mechs (9,12,15)
+	_create_action = $UC_CREATE_MECH; $UNIT_CREATOR_CREATE_UNIT
+}
+if (current==18) { //create 1 teleporter(18)
+	_create_action = $UC_CREATE_TELEPORTER; $UNIT_CREATOR_CREATE_UNIT
+}
+if (current==21) { //create 1 mech
+	_create_action = $UC_CREATE_MECH; $UNIT_CREATOR_CREATE_UNIT
+}
+
+if (current==24) {
+	_create_action = $UC_CREATE_WAYPOINT; $UNIT_CREATOR_CREATE_UNIT
+}
+
+
+PERFORM GET_PLAYER_TIME_RATE 0; //1 : 0.5 speed, 2 : normal speed, 3 : fast forward
+int rate = perf_ret;
+
+PERFORM GET_ACHRONAL_FIELD 1;
+int ap = perf_ret; //Achronal Parameter field
+PERFORM GET_ACHRONAL_FIELD 2;
+int af2 = perf_ret; //objective stored in the second Achronal field
+int obj = af2[0,4];
+int ImportantUnitLost = af2[4];
+int ImportantUnitLostTime = af2[5,27];
+
+PERFORM GET_ACHRONAL_FIELD 4;
+int af4 = perf_ret;
+
+if (TwicePerSecond) {
+	if (obj>=3 && obj<7) {
+		_uc_target = $GET_UNIT [ query->Class==$WAYPOINT_CLASS && query->Carrier==unit_creator ];
+		if (_uc_target->IsAlive==1) {
+			_dest[$Xpos] = 22; _dest[$Ypos] = 5; 
+			_release_teleport = 0; _change_owner = 1; _owner = $PLAYER; $UNIT_CREATOR_RELEASE_UNIT
+		}
+	}
+	if (obj==7) {
+		_uc_target = $GET_UNIT [ query->Class==$WAYPOINT_CLASS && query->Carrier<=0 ];  
+		if (_uc_target->IsAlive==1) {
+			$UNIT_CREATOR_TAKE_UNIT									
+		}
+	}
+}
+
+
+
+if (current==ImportantUnitLostTime) {
+	int mech = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$MECH_CLASS && query->Owner==0 ];
+    int tank = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$TANK_CLASS && query->Owner==0 ];
+	if (mech==1 && tank==1) {  //both units are alive, so clear out the unitlost values
+		ImportantUnitLost = 0;
+		ImportantUnitLostTime = 0;
+		af2[4] = 0;
+		af2[5,27] = 0;
+		target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+	}
+}
+
+//check 2x per second at all times before +10 (relative) seconds, whether Tank or Mech were destroyed
+//both the tank and mech have death animations longer than half a second (14 and 18 ticks)
+if (TwicePerSecond && current <= present + 10*$TPS) {
+	int mech = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$MECH_CLASS && query->Owner==0 ];
+    int tank = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$TANK_CLASS && query->Owner==0 ];
+	if (mech==0 || tank==0) {
+		int additionalParams = unit->AdditionalParameters;
+		int updateSM = 0;
+		if (tank==0 && !additionalParams[0]) { 
+			ImportantUnitLost = 1; 
+			additionalParams[0] = 1;
+			updateSM = 1;
+		}
+		if (mech==0 && !additionalParams[1]) { 
+			ImportantUnitLost = 0; 
+			additionalParams[1] = 1;
+			updateSM = 1;
+		} 
+		if (updateSM) {
+			//store current time as unit's death time if no death time is stored or 
+			//current time is further in the past (less) than the stored time
+			if (ImportantUnitLostTime==0 || current < ImportantUnitLostTime) {
+				ImportantUnitLostTime = current;
+				af2[4] = ImportantUnitLost;
+				af2[5,27] = ImportantUnitLostTime;
+				target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+			} 				
+			PERFORM SET_ADDITIONAL_PARAMS additionalParams;
+		}
+	}
+}
+
+//create enemy units when on the last objective of tutoral
+if (obj>=9) {
+	if (current == ap*$TPS + 1) {
+		_dest[$Xpos] = 89;
+		_dest[$Ypos] = 77;
+		_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT		//athc
+	}
+	if (current == ap*$TPS + 4) {
+		_dest[$Xpos] = 94;
+		_dest[$Ypos] = 82;
+		_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT	//mech
+	}
+	if (current == ap*$TPS + 7) {
+		_dest[$Xpos] = 84;
+		_dest[$Ypos] = 79;
+		_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT	//mech
+	}
+	if (current == ap*$TPS + 10) {
+		_dest[$Xpos] = 80;
+		_dest[$Ypos] = 82;
+		_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT	//mech
+	}
+	if (current == ap*$TPS + 13) {
+		_dest[$Xpos] = 92;
+		_dest[$Ypos] = 90;
+		_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT	//teleporter
+	}
+	if (current == ap*$TPS + 16) {
+		_dest[$Xpos] = 87;
+		_dest[$Ypos] = 90;
+		_release_next = 1; $UNIT_CREATOR_RELEASE_UNIT	//mech
+	}
+	
+	if (current == ap*$TPS + 19) { //get the unit creator out of there
+		_dest = 1;
+		$UNIT_CREATOR_RELOCATE
+	}
+	
+	if (obj==9 && current >= (ap+2) *$TPS) {
+		target = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==$MECH_CLASS && query->Owner==1 && query->HP<60]; //damaged mech
+		if (target->IsAlive==1) { //an enemy mech is getting damaged
+			af2[0,4] = 10;
+			af2[4] = ImportantUnitLost;
+			af2[5,27] = ImportantUnitLostTime;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+	}
+}
+
+
+if (current==present) {  //only the present objctive runs this code
+
+	if (TwicePerSecond) {
+		PERFORM GET_PLAYER_TIMEWAVE_VISIBILIY;
+		int pvis = perf_ret;
+		if (!pvis[1]) {
+			pvis[1] = 1;
+			PERFORM SET_PLAYER_TIMEWAVE_VISIBILIY pvis; //enable enemy timewave
+		}
+	}
+	
+	if (present==182$seconds) {
+		say "Welcome to the Time Travel training session!";
+		PERFORM DISABLE_PLAYER_CHRONAL_INPUT; PERFORM DISABLE_PLAYER_METATIME_INPUT;
+		say_to_var "playSaySound";
+		say 1;
+		say_to_var "";
+		say_to_var "SMScreenLock";
+        say 1;	
+	}
+	
+	if (present==183$seconds) {
+	  object tank = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==$TANK_CLASS && query->Owner==0 ];
+        player = 0;
+        PERFORM UI_SELECT_UNIT tank;
+        say_to_var "SMUnitDescriptionText";
+		say "The Armor-Beam Tank. In addition to the powerful beam cannon, this heavyweight tank comes equipped with potent anti-air guns, making this CESO unit versatile in any offensive or defensive situation.";
+
+		say_to_var "SMRotateAroundUnit";
+		say 1;
+		say_to_var "SMScreenLock";
+        say 1;	
+	}
+	if (present==184$seconds) {
+		PERFORM ENABLE_PLAYER_CHRONAL_INPUT; PERFORM ENABLE_PLAYER_METATIME_INPUT;
+		say_to_var "SMScreenLock";
+        say 0;	
+	}
+	
+	
+	if (TwicePerSecond) { //only update these 2x a second
+		if (current % (18 * $TPS) == 9 * $TPS) { 
+			if (ImportantUnitLostTime>0) {
+				if (ImportantUnitLost==0) {
+					say "The Mech was destroyed at ";
+				} else {
+					say "The Tank was destroyed at ";
+				}
+				int totalSecs = ImportantUnitLostTime / $TPS;
+				int min = totalSecs / 60;
+				int sec = totalSecs % 60;
+				if (min<10) { say "0"; }
+				say min, ":";
+				if (sec<10) { say "0"; }
+				say sec;
+
+				say_to_var "";
+				if (player1time > ImportantUnitLostTime) { 
+					say "You must jump back and prevent its destruction!";					
+				} else {
+					say "You must prevent its destruction!";
+				}
+				
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+		}
+	
+		say_to_var "ShowSecondaryObjectives"; //this scenario has secondary objectives, so display them
+		say 1;
+		say_to_var "";
+		
+		//update skin appropriately on start of level from a save game reload based on current objective
+		if (obj<2) {
+			say_to_var "HideSpeedCotrolsOnstart";
+			say 1;
+			say_to_var "";
+		}
+		if (obj<5) { 
+			say_to_var "HideUpdatersOnstart";
+			say 1;
+			say_to_var "";
+		}
+		if (obj<9) { 
+			say_to_var "HideUndoButtonOnstart";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "TutorialInit"; //hide the appropriate controls if not up to objective 9 yet
+			say 1;
+			say_to_var "";
+		}
+		
+		
+		if (present==184$seconds) {
+			say_to_var "SMtutorialTextWindow"; 
+			say "At the bottom of the screen is the timeline.  It displays the available temporal window.  On it, you will find the present marked as 'present', and your current temporal position marked by a light blue line.\n \nThe 'present' represents the amount of time elapsed since the beginning the level - it moves forward in real time.";
+		}
+		
+		if (present==184$seconds + 9) {
+			say_to_var "SMtutorialTextWindow"; 
+			say "Clicking anywhere on the timeline will let you see what's happening at that point in time.  Viewing the timeline does not require any energy.\n \nAs you mouse-over the timeline, the relative time to the present is shown above the mouse, and the absolute time is shown below the mouse.";
+		}
+			
+		if (present == 185 $seconds) {
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+			
+		if (present > 185 * $TPS && obj==0) {
+			 say_to_var "tutorialText";
+			 say "New Objective:     Learn to jump in time\n \n- Jump to 30 seconds into the future (approximately +30 sec mark)";
+			 say_to_var "";
+			
+			//display the helper Balloon at +30 secs at the 3:30 mark 
+			if(present >= 210 *$TPS) {
+				say_to_var "showBalloon30";
+				say 1;
+				say_to_var "";
+			}
+		}
+			
+		if (obj==1) {
+			if (present == af4 + 1 $seconds) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "Your player line represents WHEN you are on the timeline.\n \nYou can use the keyboard "; say_from_config "AchronUIPresent"; say " key to return to the present.\n \nThe further in the past you are, the visual feed will degrade and the more sepia tone everything will seem.";
+			}
+
+			if (present == af4 + 1 $seconds + 9) {
+				say_to_var "SMtutorialTextWindow";
+				say "The keyboard keys of "; say_from_config "AchronUIEnableBookmark"; say "-F1 through "; say_from_config "AchronUIEnableBookmark"; say "-F8 store up to 8 temporal bookmarks.  F1 through F8 will recall those individual bookmarks.\n \nExample: "; say_from_config "AchronUIEnableBookmark"; say "-F1 will store your current time into the first bookmark which will appear on the timeline as a white line marked with a 1.  To jump back to that bookmark, simply hit F1.";
+			}
+			
+			if (present == af4 + 2 $seconds ) {
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+			
+			if (present > af4 + 2 $seconds) {
+				say_to_var "altTextColor";
+				 say "1";
+				 say_to_var "tutorialText";
+				 say "New Objective: \n \n- Jump to -30 seconds (into the past)";
+				 say_to_var "";
+			}
+			
+			if (current >= (ap+30)*$TPS) { //show hint balloon 30 seconds after jump
+				say_to_var "showBalloonM30";
+				say 1;
+				say_to_var "";		
+			}
+		}
+		if (obj>1) { 
+			say_to_var "tutObj1";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj1Text";
+			say "x Learn to jump around in time";
+			say_to_var "";
+		} else {
+			say_to_var "Obj1Text";
+			say "- Learn to jump around in time";
+			say_to_var "";
+		}
+		
+		if (obj==2) {
+			if (present == af4 + 1 $seconds) {
+				
+				say_to_var "SMtutorialTextWindow"; 
+				say "The Time Speed controls are located just above the timeline.\n \nThe slow-time button (keyboard shortcut: "; say_from_config  "AchronUITimeSlow"; say ") slows down your movement through time by half and can be used to issue more percise commands.\n \nThe pause-time button (keyboard shortcut: "; say_from_config "AchronUITimeStop"; say") can also be used for percision micromanagement.";			
+			}
+
+			if (present == af4 + 1 $seconds + 9) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "The default play button (keyboard shortcut: "; say_from_config "AchronUITimeNormal"; say") moves you at real-time speed.\n \nThe fast-forward button (keyboard shortcut: "; say_from_config "AchronUITimeFast"; say ") doubles the speed that you move along the timeline.\n \nPlaying in fast-forward is especially useful when replaying the past.";
+			}	
+			
+			if (present == af4 + 2 $seconds ) {
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+			
+			if (present > af4 + 2 $seconds) {
+				say_to_var "altTextColor";
+				say "0";
+				say_to_var "tutorialText";
+				say "New Objective:  Playing at different speeds\n \n- Fast Forward to -15 seconds in the past";
+				say_to_var "";
+			}
+			
+			say_to_var "Obj2Text";
+			say "- Learn to use speed controls";
+			say_to_var "";
+			
+		}  else if (obj<2) {
+			say_to_var "Obj2Text";
+			say "   Learn to use speed controls";
+			say_to_var "";
+		}
+		
+		if (obj==3 || obj==4) {
+		
+			if (present==af4+1$seconds) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "While you are in the past, playing in Fast Forward lets you propagate past changes to the present since you are progressing at 2x the speed.\n \nYour player line falls back on the timeline while playing in 'Slow-Mo' or in 'Pause' because these controls affect only your progression through time while real time is still flowing at regular speed for everyone else.";
+			}
+			
+					
+			if (present == af4 + 1 $seconds + 9) {
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+		
+			if (present > af4 + 1 $seconds + 9) {
+				say_to_var "altTextColor";
+				say "1";
+				say_to_var "tutorialText";
+				say "New Objective:    Learn to use speed controls\n \n1) Jump back to -15 seconds (you don't need to be exact)\n \n2) Move your Mech north to the 'waypoint' Target Zone\n \n3) Play in FAST FORWARD and catch up to the present AS the Mech moves";	
+				say_to_var "";
+			}
+			
+			say_to_var "Obj2Text";
+			say "- Learn to use speed controls";
+			say_to_var "";
+		}
+		if (obj>4) { 
+			say_to_var "tutObj2";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj2Text";
+			say "x Learn to use speed controls";
+			say_to_var "";
+		} 
+		if (obj==5||obj==6||obj==7) {
+		
+			if (present == af4 + 1 $seconds) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "Timewaves are now enabled on the timeline.\n \nTime waves allow changes to past events to propagate through the timeline.\n \nYou can toggle unique coloring for timewaves in the settings menu.";
+			}
+		
+			if (present == af4 + 1 $seconds + 9) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "Time waves represent the methodical nature with which the timeline corrects itself.\n \nA wave is generated in the immutable past, and travels along the timeline into the future.";
+			}
+			
+			if (present == af4 + 2 $seconds) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "When a time wave encounters a change, it propagates that change forward on the timeline.\n \nOnce that time wave reaches your current temporal position, the changes it carries will have occurred.";
+			}
+
+			if (present == af4 + 2 $seconds + 9) {
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+			
+			if (present > af4 + 2 $seconds + 9) {			
+				say_to_var "altTextColor";
+				say "0";
+				say_to_var "tutorialText";
+				say "New Objective: Learn how timewaves propagate changes\n \n1) Jump to 30 seconds in the past (you don't need to be exact)\n \n2) Move the TANK to the Target Zone\n \n3) Before the tank reaches the destination, jump forward to the present\n  (keyboard shortcut: "; say_from_config "AchronUIPresent"; say ")\n \n4) Wait for the next Timewave to sweep past the -30 sec mark\n   and to propagate the Tank's altered history to the present";
+				say_to_var "";
+			}
+			
+			say_to_var "Obj3Text";
+			say "- Learn how timewaves work";
+			say_to_var "";
+		
+		} else if (obj<5) {
+			say_to_var "Obj3Text";
+			say "   Learn how timewaves work";
+			say_to_var "";
+		}
+		if (obj>7) {
+			say_to_var "tutObj3";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj3Text";
+			say "x Learn how timewaves work";
+			say_to_var "";
+		}
+		if (obj==8) {
+		
+			if (present == af4 + 2 $seconds) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "Each timewave refreshes the screen with past changes as it passes by.\n \nThe order you issued in the past has now caught up with the present.  The Tank is now at this new location.";
+			}
+			
+			if (present == af4 + 3 $seconds + 9) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "Timewaves are evenly separated, giving the player opportunities to plan and react to those past changes before the next timewave passes.\n \nMoving around the timeline will allow you to watch events unfold in the past, present and future.";
+			}
+			
+			if (present == af4 + 3 $seconds ) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "The timeline also serves as a map of time, showing a summary of events and what is happening at every point in this time window.\n \nThe legend for these events is located to the left of the timeline.\n \nApproriately colored blobs denote these events with the size of the bars scaling up or down based on the magnitude of the event.";
+			}
+
+			if (present == af4 + 3 $seconds + 9) {
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+			
+			if (present > af4 + 3 $seconds + 9) {		
+				say_to_var "altTextColor";
+				say "1";
+				say_to_var "tutorialText";
+				say "New Objective: Learn to read events on the timeline\n \n1) Attack the disabled Armory on the side of the road\n \n2) Note how each attack is displayed on the timeline as 'damage dealt'\n \n3) Remain in the present until the Armory is destroyed";
+				say_to_var "";
+			}
+			if (present == af4 + 4 $seconds) {
+				$UI_SELECT_UNIT $ARMORY;
+			}
+			
+			
+			say_to_var "Obj4Text";
+			say "- Learn about events on the timeline";
+			say_to_var "";
+		} else if (obj<8) {
+			say_to_var "Obj4Text";
+			say "   Learn about events on the timeline";
+			say_to_var "";
+		}
+		if (obj>=9) {
+			if (present == af4 + 1 $seconds) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "Above the timeline is your chronoenergy.  Communicating with the past requires energy, the further back you go along the timeline, the more energy it takes to change it.\n \nEach command issued in the past consumes some of your reserve.  Chronoenergy regenerates when you are not using it.";
+			}
+			
+			if (present == af4 + 1 $seconds + 9) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "One of the most useful timeline commands is the UNDO command which is located to the left of the speed controls.  It revokes commands issued in a period of time selected on the timeline.\n \nYou can undo future or past orders for any selected units.";
+			}
+			
+			if (present == af4 + 2 $seconds ) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "IMPORTANT POINT: the undo command is used to ERASE orders because simply issuing different commands will *not* overwrite your previous orders.\n \nIf you originally order a unit to move left, but then jump back in time and tell it to move right, the unit will still try to move left!";
+			}
+			
+			
+			if (present == af4 + 2 $seconds + 9) {
+				say_to_var "SMtutorialTextWindow"; 
+				say "To quick-undo all future orders:\n1) jump back in time\n2) select the desired units\n3) hit '";  say_from_config "AchronUIUndoFuture"; say "' twice\n \nTo percision undo specific orders:\n1) select the desired units\n2) click the UNDO control (keyboard shortcut: "; say_from_config "AchronUIUndoFuture"; say ")\n3) select the range and LEFT click on the timeline";
+			}
+			
+			if (present == af4 + 3 $seconds ) {			
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+			
+			if (present > af4 + 3 $seconds ) {			
+				say_to_var "altTextColor";
+				say "0";
+				say_to_var "tutorialText1";
+				say "Primary Objective: to complete the tutorial, destroy enemy outpost\n- In the present, attack the outpost South on the road\n \n \n \nOptional Objective: Learn how to Undo commands\n \n1) Move a unit anywhere\n \n2) As it is moving, select that unit, click UNDO (key: ";  say_from_config "AchronUIUndoFuture"; say ")\n \n3) LEFT click on the timeline a few seconds before your order\n \nThis will erase all the commands you gave to the unit in the selected time.";
+				say_to_var "";
+				
+				say_to_var "tutorialText";
+				say "Final Objective:    Return to the present and destroy enemies \n                     on the South edge of the road\n \n1) Using what you've learned, do not to let the Mech nor the Tank die\n \n2) Remember that timewaves bring past changes to the future.\n   Verify your victory in the future at +10 seconds by jumping there\n   and seeing that the timewaves have propagated your win.\n \n   Hint: you can also Fast Forward to +10 seconds because you observing\n   the passage of time propagates changes just like a timewave!";
+				say_to_var "";
+			}
+			say_to_var "tutObj4";
+			say 1;
+			say_to_var "";
+			
+			say_to_var "Obj4Text";
+			say "x Learn about events on the timeline";
+			say_to_var "";
+			
+			say_to_var "Obj5Text";
+			say "-  Attack enemy outpost";
+			say_to_var "";
+			
+			say_to_var "Obj6Text";
+			say "- Learn 'Undo'";
+			say_to_var "";
+			
+		} else if (obj<9) {
+			say_to_var "Obj5Text";
+			say "   Attack enemy outpost";
+			say_to_var "";
+			
+			say_to_var "Obj6Text";
+			say "   Learn 'Undo'";
+			say_to_var "";
+		}
+		if (obj==10) {
+			say_to_var "showBalloon10";
+			say 1;
+			say_to_var "";
+		}
+	
+	}
+	
+	if (obj==0) {
+		if (current > 181*$TPS && current % ( 30 * $TPS) == 0) { //say hint every 30 seconds
+			say "If you're ready to continue, jump to +30 secs, to the future";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+		if (current > 181*$TPS && current % ( 30 * $TPS) == 1) { //say hint every 30 seconds
+			say "Your relative time to the present is right above the timeline";
+		}
+	}
+	
+	if (obj==1) {
+		if ((current-ap*$TPS) % (18 * $TPS) == 0 ) { //every 18 seconds after the jump
+			say "When you are ready to continue, jump to -30 seconds";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+	}
+	
+	if (obj==9) {
+		if (current == (ap+10)*$TPS) { //wait 10 seconds
+			say "We recommend you try the Optional Objective";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+		if (current == (ap+20)*$TPS) { //wait 10 more seconds
+			say "You should really try doing the Optional Objective...";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";
+		}
+	}
+	
+	//player is at present
+	if (player1time == present) {
+				
+		
+		if (obj==6) { //this means player jumped to present before seeing the 'jump to present now' message
+			int sec = current / $TPS;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+			af2[0,4] = 7;
+			af2[4] = ImportantUnitLost;
+			af2[5,27] = ImportantUnitLostTime;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+
+		if (obj==7) {
+			if (current == (ap+5) * $TPS) { //wait 7 seconds after returning to present
+				$UI_MSG "Please wait here for the next time wave to pass";
+			}
+
+			if (current == (ap+10) * $TPS) { //wait 7 more seconds after returning 
+				$UI_MSG "Here it comes... you can see it approaching the present.";
+			}
+			
+			object tank= QUERY UNIT [unit] MIN [1] WHERE [ query->Class==$TANK_CLASS && query->Owner==0];
+			if (tank->IsAlive==1) {   
+				int X = tank->XPosition;
+				int Y = tank->YPosition;
+				if ( X>=12 && X<=30 && Y>=0 && Y<=15) {
+					say "Great!";
+					say_to_var "playObjSound";
+					say 1;
+					say_to_var "";
+					int sec = current / $TPS;
+					target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+					af2[0,4] = 8;
+					af2[4] = ImportantUnitLost;
+					af2[5,27] = ImportantUnitLostTime;
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+					
+					target = 4; PERFORM SET_ACHRONAL_FIELD present-present%$TPS;; 
+					say_to_var "tutorialText"; 
+					say "";
+				}
+			}
+		}
+		
+		if (obj==8) {
+			int timePassed = current-ap*$TPS;
+			int every18sec = timePassed % (18 * $TPS);
+			
+			if ( every18sec == 0 ) { //every 18 seconds 
+				$UI_MSG "Attack and destroy the Armory on the side of the road";
+			}
+						
+			int fact = QUERY VALUE [unit] SUM [1] WHERE [query->Class==$ARMORY_CLASS];
+			if (fact==0) {
+				say_to_var "playObjSound";
+				say 1;
+				say_to_var "";
+				int sec = current / $TPS;
+				target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+				af2[0,4] = 9;
+				af2[4] = ImportantUnitLost;
+				af2[5,27] = ImportantUnitLostTime;
+				target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+				
+				
+				target = 4; PERFORM SET_ACHRONAL_FIELD present-present%$TPS;; 
+				say_to_var "tutorialText"; 
+				say "";
+				
+				say_to_var "HideUndoButton";
+				say 0;
+				say_to_var "";
+			}
+		}
+		
+	} else {
+		if (obj==7) {
+			if (current == (ap+7) * $TPS) { //wait 5 seconds after returning to present
+				$UI_MSG "Please return to the present (keyboard shortcut: "; say_from_config "AchronUIPresent"; say ")";
+			}
+		}
+		if (obj==8) {
+			if ((current-ap*$TPS) % (18 * $TPS) == 0 ) { //every 18 seconds 
+				$UI_MSG "Return to the present and attack the Armory";
+			}
+		}
+	}
+		
+	
+	
+	// + 25 <> + 35 
+	if (player1time > (present + 25 * $TPS) &&
+		player1time < ( present + 35 * $TPS) ) {    
+		
+		if ( rate == 2 && obj==0) {	//playing at 1x and just started
+			int sec = current / $TPS;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+			af2[0,4] = 1;
+			af2[4] = ImportantUnitLost;
+			af2[5,27] = ImportantUnitLostTime;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+			
+			target = 4; PERFORM SET_ACHRONAL_FIELD present-present%$TPS;; 
+			say_to_var "tutorialText"; 
+			say "";
+			
+			say_to_var "showBalloon30";
+			say 0;
+			say_to_var "";
+			
+		}
+		
+	}
+
+		// -25 <> -35 
+	if (player1time < (present - 25 * $TPS)  &&
+		player1time > ( present - 35 * $TPS) ) {    
+		
+		if ( rate == 2) { //playing at 1x 
+			if (obj==1) {	//objective 1 completed, doing obj2
+				int sec = current / $TPS;
+				target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+				af2[0,4] = 2;
+				af2[4] = ImportantUnitLost;
+				af2[5,27] = ImportantUnitLostTime;
+				target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+				
+				
+				target = 4; PERFORM SET_ACHRONAL_FIELD present-present%$TPS;; 
+				say_to_var "tutorialText"; 
+				say "";			
+			
+				say_to_var "playObjSound";
+				say 1;
+				say_to_var "";   
+				
+				say_to_var "HideSpeedControls";
+				say 0;
+				say_to_var "";
+
+				say_to_var "showBalloonM30";
+				say 0;
+				say_to_var "";				
+			}
+			
+			if (obj==2) {
+				if (present>af4+2$seconds && (current-ap*$TPS) % (18 * $TPS) == 0 ) { //every 18 seconds after the jump
+					$UI_MSG "Fast Forward to -15 second mark on the timeline";
+				}
+			}
+		}	
+		
+		if (obj==5) { 
+			say_to_var "showBalloonM30"; //clear helper ballon since player already jumped to -30
+			say 0;
+			say_to_var "";
+		
+			if ((current-ap*$TPS) % (18 * $TPS) == 0 ) { //every 18 seconds 
+				$UI_MSG "Dispatch the Tank to move to the Target Zone";
+				say_to_var ""; say "then jump back to the present before the Tank arrives";
+				
+			}
+		
+			//for step5, see if tank is moving 
+			object tank = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==$TANK_CLASS && query->Owner==0];
+			target = tank;
+			PERFORM GET_UNIT_AT_TIME player1time;
+			tank = perf_ret;
+			if (tank->IsAlive==1) {  
+				int X = tank->ObjParamX;
+				int Y = tank->ObjParamY;
+				//tank is moving to north-west corner 
+				int to = tank->Objective;
+				if ((to==$OBJECTIVE_UNIT_MOVE || to==$OBJECTIVE_ATTACKING) &&
+					(X <= tank->XPosition && Y <= tank->YPosition || 
+					X>=15 && X<=28 && Y>=0 && Y<=10)) {
+					
+					say "Return to the present and wait for the next time wave";
+					say_to_var "playSaySound";
+					say 1;
+					say_to_var "";	
+					int sec = current / $TPS;
+					target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+					af2[0,4] = 6;
+					af2[4] = ImportantUnitLost;
+					af2[5,27] = ImportantUnitLostTime;
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+				}    
+			}
+		}
+		
+		if (obj==6 && current == (ap+10) * $TPS) { //wait 10 seconds 
+			say "Return to the present now!";
+			say_to_var "playSaySound";
+			say 1;
+			say_to_var "";	
+			int sec = current / $TPS;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+			
+			af2[0,4] = 7;
+			af2[4] = ImportantUnitLost;
+			af2[5,27] = ImportantUnitLostTime;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+		}
+	
+	} else {
+		if (obj==5) {
+			if (present > af4 + 3 $seconds && (current-ap*$TPS) % (18 * $TPS) == 0 ) { //every 18 seconds 
+				say "Jump to -30 secs and then move the Tank to the Target Zone";
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";
+			}
+			
+			if (current >= (ap+30)*$TPS) { //show hint balloon after 30 seconds  of waiting
+				say_to_var "showBalloonM30";
+				say 1;
+				say_to_var "";
+			}
+		}
+	}
+	
+
+	// -15 and playing in FF
+	if (player1time >= (present - 16 * $TPS) && player1time <= (present - 15 * $TPS) && rate == 3 ) {    
+		if (obj==2) {	//objective 2 completed, doing obj3
+			int sec = current / $TPS;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+			af2[0,4] = 3;
+			af2[4] = ImportantUnitLost;
+			af2[5,27] = ImportantUnitLostTime;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+			
+			target = 4; PERFORM SET_ACHRONAL_FIELD present-present%$TPS;; 
+			say_to_var "tutorialText"; 
+			say "";
+			
+    
+		}
+	}
+
+	//- 18 <> 0 and playing in FF
+	if (player1time<present && player1time >= (present - 18 * $TPS) && rate==3) {
+		if (obj==3) {
+			object mech = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==$MECH_CLASS && query->Owner==0];
+			target = mech;
+			PERFORM GET_UNIT_AT_TIME player1time;
+			mech = perf_ret;
+			if (mech->IsAlive==1) {  
+				int X = mech->ObjParamX;
+				int Y = mech->ObjParamY;
+				int mo = mech->Objective;
+				//mech is moving to north-west corner 
+				if ((mo==$OBJECTIVE_UNIT_MOVE || mo==$OBJECTIVE_ATTACKING) &&
+					(X <= mech->XPosition && Y <= mech->YPosition || 
+					X>=15 && X<=28 && Y>=0 && Y<=10)) {
+					say "Hint: You can also click on the minimap to issue move orders";
+					af2[0,4] = 4;
+					af2[4] = ImportantUnitLost;
+					af2[5,27] = ImportantUnitLostTime;
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+				}
+			}
+			
+			
+			if (present>af4+2$seconds && (current-ap*$TPS) % (18 * $TPS) == 0 ) { //every 18 seconds 
+				say "Move the Mech all the way North, towards the Target Zone";
+				//say "While in Fast Forward, move the Mech all the way North, between the boxes";
+				say_to_var "playSaySound";
+				say 1;
+				say_to_var "";		
+			}
+			
+		}
+	} else {
+		if (obj==3) {
+			if (present>af4+2$seconds && (current-ap*$TPS) % (18 * $TPS) == 0 ) { //every 18 seconds after the jump
+				$UI_MSG "Jump to -15 secs, play in Fast Forward and move the";
+				say_to_var ""; say "Mech North on the road towards the target zone";
+			}
+		}
+	}
+
+	//-1 <> 0 
+	if ( player1time <= present && player1time >= (present - $TPS)) {
+		if (obj==4 ) {
+			object mech = QUERY UNIT [unit] MIN [1] WHERE [ query->Class==$MECH_CLASS && query->Owner==0];
+			if (mech->IsAlive==1) {  
+				int X = mech->XPosition;
+				int Y = mech->YPosition;
+				if ( X>=15 && X<=28 && Y>=0 && Y<=10) {
+					say "Good job!";
+					say_to_var "playObjSound";
+					say 1;
+					say_to_var "";      
+					
+					//say "Jump to 30 seconds in the past and then move the Tank close to the Mech";
+					af2[0,4] = 5;
+					af2[4] = ImportantUnitLost;
+					af2[5,27] = ImportantUnitLostTime;
+					target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+
+					target = 4; PERFORM SET_ACHRONAL_FIELD present-present%$TPS;; 
+					say_to_var "tutorialText"; 
+					say "";
+					
+					say_to_var "ShowUpdaters";
+					say 1;
+					say_to_var "";      			
+					
+					int sec = current / $TPS;
+					target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+				}
+			}
+		}
+	}
+}    
+else {    //if (current!=present)  // all timewaves not at present run this code
+
+	// + 8 <> + 15 , timewave and on last objective
+	if (obj==10 && player1time==current && current > (present + 8 * $TPS) &&
+		current < ( present + 15 * $TPS) ) {        
+		//ignore the enemy unit_creator
+		int enemies = QUERY VALUE [unit] SUM [1] WHERE [ query->Owner==1 && query.Rank >= $RP_RANK ];
+		int mech = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$MECH_CLASS && query->Owner==0];
+		int tank = QUERY VALUE [unit] SUM [1] WHERE [ query->Class==$TANK_CLASS && query->Owner==0];
+		//no enemies left, mech and tank survived 
+		if (enemies==0 && mech==1 && tank==1 ){
+			say_to_var "Obj5Text";
+			say "x  Attack enemy outpost";
+			say_to_var "";
+		
+			say_to_var "tutObj5";
+			say 1;
+			say_to_var "";
+	
+
+			int sec = current / $TPS;
+			target = 1; PERFORM SET_ACHRONAL_FIELD  sec;
+			af2[0,4] = 11;
+			target = 2; PERFORM SET_ACHRONAL_FIELD  af2;
+			
+			target = 4; PERFORM SET_ACHRONAL_FIELD  present;
+			
+			say "Good job. Food for thought...";
+			say_to_var "altTextColor";
+			say "1";
+			say_to_var "tutorialText";
+			say "Final reminders:\n \n1) Using the UNDO control is a safer way to undo future commands.  Be careful when using this "; say_from_config "AchronUIUndoFuture"; say "-twice shortcut to undo future orders, since it will erase ALL future orders for the selected units.\n \n2) Your observing the passage of time propagates changes forward just like a timewave.";
+			say_to_var "tutorialText1";
+			say "Final reminders:\n \n1) Using the UNDO control is a safer way to undo future commands.  Be careful when using this "; say_from_config "AchronUIUndoFuture"; say "-twice shortcut to undo future orders, since it will erase ALL future orders for the selected units.\n \n2) Your observing the passage of time propagates changes forward just like a timewave.";
+			say_to_var "playObjSound";
+			say 1;
+			say_to_var "";
+
+		}
+		
+	}
+
+	if (obj==11 && present==af4+1$seconds ) {
+		PERFORM PLAYER_LOST 2;
+		PERFORM END_SCENARIO;
+	} if (obj==11 && present==af4+1$seconds + 9) {
+		PERFORM EXIT_ENGINE;
+	}
+	
+}
+
+PERFORM NOTHING;
+
+
+
+
+
+
+
+   
+   
+   
+   
+   

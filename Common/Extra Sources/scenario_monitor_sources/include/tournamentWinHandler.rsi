@@ -1,0 +1,59 @@
+/************************************
+*Tournament Handler
+*
+*Handles auto-win recording and determining who is the actual first and second players
+*
+*Defines: TOURNAMENT_PLAYER_AF 119: Field for storing actual first and second players
+*
+*Global vars used: nonObsPlayerMask
+*				   obs
+*
+*Fields: 119: Bits 0-3: Stores first-most player number
+*			  Bits 4-7: Stores second-most player number
+************************************/
+
+#define TOURNAMENT_PLAYER_AF 119;
+
+
+//Set the first-most and second-most players, for robustness with tournament display
+if(current == present && present == 3){
+	int x = 0;
+	int firstMostPlayer = 16; //Since 0 is Player 1, we need a different start point
+	int secondMostPlayer = 0; //Since 0 is Player 1, who will never be secondmost, this works
+	for(x = 0; x<15; x = x+1){
+		if((nonObsPlayerMask>>x)&1) {
+			if (firstMostPlayer == 16){
+				firstMostPlayer = x;
+			} else if (!secondMostPlayer){
+				secondMostPlayer = x;
+			}
+		}
+	}
+	int y = 0;
+	for(y = 0; y<15; y = y+1){
+		player = y;
+		say_to_var "SMTourP1"; say firstMostPlayer;
+		say_to_var "SMTourP2"; say secondMostPlayer;
+	}
+	target = $TOURNAMENT_PLAYER_AF;
+	PERFORM SET_ACHRONAL_FIELD firstMostPlayer[0,4] | (secondMostPlayer[0,4]<<4);
+}
+
+if( af1[30,2]==1){
+	PERFORM GET_ACHRONAL_FIELD $TOURNAMENT_PLAYER_AF;
+	int firstMostPlayer = perf_ret[0,4];
+	int secondMostPlayer = perf_ret[4,4];
+	int x = 0;
+	PERFORM IS_REPLAY;
+	for(x=0;x<15;x=x+1){
+		player = x;
+		if ((((obs&connected)>>x)&&!perf_ret)||(perf_ret&&((enabled>>x)&1))){
+			if ((af2>>(firstMostPlayer+15))&1){
+				say_to_var "SMP2Won"; say 1;
+			}
+			else if ((af2>>(secondMostPlayer+15))&1){
+				say_to_var "SMP1Won"; say 1;
+			}
+		}
+	}
+}

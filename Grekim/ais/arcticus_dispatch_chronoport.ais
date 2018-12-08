@@ -1,0 +1,109 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//arcticus_dispatch_stop.ais - script for arcticus base to override player issued commands and chronoport units 
+
+#include common/include/unit_common_header.aih
+
+
+if ( !(player->Advancements)[$GREKIM_ADV_GATE] ) {
+    PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+PERFORM GET_RECHRONOPORT_DELAY;  //get the rechronoport delay in ticks
+int RECHRONOPORTDELAY = perf_ret;
+
+int targetTime = unit->ObjectiveParameters; 
+int LC = player->$LCrystals;
+int QP = player->$QPlasma;
+int lc = 0;
+int qp = 0;
+int uclass = 0;
+
+int i = 0;
+
+while (1) {
+	target = unit->NextSubordinate;
+	if (target->IsAlive==1) {
+	
+		//make sure the subordinate can actually jump WRT the rechronoport delay
+		int timeSinceLastChronoport = target->TimeSinceLastChronoport;
+		if (timeSinceLastChronoport==-1 || timeSinceLastChronoport > RECHRONOPORTDELAY) {
+			
+			uclass = target->Class;
+			if (uclass==$ARCTICUS_CLASS || uclass==$ARCTICUS_MOVE_CLASS) continue; //ignore arcticus subordinates
+			
+			
+			//*** 
+			//	this block of code prevents an echo-loop where the orinigally chronport-dispatched unit is 
+			// disconnected from the hierarchy, allowing it's older chronoclone to exist in an ontological loop 
+			// by not allowing an older clone subordinate to be chronoport dispatched 
+			//***
+			
+			int name = target->Name;
+			
+			 //if set, skips to dispatch to the next subordinate unit 
+			int next = 0;
+			
+			//store age of target. it should be the younger unit (not traveled yet)
+			int age = target->Age; 
+			
+			for (i=0; i<8; i=i+1) {
+				//check if chronoclones exist at this same time
+				object original = target->NextUnitOfSameName;
+				if (original <= 0) { break; }
+				
+				//a chronoclone does exist, make sure target unit isn't the chronoclone
+				if (original->Age <= age) { //the target is the older one! do not chronport it
+					next = 1;
+					break;
+				}
+			}
+			
+			if (next) { continue; }  //skip this target 
+					
+			//*** ***//
+			
+			//make sure the unit's original self doesn't exist at the same time
+			//if it does, make sure it isn't reporting to this same arcticus or has the same name
+			object parent = target->Parent;
+			if (parent->IsAlive!=1 || parent->Commander!=unit || parent->Name!=name) {	
+				
+				//set cost of chronoport based on subordinate's class
+
+				if (uclass==$OCTO_CLASS) { qp = $OCTO_CPORT_QP; } 
+				else if (uclass>=$OCTOPOD_CLASS && uclass <= ($OCTOPOD_CLASS+4)) { qp = $OCTOPOD_CPORT_QP; } 
+				else if (uclass==$OCTOLIGO_CLASS) { qp = $OCTOLIGO_CPORT_QP; } 
+				else if (uclass==$SEPI_CLASS) { qp = $SEPI_CPORT_QP; } 
+				else if (uclass==$SEPIPOD_CLASS) { qp = $SEPIPOD_CPORT_QP; } 
+				else if (uclass==$SEPILIGO_CLASS) { qp = $SEPILIGO_CPORT_QP; } 
+				else if (uclass==$PHARO_CLASS) { qp = $PHARO_CPORT_QP; } 
+				else if (uclass==$PHAROPOD_CLASS) { qp = $PHAROPOD_CPORT_QP; } 
+				else if (uclass==$PHAROLIGO_CLASS) { qp = $PHAROLIGO_CPORT_QP; } 
+				
+				//if not enough resources to chronoport subordinate, stop dispatches
+				if (LC < lc || QP < qp) {
+					break;
+				} 
+				
+				//calculate remaining amount of resources after this unit chronoports
+				LC = LC - lc; 
+				QP = QP - qp;
+			
+				PERFORM SET_OTHER_OBJECTIVE $OBJECTIVE_CHRONOPORT;
+				PERFORM SET_OTHER_OBJECTIVE_PARAMS targetTime;
+				PERFORM SET_OTHER_ADDITIONAL_PARAMS 0;	
+				//If Hierarchy Control is disabled then only the first unit should get the order
+				$INIT_GLOBAL_CHRONAL_PROPERTIES
+				if ( !$CLEAR_QUEUE_AFTER_CHRONOPORT ) { break; }
+		
+			}
+				
+		}
+		
+	} else { break; }
+}
+
+
+PERFORM SET_OBJECTIVE 0;
+

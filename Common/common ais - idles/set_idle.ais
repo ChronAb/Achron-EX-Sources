@@ -1,0 +1,20 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+int uclass = unit->Class;
+int urank = unit.Rank;
+int isClosed = (uclass==$HUMAN_RP_OFF_CLASS||uclass==$GREKIM_RP_OFF_CLASS||uclass==$VECGIR_RP_OFF_CLASS);
+
+if(urank == $RP_RANK && !isClosed){
+	if(unit->Action == 2 || unit->Action == 3) PERFORM NOTHING;
+	else if(unit->Action == 16) {
+		PERFORM SET_OBJECTIVE 0; //go back to idle
+		PERFORM NOTHING;
+	}
+	else PERFORM $ACTION_STARTMOVE;
+}
+if(urank == $GREKIM_PROGENERATION_RANK || urank == $GREKIM_POD_PROGENERATION_RANK || uclass == $VICTORY_CLASS){
+	PERFORM $ACTION_SET_IDLE;
+}
+PERFORM SET_OBJECTIVE 0; //go back to idle

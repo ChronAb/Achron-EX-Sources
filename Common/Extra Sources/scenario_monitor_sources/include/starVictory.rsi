@@ -1,0 +1,64 @@
+/**************************************
+* Basic Victory condition for Star games
+*
+* Checks if any player has killed all of their enemies, but their allies are both alive. 
+* If so, the player wins and their allies lose.
+*
+* Global vars used: playerCount
+*                   aiPlayer
+*                   nonPlayer
+*                   end_game
+**************************************/
+
+int checkPlayer = 0;
+
+PERFORM GET_ACTIVE_PLAYERS;
+active = perf_ret;
+
+for(checkPlayer = 0; checkPlayer<playerCount; checkPlayer = checkPlayer+1){
+	player = checkPlayer;
+	
+	//Only check for players who are still alive
+	if(((active&(~nonPlayer))>>checkPlayer)&1){
+	
+	//Check if the only players still alive and connected are this player's allies. If so, this player wins.
+	//We need to check connected specifically so that disconnects at the end trigger victory condition
+	//thus we also need to check AI explicitly, as using the connected field won't do it
+		if ((player->Allies&(~nonPlayer)|(1<<checkPlayer)) == ((active&connected&(~nonPlayer))|(active&aiPlayer))){
+			PERFORM PLAYER_LOST player->Allies&(~nonPlayer);
+			int y = 0;
+			for (y = 0; y<15; y = y+1){
+				if ((enabled>>y)&1){
+				player = checkPlayer;
+					if (((player->Allies&(~nonPlayer))>>y)&1){
+						player = y;
+						say_to_var "DefeatedText";
+						say "Player ", checkPlayer + 1, " has defeated their enemies\nand won alone";
+						
+						int totalSecs = current / TICKS_PER_SECOND;
+						$CALCULATE_MIN_SEC_HOUR
+						say_to_var "endgameTime"; 
+						say "AT: ";
+						$SAY_CALCULATED_TIME
+					} else if (checkPlayer != y) {
+						player = y;
+						say_to_var "DefeatedText";
+						say "Player ", checkPlayer + 1, " has defeated their enemies and won";
+					} else {
+						say_to_var "DefeatedText";
+						say "You have defeated your enemies and won alone";
+					}
+				}
+			}
+			end_game = 1;
+			break;
+		} 
+			
+		else if ((((player->Allies)&(active&(~nonPlayer)))|(1<<checkPlayer)) == (active&(~nonPlayer))){
+			end_game = 1;
+		} else {
+			end_game = 0;
+			break;
+		}
+	}
+}

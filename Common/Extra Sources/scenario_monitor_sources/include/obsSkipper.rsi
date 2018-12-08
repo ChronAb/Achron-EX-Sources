@@ -1,0 +1,303 @@
+// --- Records manages, tracks, and responds to discontinuities in the timeline
+//      INPUT:
+//          obs     the bitmask of the observer players
+//      DEFINES:
+//          MaxFields
+//          MinFields
+//          SkipNum
+//          CheckOffput
+//          ListStart
+//          SpendStart
+//          spent
+//          skipper
+//          BlanketSpacing
+//          MaxList
+//          ListTest
+
+// --- ACHRONAL FIELD USAGE:
+//          MinFields
+//          -> +14      = LastTicks for the players
+//          =  +15      = Changed bitmask
+//          +16 -> +30  = CE records for players
+//          ->          = Discontinuity list
+//          MaxFields
+//          ->          = Chronoporting information
+//          MaxCP
+
+// --- ADDITIONAL PARAM USAGE
+//          Unit        = Post-chronoport usage
+//          Unit + 2    = Pre-chronoport usage
+
+
+
+// --- TO DO:
+//          //Code to remove discontinuity markers from player waves when passed by natural waves
+//          //Not consider it a discontinuity if a player jumps from being synced to another player
+//          //When adding discontinuity markers, check for duplicates
+//          //Double check the chroport discontinuity marker card, esp: inf loop?
+//          //If players pass: exchange discontinuity markers
+//          //Chronoport bug? solution: mark further forward
+//          //In the future bug?
+//          //Observers + players, then player jumps
+//          //Multple observers, over disc
+//          //Undos (at least, into the past), soltuiton: if a drop in CE is detected at the same time that another player jumps through time: mark section of time as discontinuities
+//          //Chronoport marking, for incase of undone chronoports:
+//              Extra AFs will be used in order to mark chronoports here is how it will work:
+//              Passing over a departure will mark the arrival as a discontinuity (only if the current wave has a discon)
+//              It will also create a chronoport record (only if discon)
+//              Chronoport records are a pair of AFs, representing both an arrival and departure time
+//              A non-obs wave passing over an arrival will delete the chronoport order
+//              A non-obs wave passing over a departure will mark the arrival as a discon if the wave is carrying a discon
+
+
+// --- KNOWN EXCEPTIONS/BUGS
+//          Undos into the future: Z+Z and Del+click
+//          //An undone departure will not mark the undone arrival as a discontinuity as it should
+
+
+if (present==8) {if (current==8) {int a=0; for (a=0;a<=15;a=a+1) { if ((enabled>>a)&1) { player=a;say "Discontinuity Monitor v0.8";}}}}
+
+if (current > 2) {
+// - 0) defines
+#define MaxFields $skipper+290
+#define MinFields 1200
+#define SkipNum ptime + 30-(ptime%30) + 31
+#define CheckOffput 0
+#define ListStart $MinFields+16+15+1+15
+#define SpendStart $MinFields+16
+#define spent $MinFields+15
+#define skipper $spent+15
+#define MaxCP 2000
+#define BlanketSpacing 30*3
+#define ListTest if (1) {\
+    PERFORM GET_ACHRONAL_FIELD ($ListStart);\
+    int D=0;player=0; say " (";\
+    while (D<10) {\
+        say " ",perf_ret;D=D+1;\
+        PERFORM GET_ACHRONAL_FIELD (D+$ListStart);\
+    }\
+    say " ) ";\
+}
+#define ListTest2 if (1) {\
+    PERFORM GET_ACHRONAL_FIELD($MaxFields+1);\
+    int D=0;player=0; say " (";\
+    while (D<20) {\
+        say " ",perf_ret;D=D+1;\
+        if (D%2==1) {say " /";}\
+        PERFORM GET_ACHRONAL_FIELD (D+$MaxFields+1);\
+    }\
+    say " ) ";\
+}
+
+
+// - 0) pre-checks
+PERFORM GET_NUM_TIME_WAVES; int numWaves=perf_ret;
+PERFORM GET_ACHRONAL_FIELD ($spent); int spent=perf_ret; if (current==1) {spent=2**(15+numWaves+1);}
+PERFORM GET_ACHRONAL_FIELD ($skipper); int skipper=perf_ret;
+#include include/waves.rsi
+#include include/obsSkipperCheck.rsi
+#include include/cportCheck.rsi
+#include include/obsSkipperCPCheck.rsi
+
+
+//if (waves[2]) {player=2;say_to_var "DefeatedText"; say current;say_to_var "";}
+//if (waves[0]) {player=0;say WaveCount;}
+//PERFORM GET_CYCLE_COUNT; int ccc=perf_ret;//if (waves[0]) {PERFORM GET_CYCLE_COUNT; player=0;say "cycles: ", perf_ret;}
+
+
+// - 1) quick-fix, regular code does not work when players pause then jump through time
+if (current==present) {
+    for (A=0; A<=14; A=A+1) {
+        PERFORM GET_PLAYER_TIME_RATE A;
+        if (perf_ret==0) { // if: player A is paused
+            
+            PERFORM GET_ACHRONAL_FIELD ($MinFields+A);int LastTick=perf_ret;
+            PERFORM GET_PLAYER_TIME A; int time = current; current = perf_ret;
+            if ((abs (current - LastTick) >= 2) && ((spent>>A)[0]==1)) { // if: player jumped through time
+                #include include/obsSkipperNew.rsi
+                spent=spent-(1<<A);
+            }
+
+            if (current < LastTick - 5) { // Check for an undo into the past
+                PERFORM GET_PLAYER_MAX_CHRONOENERGY A; float blah = perf_ret_float;
+                PERFORM GET_PLAYER_CHRONOENERGY A; int blah2=blah - perf_ret_float;
+                PERFORM GET_ACHRONAL_FIELD ($SpendStart + A);//player=0;say perf_ret, " : ", blah2;
+                if (perf_ret < blah2) {
+                    #include include/obsSkipperBlanket.rsi
+                }
+            }
+            
+            target=$MinFields+A; PERFORM SET_ACHRONAL_FIELD current; // update LastTick for player
+            current = time;
+            
+        }
+    }
+}
+
+
+// - 2) the MAIN detection code for discontinuities etc etc
+//      checks everything for every wave blah blah blah
+//           Players:         Check if they have moved through time, clear previous inconcistencies
+//           Observers:       If they are close to an inconcistency, skip them over it
+//           Others:          Remove inconcistencies
+int DisMark=0;int FastestWave=0;int doRemove=0;// if (current==present) {FastestWave=2;}
+for (A=0; A<=15+numWaves; A=A+1) { //1 for: all waves
+    if ((waves>>A)[0]==1) { //2 if: wave is at this tick
+        if (A<15) { //3 if: player wave
+            if ((obs>>A)[0]==0) { //4 if: non-obs player
+                
+                
+                PERFORM GET_PLAYER_TIME_RATE A; if (perf_ret>FastestWave) {FastestWave=perf_ret;}
+                PERFORM GET_ACHRONAL_FIELD ($MinFields+A);int LastTick=perf_ret;
+                doRemove=1;
+                
+                
+                // - 2.1) Check for if the player has jumped through time
+                if ((abs (current-LastTick)>=4) && ((spent>>A)[0]==1)) {
+                    LastTick=LastTick+4;
+                    #include include/obsSkipperNew.rsi
+                    spent=spent-(1<<A); target=$MinFields+15; PERFORM SET_ACHRONAL_FIELD spent;
+                }
+                
+                target=$MinFields+A; PERFORM SET_ACHRONAL_FIELD current; // update LastTick for player
+                if ((spent>>A)[0]) {DisMark=1;}
+
+                if (current < LastTick - 5) { // Check for an undo into the past
+                    PERFORM GET_PLAYER_MAX_CHRONOENERGY A; float blah = perf_ret_float;
+                    PERFORM GET_PLAYER_CHRONOENERGY A; int blah2=blah - perf_ret_float;
+                    PERFORM GET_ACHRONAL_FIELD ($SpendStart + A);//player=0;say perf_ret, " : ", blah2;
+                    if (perf_ret < blah2) {
+                        #include include/obsSkipperBlanket.rsi
+                    }
+                }
+                
+                
+            } else  { //4 else:
+                if (skip && !doRemove && current!=present) { //5 if: discontinuity && not following a player && not at present
+                    // skip observer forward
+                    //player=A; say "Timeline discontinuity type A"/*, current, " ", FIndex*/;
+                    skipper=skipper|(1<<A);//PERFORM SET_PLAYER_TIME (current+$SkipNum);
+                } else if (DisMark || (spent[15] && current==present)) { //5 else if: discon. marker here || at present with disc marker
+                    // if the observer is going faster than any player waves with a discon. marker skip them forward
+                    PERFORM GET_PLAYER_TIME_RATE A;
+                    if (perf_ret > FastestWave && DisMark) {//player=A; say "Timeline discontinuity type B";
+                        skipper=skipper|(1<<A);}//PERFORM SET_PLAYER_TIME (current+$SkipNum);}
+                }
+            }
+        } else { //3 else: Present or natural
+            if (A==15 && FastestWave < 2) {FastestWave=2;}
+              else if (A>15) {FastestWave=4;}
+            if ((spent>>A)[0]) {DisMark=1;}
+            doRemove=1;
+        }
+    }
+}
+
+
+// - 3) if any non-observer wave passes here, and there is a discontinuity, remove it
+if (doRemove && skip) {
+    #include include/obsSkipperRemove.rsi
+    DisMark=1;
+    //player=0;say "PICKED UP";
+}
+/*if (waves[2]) {player=2;say " ( ",spent," ) ";}*/
+
+
+// - 4) detect if a player is changing time:
+//          at the moment: this code detects only chronoenergy variance
+//player=0;say current, " ", present;
+if (current==present) {
+    for (A=0;A<=14;A=A+1) {
+        PERFORM GET_PLAYER_MAX_CHRONOENERGY A; float blah = perf_ret_float;
+        PERFORM GET_PLAYER_CHRONOENERGY A; int blah2 = blah - perf_ret_float;
+        PERFORM GET_ACHRONAL_FIELD ($SpendStart + A);
+        if (perf_ret < blah2) {
+            spent=spent|(1<<A);
+            //player=0;say A, " spend";
+        } else {
+            PERFORM GET_PLAYER_TIME A;
+            if (perf_ret >= present-20) { spent=spent|(1<<A); }
+        }
+        target=$SpendStart+A;PERFORM SET_ACHRONAL_FIELD blah2;
+    }
+}
+if (current>=present-1) {DisMark=1;} // because the script cannot check for order changes in the present upward, assume they have and are issuing an order
+
+
+// - 5) detect if there is a chronoport departure here, and this simulation carries a discontinuity:
+//          mark the arrival time of all chronoports as discontinuities
+if (NewCportD && DisMark) {//player=0;say"CP";
+    int lowest=0;
+    PERFORM GET_XPORT_TIMEOUT; int timeout=perf_ret;
+    while (1) {
+        // queryvalue: chronoport destinations: where: units are chronoporting
+        int T = QUERY VALUE [unit] MIN [query->ObjectiveParameters] WHERE [query->ObjectiveParameters > lowest && query->Action==60];
+        
+        if (T != -1 && T != 2147483647) {//say " ",T;
+            int LastTick = T + 30-(T%30)-1;
+            lowest= T;
+            #include include/obsSkipperNew.rsi
+            #include include/obsSkipperCPNew.rsi
+        } else {break;}
+    }
+}
+
+
+// - 6) if the waves are near the end of the timeline:
+//          remove the discontinuity markers
+PERFORM GET_TIME_WINDOW_START; int end=perf_ret;
+PERFORM GET_TIME_WINDOW_DURATION; end=end+perf_ret;
+if (abs (current-end)<= 18) {
+    DisMark=1;
+    FastestWave=6;
+}
+
+
+// - 7) update the "spent" bitmask values for all waves here
+//          for all but the fastest waves, clear the bitmask
+//          for the fastest waves, fill the bitmask
+if (DisMark) {
+    for (A=0;A<=15+numWaves;A=A+1) {if ((waves>>A)[0]){
+        perf_ret=2;if (A<15) {PERFORM GET_PLAYER_TIME_RATE A;} else if (A>15) {perf_ret=4;}
+        if (perf_ret<FastestWave && ((spent>>A)[0])) {spent=spent-(1<<A);}
+        else if (perf_ret>=FastestWave) {spent=spent|(1<<A);}
+    }}
+}/* else {
+    for (A=0;A<=15+numWaves;A=A+1) {if ((waves>>A)[0] && (spent>>A)[0]) {
+        spent=spent-(1<<A);
+    }}
+}/*/
+
+
+// - 8) jump forward all marked observer waves that are more than $SkipNum away current
+//if (waves[2]) {player=2;say skipper;}
+if (skipper>0) {//player=2;say "A";
+    for (A=0;A<=14;A=A+1){if ((skipper>>A)[0]){
+        PERFORM GET_PLAYER_TIME A;int ptime=perf_ret;
+        if (abs(current-ptime)> 30) {//say "B";
+            player=A;/*say abs(current-ptime), "   ";*/say "Timeline Discontinuity at ";
+            int totalSecs = ptime / TICKS_PER_SECOND;
+            $CALCULATE_MIN_SEC_HOUR
+            $SAY_CALCULATED_TIME
+            PERFORM SET_PLAYER_TIME ($SkipNum);
+            skipper=skipper-(1<<A);
+        }
+        //PERFORM GET_PLAYER_TIME A;
+        //PERFORM SET_PLAYER_TIME (perf_ret+$SkipNum);
+    }}
+}
+
+//if (waves[0]){PERFORM GET_CYCLE_COUNT; player=0;say "cycles: ", perf_ret-ccc, " / ", perf_ret;}
+// save the "spent" bitmask
+target=$spent; PERFORM SET_ACHRONAL_FIELD spent;
+target=$skipper; PERFORM SET_ACHRONAL_FIELD skipper;
+//if (waves[2]) {player=2;say " ( ",spent-2**(15+numWaves+1)," )";}
+/*player=2;
+if (skipper>0) {say " --- ELF()";
+    for (A=0;A<=14;A=A+1) {if ((waves>>A)[0] && ((skipper)>>A)[0]){
+        player=A;say " _______";
+        PERFORM SET_PLAYER_TIME (current+$SkipNum);
+    }}
+    PERFORM GET_CUR_TIME; if (current!=perf_ret) {say "NOTHING";PERFORM NOTHING;}
+}*/
+}

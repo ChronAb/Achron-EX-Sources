@@ -1,0 +1,27 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+PERFORM SET_OBJECTIVE 0;
+
+if(unit.Rank == $RP_RANK){
+	if (player->$QPlasma < 40) {
+		$SAY_QP
+		PERFORM $ACTION_ERROR1;
+	}
+	else {
+		if (unit->Ammo < 20) {
+			say "Not enough Charge";
+			PERFORM $ACTION_ERROR1;
+		}
+		else {
+			$SAY_CONVERT_RESOURCES
+			PERFORM $ACTION_CONVERT_QP;
+		}
+	}
+	PERFORM NOTHING;
+}
+
+if(unit.Rank == $RESOURCE_RANK || unit.Rank == $EMPTIED_RANK){
+	PERFORM $ACTION_CONVERT_QP;
+}

@@ -1,0 +1,89 @@
+/********************************
+* Observer alliance and vision controller by Shadowfury333
+*
+* This is the core of the Observer monitor. It is used to make sure all connected observers are
+* able to see what all players are doing, and vice versa.
+*
+* Defines: none
+*
+* Global vars used: obs
+*				   	nonPlayer
+*
+* Global vars defined: none
+*
+********************************/
+
+if (current == present && present == 1) {
+	int playerHealth = 0;
+	int num = 0;
+	int x = 0;
+	int class = 0;
+	int firstObsNum = 0;
+
+	//loop through the 15 players
+	for (x = 0; x<15; x=x+1) {
+		if((enabled>>x)&1 && ((nonPlayer>>x)&1)){
+			num = $GET_UNIT_COUNT [ query->Owner == x ];
+			if (num == 0) {
+				if (!firstObsNum){
+					firstObsNum = x; //Set initial obs number, to allow it to work in replays
+				}
+				obs = obs | (1<<x);
+			}
+		}
+	}
+
+	//Remove all inactive obs, but keep the main one in replays, provided there are observers
+	int unusedObs = 0;
+	PERFORM IS_REPLAY;
+	if(!perf_ret||firstObsNum==0){unusedObs = obs&(~connected)&enabled;}
+	else {unusedObs = obs&(~connected)&enabled&(~(1<<firstObsNum));}
+
+	//Reset the observer mask to only include observers that should stay alive
+	if(perf_ret){obs = (obs&connected)|(1<<firstObsNum);}
+	else {obs = (obs&connected);}
+	target = $OBS_AF;
+	PERFORM SET_ACHRONAL_FIELD obs;
+
+	PERFORM GET_PLAYER_TIMEWAVE_VISIBILIY;
+	PERFORM SET_PLAYER_TIMEWAVE_VISIBILIY perf_ret&(~(obs));
+
+  //Uncomment if nonPlayer ever stops being used as a basis for obs
+	//nonPlayer = nonPlayer | obs;
+	//target = $NONPLAYER_AF;
+	//PERFORM SET_ACHRONAL_FIELD nonPlayer;
+
+	//Make all unused observers lose quietly
+	PERFORM PLAYER_LOST unusedObs;
+	af2[15,15] = af2[15,15] | unusedObs;
+	target = 1; PERFORM SET_ACHRONAL_FIELD af2;
+
+	//Make all remaining obs unable to control units or manually make alliances
+	PERFORM PLAYER_DISABLE_UNIT_CONTROLS obs;
+}
+
+//loop through each player and share vision between them and the observer
+if(TwicePerSecond){
+	int allymask = 0;
+	int visionmask = 0;
+	int x = 0;
+
+	for (x = 0; x < 15; x=x+1) {
+		player = x;
+		PERFORM IS_REPLAY;
+		if (perf_ret){
+			say_to_var "SMReplayStats"; say 1;
+		}
+		allymask = player->Allies;
+		if ((obs>>x)&1){
+			say_to_var "SMObsStats"; say 1;
+			PERFORM SET_PLAYER_VISIBILITY_SHARING (obs|connected|active);
+			PERFORM SET_PLAYER_ALLIANCES allymask | obs;
+		} else if ( ((active|connected)>>x)&1) {
+			visionmask = player->VisibilitySharing;
+			PERFORM SET_PLAYER_VISIBILITY_SHARING visionmask | obs;
+			// PERFORM SET_PLAYER_ALLIANCES allymask;
+		}
+	}
+
+}

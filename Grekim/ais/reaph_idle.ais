@@ -1,0 +1,70 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+
+#include common/include/unit_common_header.aih
+#define IS_REAPH 1
+
+PERFORM GET_CUR_TIME;
+int curtime = perf_ret;
+
+if (curtime%87==0) {
+	if (unit->Objective!=0) { PERFORM SET_OBJECTIVE 0; } //set objective to idle if running idle script
+}
+
+int current_action = unit->Action;
+//Don't try to heal while still being built
+if (current_action == 0){
+	PERFORM NOTHING;
+}
+
+
+//******************
+//Healing:
+int unitEnergy = unit->Energy;
+
+if (curtime%18==9) {//only look for healing targets once per s to save CPU
+	
+object buddy = 0;
+//Search an ally that's either commjammed or stopped 
+/*if (unitEnergy >= 60) {
+	int qstatus = 0;
+	buddy =  QUERY UNIT [unit] MIN [ unit <=> query ] WHERE [query->IsAlly==1 && 
+				( ((qstatus=query->Status)&$FROZEN_COMMJAM ) && !qstatus[$TSS_BIT] )  ];
+}*/
+
+//Search for an Ally to heal
+if (unitEnergy >= 2 && buddy <= 0) {
+    query_vis_distance = -1;//reaph's heal radius is equal to vision radius
+    
+    if (player->$Power > $POWER_SMART_THRESHOLD){
+        buddy =  QUERY UNIT [unit] MIN [ query->HP ] WHERE 
+                [query->IsAlly==1 && query->HP <= (query.MaxHP-4) && query->HP != 0 &&
+                    !(query->IsStasis) && !(query->IsStop) ];
+    }
+    else {
+        buddy =  QUERY UNIT [unit] MIN [ query->HP ] WHERE 
+                [query->IsAlly==1 && query->HP <= (query.MaxHP*0.65) &&                    query->HP != 0 && !(query->IsStasis) && !(query->IsStop) ];
+    }
+}
+
+
+if (buddy>0) { //found a nearby unit that needs help
+	/*if (buddy->IsCommjam || buddy->IsStop ) { //buddy needs recovering
+		if (unitEnergy >= 60 ) { //enough energy to recover
+				target = buddy;
+				PERFORM $ACTION_BLDG_RECOVER target;
+				PERFORM NOTHING;
+		}
+	}*/
+                
+	if (buddy->HP <= (buddy.MaxHP-4)  && buddy->HP !=0) { //check if it needs repair  
+		target = buddy;
+		PERFORM $ACTION_BLDG_HEAL target;
+		PERFORM NOTHING;
+	}
+}
+
+}
+
+int ap = unit->AdditionalParameters;
+#include common/include/grekim_building_idle.ais

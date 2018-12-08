@@ -1,0 +1,591 @@
+/*************************************
+* Resource display for observers by Shadowfury333
+* Displays player resources to all observers.
+* First section grabs relevant values for each player and sets them to appropriate AFs.
+* If a value is synchronized with the skin here a synced bit is set.
+* Second section says the values to the skin. This only happens if the synced bit for that value is clear
+* After a say, the synced bit is set.
+*
+* Field usage varies depending on number of enabled players and observers
+*
+* Defines:  PLAYERCOUNT_AF 118 : Field for player number storage
+*           CURR_TIME_RATE_START_AF 121 : Start Field for current player time rate
+*           CURR_TIME_RATE_Y_AF 121+y : Field for current player time rate, y is current observer
+*           RESOURCESAY_START_AF 122 : Starting point for resource storage
+*
+* Global vars used: obs
+*
+* Fields: 118 : bits 0-3: Stores the number of non-observer players enabled on the map
+*               bits 4-18: Stores a mask of non-obs players active in the game, including active AI
+*               bit 19-31: unused
+*         121 to 135 : Stores current time rate for all players in 2-bit chunks
+*
+*         136 to 1036 : Used to store player resources and tech for each observer
+*          Per observers fields are needed to avoid race conditions on resource data. Per player fields are necessary for
+*          observer stats in replays while looking from player POV.
+*
+*         136+4n : Used to store Vecgir Power (bits 0-27)
+*         137+4n : Used to store Liquid Crystal (bits 0-18), and player race (bits 19-20),
+*          SmartIdle (bit 22), Auto-Hierarchy (bit 21), whether a Comm building exists (bit 23),
+*          and whether LC has been synced (bit 24), whether Race has been synced (bit 25),
+*          whether Tech has been synced (bit 26), and whether Power has been synced (bit 27).
+*          In assassin mode, also contains the status of the Achron (bit 28).
+*         138+4n : Q-Plasma(bits 13-29), CESO Reserves(bits 0-12),
+*          and whether Q-Plasma or Reserves has synced (bits 31 and 30 respectively)
+*         139+4n : Used to store Tech. First 16 bits are researched tech, last 16 bits are tech in progress
+*
+* Global vars defined: y : mentioned for code safety's sake. This is defined in other code as well.
+*                          So far, no issues.
+*              playerCount : Stores the number of non-observer players enabled on the map
+*                      nonObsPlayerMask : Stores a mask of players who are not obs and active at game start, for skin stats display
+*************************************/
+
+#define PLAYERCOUNT_AF 118
+
+PERFORM GET_ACHRONAL_FIELD $PLAYERCOUNT_AF;
+int nonObsPlayerMask = perf_ret[4,15];
+int playerCount = perf_ret[0,4];
+
+#define CURR_TIME_RATE_START_AF 121
+#define CURR_TIME_RATE_Y_AF 121+y
+
+#define RESOURCESAY_START_AF 136
+//AF offsets as defines for Player x
+#define P_X_POW_AF 4*x + 4*15*(y) + $RESOURCESAY_START_AF
+#define P_X_COMM_RACE_LC_AF 4*x + 4*15*(y) + 1 + $RESOURCESAY_START_AF
+#define P_X_QP_RES_AF 4*x + 4*15*(y) + 2 + $RESOURCESAY_START_AF
+#define P_X_ADV_AF 4*x + 4*15*(y) + 3 + $RESOURCESAY_START_AF
+
+#define LC_BITS 0,19
+#define RACE_BITS 19,2
+#define COMM_BITS 21,3
+
+#define ADV_BITS 0,16
+#define ADV_INCOMPLETE_BITS 16,16
+
+#define LC_SYNCED_BIT 24,1
+#define RACE_SYNCED_BIT 25,1
+#define ADV_SYNCED_BIT 26,1
+#define POW_SYNCED_BIT 27,1
+
+#define QP_BITS 13,17
+#define RES_BITS 0,13
+
+#define QP_SYNCED_BIT 31,1
+#define RES_SYNCED_BIT 30,1
+
+#define ACHRON_DEAD_BIT 28,1
+
+int y = 0;
+
+//Determine the number of actual players
+if (current == present && present == 2){
+  int x = 0;
+  playerCount = 0;
+  for (x = 0;x < 15; x=x+1){
+    if (((active&(~nonPlayer))>>x)&1) {
+      playerCount = playerCount + 1;
+    }
+  }
+  PERFORM GET_ACHRONAL_FIELD $PLAYERCOUNT_AF;
+  target = $PLAYERCOUNT_AF;
+  PERFORM SET_ACHRONAL_FIELD perf_ret | playerCount;
+
+  //Determine which players are still alive after ai killer
+  //If random and an AI survives, active doesn't store AI,
+  //so we need to not the mask of dead AI players that are AI players in the first place and add that
+  nonObsPlayerMask = (active & (~nonPlayer));
+  target = $PLAYERCOUNT_AF;
+  PERFORM GET_ACHRONAL_FIELD $PLAYERCOUNT_AF;
+  perf_ret[4,15] = nonObsPlayerMask;
+  PERFORM SET_ACHRONAL_FIELD perf_ret;
+}
+
+for (y=0; y<15; y=y+1){
+  //If we are in a replay, make sure all players get data
+  PERFORM IS_REPLAY;
+  if((((obs&connected)>>y)&1)||(perf_ret&&((enabled>>y)&1))){ //&&(y==firstObsNum)&&(firstObsNum!=0))){
+    PERFORM GET_PLAYER_TIME y;
+    int currentObsTime = perf_ret;
+      // print perf_ret, "\n";
+    if (TwicePerSecond && current == currentObsTime){
+      //Get information for each player to each obs from each obs's current time
+      int x = 0;
+      for( x=0; x<15; x=x+1){
+        if((nonObsPlayerMask>>x)&1){
+          player = x;
+
+          //We need to grab all fields and set for that, in case the synced bit is reset
+          //and hasn't been reset by the say block
+          PERFORM GET_ACHRONAL_FIELD $P_X_COMM_RACE_LC_AF;
+          int COMM_RACE_LC = perf_ret;
+          COMM_RACE_LC[$LC_BITS] = player->$LCrystals;
+          COMM_RACE_LC[$COMM_BITS] = player->GlobalFlags[0,3];
+          // COMM_RACE_LC[$COMM_EXISTS_BIT] = player->GlobalFlags[2,1]; //Check if a Comm Center exists at all
+
+          // PERFORM GET_ACHRONAL_FIELD $P_X_POW_AF;
+          int POW = 0;
+          POW = player->$Power;
+
+          PERFORM GET_ACHRONAL_FIELD $P_X_QP_RES_AF;
+          int QP_RES = perf_ret;
+          QP_RES[$QP_BITS] = player->$QPlasma;
+          QP_RES[$RES_BITS] = player->$ReserveSoldiers;
+
+          int ADV = 0;
+          ADV[$ADV_BITS] = player->Advancements;
+          ADV[$ADV_INCOMPLETE_BITS] = player->CustomControls;
+
+          if ((current/$TPS < 465 || !COMM_RACE_LC[$LC_SYNCED_BIT]) && ADV != 0) { //Efficient race check. If they have tech, they are that race and no query is needed
+            if (ADV[1,5] != 0 || ADV[17,5] != 0){
+              COMM_RACE_LC[$RACE_BITS] = 1; //Set to CESO
+            } else if (ADV[6,5] != 0 || ADV[22,5] != 0){
+              COMM_RACE_LC[$RACE_BITS] = 3; //Set to Grekim
+            } else if (ADV[11,5] != 0 || ADV[27,5] != 0 || ADV[0] == 1 || ADV[16] == 1){
+              COMM_RACE_LC[$RACE_BITS] = 2; //Set to Vecgir
+            }
+          }
+
+          if(pre_game_settings[$MP_ASSASSIN_MODE]) {COMM_RACE_LC[$ACHRON_DEAD_BIT] = player->ControlFlags[$CONTROLFLAGS_PLAYER_CONTROL];}
+
+
+          //Efficiency check. Don't send information that hasn't changed. Should cut bandwidth usage down greatly
+          //We can't have this code both set and reset the change bits, as that creates a race condition with the say block
+          PERFORM GET_ACHRONAL_FIELD $P_X_POW_AF;
+          if (POW != perf_ret) {COMM_RACE_LC[$POW_SYNCED_BIT] = 0;} //Clear Pow synced bit if current POW has changed since last stored POW
+
+          PERFORM GET_ACHRONAL_FIELD $P_X_COMM_RACE_LC_AF;
+          if (COMM_RACE_LC[$LC_BITS] != perf_ret[$LC_BITS]) {COMM_RACE_LC[$LC_SYNCED_BIT] = 0;} //Clear LC synced bit if current LC has changed since last stored LC
+          if (COMM_RACE_LC[$RACE_BITS] != perf_ret[$RACE_BITS]) {COMM_RACE_LC[$RACE_SYNCED_BIT] = 0;} //Clear Race synced bit if current Race has changed since last stored Race
+
+          PERFORM GET_ACHRONAL_FIELD $P_X_QP_RES_AF;
+          if (QP_RES[$QP_BITS] != perf_ret[$QP_BITS]) {QP_RES[$QP_SYNCED_BIT] = 0;} //Clear QP synced bit if current QP is changed since last stored QP
+          if (QP_RES[$RES_BITS] != perf_ret[$RES_BITS]) {QP_RES[$RES_SYNCED_BIT] = 0;} //Clear RES synced bit if current RES is changed since last stored RES
+
+          PERFORM GET_ACHRONAL_FIELD $P_X_ADV_AF;
+          if (ADV != perf_ret) {COMM_RACE_LC[$ADV_SYNCED_BIT] = 0;} //Clear ADV synced bit if current ADV is changed since last stored ADV
+
+
+          //Get the field at 4*(this player's number) + 4*15*(this observer's number - the start point of observers)
+          target = $P_X_POW_AF;
+          //print "POW field: ", target, " Player: ", x, " Observer: ", y, "\n";
+          PERFORM SET_ACHRONAL_FIELD POW;
+          target = $P_X_COMM_RACE_LC_AF;
+          //print "LC field: ", target, " Player: ", x, " Observer: ", y, "\n";
+          PERFORM SET_ACHRONAL_FIELD COMM_RACE_LC;
+          target = $P_X_QP_RES_AF;
+          //print "COMM_QP_RES field: ", target, " Player: ", x, " Observer: ", y, "\n";
+          PERFORM SET_ACHRONAL_FIELD QP_RES;
+          target = $P_X_ADV_AF;
+          PERFORM SET_ACHRONAL_FIELD ADV;
+        }
+      }
+    }
+
+    //Slow race check. current % 60 / 4 makes it work for 1 player every 4 ticks, checking if that player even exists
+    if (current % 4 == 0 && (nonObsPlayerMask>>((current % 60)/4))&1 && current == currentObsTime){
+
+      //Get Player x's race if stored
+      int x = (current % 60)/4;
+      player = x;
+
+      //Get current race here in case no query is done. That way it will remain consistent.
+      PERFORM GET_ACHRONAL_FIELD $P_X_COMM_RACE_LC_AF;
+      int pxRace = perf_ret[$RACE_BITS];
+
+      if ((current/$TPS < 465 || !perf_ret[$RACE_SYNCED_BIT]) && player->Advancements == 0 && player->CustomControls == 0){ //Check if tech is researched. If it is, that indicates race already
+        object pxRaceUnit = $GET_UNIT [ query->Owner == x];
+
+        if (pxRaceUnit.Rank == $RACE_CHOOSER_RANK) {
+          pxRace = 0;
+        } else if (pxRaceUnit->Class >= 1 && pxRaceUnit->Class <= 999) {
+          pxRace = 1;
+        } else if (pxRaceUnit->Class >= 1000 && pxRaceUnit->Class <= 1999) {
+          pxRace = 3;
+        } else if (pxRaceUnit->Class >= 2000 && pxRaceUnit->Class <= 2999) {
+          pxRace = 2;
+        }
+      }
+
+      if (pxRace != perf_ret[$RACE_BITS]) {perf_ret[$RACE_SYNCED_BIT] = 0;}  //Clear race synced bit if race has changed since last stored race
+
+      perf_ret[$RACE_BITS] = pxRace;
+      target = $P_X_COMM_RACE_LC_AF;
+      PERFORM SET_ACHRONAL_FIELD perf_ret;
+
+    }
+    if (current == present && TwicePerSecond && present >= $TPS){
+      player = y;
+      say_to_var "SMObsPlayerNum";
+      say (playerCount | (nonObsPlayerMask<<4));
+    }
+
+    int x = current % 18;
+    if (current==present && x <= 14 && ((nonObsPlayerMask>>x)&1)) { //cycle through all 15 players only if they are enabled
+
+      player = y;
+      //Send information to skin variables
+      //Send information as bits 0-3: Number of players
+      //            bits 4-18: Bitmask of all 15 players.
+      if((nonObsPlayerMask>>x)&1) { //only do this for non-observer players
+
+        //If this is a replay, bypass all efficiency measures, it messes with proper operation.
+        //If this isn't a replay, send all data every 30 seconds anyway, in case lag spikes have caused a
+        //false positive in the synced detection bits.
+        PERFORM IS_REPLAY;
+        int forceUpdate = perf_ret|((present%(30 $seconds))==x);
+
+        PERFORM GET_ACHRONAL_FIELD $P_X_COMM_RACE_LC_AF;
+        int COMM_RACE_LC = perf_ret;
+        if (!perf_ret[$LC_SYNCED_BIT]||forceUpdate){
+          if (x==0) { say_to_var "SMObsP1LC"; }
+          if (x==1) { say_to_var "SMObsP2LC"; }
+          if (x==2) { say_to_var "SMObsP3LC"; }
+          if (x==3) { say_to_var "SMObsP4LC"; }
+          if (x==4) { say_to_var "SMObsP5LC"; }
+          if (x==5) { say_to_var "SMObsP6LC"; }
+          if (x==6) { say_to_var "SMObsP7LC"; }
+          if (x==7) { say_to_var "SMObsP8LC"; }
+          if (x==8) { say_to_var "SMObsP9LC"; }
+          if (x==9) { say_to_var "SMObsP10LC"; }
+          if (x==10) { say_to_var "SMObsP11LC"; }
+          if (x==11) { say_to_var "SMObsP12LC"; }
+          if (x==12) { say_to_var "SMObsP13LC"; }
+          if (x==13) { say_to_var "SMObsP14LC"; }
+          if (x==14) { say_to_var "SMObsP15LC"; }
+          // Since ADV_SYNCED_BIT is stored with COMM_RACE_LC, we need it as a separate var
+          say perf_ret[$LC_BITS];
+          perf_ret[$LC_SYNCED_BIT] = 1;
+          target = $P_X_COMM_RACE_LC_AF;
+          PERFORM SET_ACHRONAL_FIELD perf_ret;
+        }
+        PERFORM GET_ACHRONAL_FIELD $P_X_QP_RES_AF;
+        if (!perf_ret[$QP_SYNCED_BIT]||forceUpdate){
+          if (x==0) { say_to_var "SMObsP1QP"; }
+          if (x==1) { say_to_var "SMObsP2QP"; }
+          if (x==2) { say_to_var "SMObsP3QP"; }
+          if (x==3) { say_to_var "SMObsP4QP"; }
+          if (x==4) { say_to_var "SMObsP5QP"; }
+          if (x==5) { say_to_var "SMObsP6QP"; }
+          if (x==6) { say_to_var "SMObsP7QP"; }
+          if (x==7) { say_to_var "SMObsP8QP"; }
+          if (x==8) { say_to_var "SMObsP9QP"; }
+          if (x==9) { say_to_var "SMObsP10QP"; }
+          if (x==10) { say_to_var "SMObsP11QP"; }
+          if (x==11) { say_to_var "SMObsP12QP"; }
+          if (x==12) { say_to_var "SMObsP13QP"; }
+          if (x==13) { say_to_var "SMObsP14QP"; }
+          if (x==14) { say_to_var "SMObsP15QP"; }
+          say perf_ret[$QP_BITS];
+          perf_ret[$QP_SYNCED_BIT] = 1;
+          target = $P_X_QP_RES_AF;
+          PERFORM SET_ACHRONAL_FIELD perf_ret;
+        }
+        PERFORM GET_ACHRONAL_FIELD $P_X_POW_AF;
+        if ((!COMM_RACE_LC[$POW_SYNCED_BIT])||forceUpdate){
+          if (x==0) { say_to_var "SMObsP1PW"; }
+          if (x==1) { say_to_var "SMObsP2PW"; }
+          if (x==2) { say_to_var "SMObsP3PW"; }
+          if (x==3) { say_to_var "SMObsP4PW"; }
+          if (x==4) { say_to_var "SMObsP5PW"; }
+          if (x==5) { say_to_var "SMObsP6PW"; }
+          if (x==6) { say_to_var "SMObsP7PW"; }
+          if (x==7) { say_to_var "SMObsP8PW"; }
+          if (x==8) { say_to_var "SMObsP9PW"; }
+          if (x==9) { say_to_var "SMObsP10PW"; }
+          if (x==10) { say_to_var "SMObsP11PW"; }
+          if (x==11) { say_to_var "SMObsP12PW"; }
+          if (x==12) { say_to_var "SMObsP13PW"; }
+          if (x==13) { say_to_var "SMObsP14PW"; }
+          if (x==14) { say_to_var "SMObsP15PW"; }
+          say perf_ret;
+          COMM_RACE_LC[$POW_SYNCED_BIT] = 1;
+          target = $P_X_COMM_RACE_LC_AF;
+          PERFORM SET_ACHRONAL_FIELD COMM_RACE_LC;
+        }
+        PERFORM GET_ACHRONAL_FIELD $P_X_QP_RES_AF;
+        if ((!perf_ret[$RES_SYNCED_BIT])||forceUpdate){
+          if (x==0) { say_to_var "SMObsP1RS"; }
+          if (x==1) { say_to_var "SMObsP2RS"; }
+          if (x==2) { say_to_var "SMObsP3RS"; }
+          if (x==3) { say_to_var "SMObsP4RS"; }
+          if (x==4) { say_to_var "SMObsP5RS"; }
+          if (x==5) { say_to_var "SMObsP6RS"; }
+          if (x==6) { say_to_var "SMObsP7RS"; }
+          if (x==7) { say_to_var "SMObsP8RS"; }
+          if (x==8) { say_to_var "SMObsP9RS"; }
+          if (x==9) { say_to_var "SMObsP10RS"; }
+          if (x==10) { say_to_var "SMObsP11RS"; }
+          if (x==11) { say_to_var "SMObsP12RS"; }
+          if (x==12) { say_to_var "SMObsP13RS"; }
+          if (x==13) { say_to_var "SMObsP14RS"; }
+          if (x==14) { say_to_var "SMObsP15RS"; }
+          say perf_ret[$RES_BITS];
+          perf_ret[$RES_SYNCED_BIT] = 1;
+          target = $P_X_QP_RES_AF;
+          PERFORM SET_ACHRONAL_FIELD perf_ret;
+        }
+
+        PERFORM GET_ACHRONAL_FIELD $P_X_ADV_AF;
+        if (!COMM_RACE_LC[$ADV_SYNCED_BIT]||forceUpdate){ //Since ADV_SYNCED_BIT is stored with COMM_RACE_LC, we need it as a separate var
+          if(x==0) {say_to_var "SMObsP1ADV";}
+          if(x==1) {say_to_var "SMObsP2ADV";}
+          if(x==2) {say_to_var "SMObsP3ADV";}
+          if(x==3) {say_to_var "SMObsP4ADV";}
+          if(x==4) {say_to_var "SMObsP5ADV";}
+          if(x==5) {say_to_var "SMObsP6ADV";}
+          if(x==6) {say_to_var "SMObsP7ADV";}
+          if(x==7) {say_to_var "SMObsP8ADV";}
+          if(x==8) {say_to_var "SMObsP9ADV";}
+          if(x==9) {say_to_var "SMObsP10ADV";}
+          if(x==10) {say_to_var "SMObsP11ADV";}
+          if(x==11) {say_to_var "SMObsP12ADV";}
+          if(x==12) {say_to_var "SMObsP13ADV";}
+          if(x==13) {say_to_var "SMObsP14ADV";}
+          if(x==14) {say_to_var "SMObsP15ADV";}
+          say perf_ret;
+          COMM_RACE_LC[$ADV_SYNCED_BIT] = 1;
+          target = $P_X_COMM_RACE_LC_AF;
+          PERFORM SET_ACHRONAL_FIELD COMM_RACE_LC;
+        }
+
+        //Send command info
+
+        //Calculate available orders
+        float currentCE = 0;
+        float maxCE = 0;
+        int controlBits = 0; //Bit 0 marks player in playable past, Bit 1 marks player in Playable time, Bit 2 marks player has orders left
+        int ordersLeft = 0;
+        int maxOrders = 0;
+        int maxPastCommands = 0;
+        int playerCurrent = 0;
+        int UPPCurrent = 0;
+        int UPPWidth = 0;
+        int windowStart = 0;
+        int maxPresent = 0;
+
+        PERFORM GET_PLAYER_MAX_CHRONOENERGY x;
+        maxCE = perf_ret_float;
+
+        PERFORM GET_PLAYER_CHRONOENERGY x;
+        currentCE = perf_ret_float;
+
+        PERFORM GET_PLAYER_TIME x;
+        playerCurrent = perf_ret;
+
+        //Compute UPP by UPPWidth - (maxPresent - present)
+        PERFORM GET_UNPLAYABLE_PAST_DURATION;
+        UPPWidth = perf_ret;
+
+        PERFORM GET_TIME_WINDOW_START;
+        windowStart = perf_ret;
+
+        PERFORM GET_PRESENT_TIME_WAVE_FIXED_TIME;
+        maxPresent = perf_ret;
+
+        PERFORM GET_MAX_NUM_COMMANDS_IN_PAST;
+        maxPastCommands = perf_ret;
+
+        //Determine current UPP for chronoenergy cost calculation
+        if (maxPresent > present){
+          UPPCurrent = UPPWidth - (maxPresent - present); //Present is floating
+        }
+        else {UPPCurrent = UPPWidth + windowStart;} //Present is fixed
+
+        //Calculate number of orders left
+        if (playerCurrent < present && playerCurrent > UPPCurrent){
+          maxOrders = maxPastCommands*(playerCurrent - UPPCurrent)/(present - UPPCurrent);
+          ordersLeft = (currentCE/maxCE)*maxOrders;
+          if (ordersLeft >= 1) {
+            controlBits = 3; //bit 0: In playable past, bit 1: In playable time
+          } else {
+            controlBits = 1;
+          }
+        } else if (playerCurrent <= UPPCurrent){
+          controlBits = 0; //Mark that player is in UPP
+        } else {
+          controlBits = 2; //Mark that player is in present or future and that the CE display should not turn red
+        }
+
+        //Send orders text
+        if(x==0) {say_to_var "SMObsP1Orders";}
+        if(x==1) {say_to_var "SMObsP2Orders";}
+        if(x==2) {say_to_var "SMObsP3Orders";}
+        if(x==3) {say_to_var "SMObsP4Orders";}
+        if(x==4) {say_to_var "SMObsP5Orders";}
+        if(x==5) {say_to_var "SMObsP6Orders";}
+        if(x==6) {say_to_var "SMObsP7Orders";}
+        if(x==7) {say_to_var "SMObsP8Orders";}
+        if(x==8) {say_to_var "SMObsP9Orders";}
+        if(x==9) {say_to_var "SMObsP10Orders";}
+        if(x==10) {say_to_var "SMObsP11Orders";}
+        if(x==11) {say_to_var "SMObsP12Orders";}
+        if(x==12) {say_to_var "SMObsP13Orders";}
+        if(x==13) {say_to_var "SMObsP14Orders";}
+        if(x==14) {say_to_var "SMObsP15Orders";}
+        say ordersLeft, " / ", maxOrders;
+
+        int CEFractionMax = 55; //Number of mini-windows in skin for displaying CE
+
+        int displayCEFraction = (currentCE/maxCE)*CEFractionMax;
+
+        //Send Chronoenergy text as number for bar
+        if(x==0) {say_to_var "SMObsP1CE";}
+        if(x==1) {say_to_var "SMObsP2CE";}
+        if(x==2) {say_to_var "SMObsP3CE";}
+        if(x==3) {say_to_var "SMObsP4CE";}
+        if(x==4) {say_to_var "SMObsP5CE";}
+        if(x==5) {say_to_var "SMObsP6CE";}
+        if(x==6) {say_to_var "SMObsP7CE";}
+        if(x==7) {say_to_var "SMObsP8CE";}
+        if(x==8) {say_to_var "SMObsP9CE";}
+        if(x==9) {say_to_var "SMObsP10CE";}
+        if(x==10) {say_to_var "SMObsP11CE";}
+        if(x==11) {say_to_var "SMObsP12CE";}
+        if(x==12) {say_to_var "SMObsP13CE";}
+        if(x==13) {say_to_var "SMObsP14CE";}
+        if(x==14) {say_to_var "SMObsP15CE";}
+        say displayCEFraction;
+
+        //Send Comm Center ability activation bits [0,2] if Comm center exists, and control bits for CE display, and whether this player is still alive
+        if(x==0) {say_to_var "SMObsP1COMM";}
+        if(x==1) {say_to_var "SMObsP2COMM";}
+        if(x==2) {say_to_var "SMObsP3COMM";}
+        if(x==3) {say_to_var "SMObsP4COMM";}
+        if(x==4) {say_to_var "SMObsP5COMM";}
+        if(x==5) {say_to_var "SMObsP6COMM";}
+        if(x==6) {say_to_var "SMObsP7COMM";}
+        if(x==7) {say_to_var "SMObsP8COMM";}
+        if(x==8) {say_to_var "SMObsP9COMM";}
+        if(x==9) {say_to_var "SMObsP10COMM";}
+        if(x==10) {say_to_var "SMObsP11COMM";}
+        if(x==11) {say_to_var "SMObsP12COMM";}
+        if(x==12) {say_to_var "SMObsP13COMM";}
+        if(x==13) {say_to_var "SMObsP14COMM";}
+        if(x==14) {say_to_var "SMObsP15COMM";}
+        if(pre_game_settings[$MP_ASSASSIN_MODE]) {say COMM_RACE_LC[$COMM_BITS] | ((controlBits[0,2])<<3) | (((active>>x)&1)<<5) | (COMM_RACE_LC[$ACHRON_DEAD_BIT] << 6);}       
+        else {say COMM_RACE_LC[$COMM_BITS] | ((controlBits[0,2])<<3) | (((active>>x)&1)<<5);}
+
+
+
+        //print "Player", x, " Orders Left: ", ordersLeft, " Max Orders: ", maxOrders, "\n";
+
+        //Tournament Display
+
+        //Always send this on change to observer, since the non-observer may have been active
+        //beyond the point at which the present becomes fixed
+        if ((UPPCurrent < UPPWidth && !COMM_RACE_LC[$RACE_SYNCED_BIT])||forceUpdate){
+          if(x==0) {say_to_var "SMP1Race";}
+          if(x==1) {say_to_var "SMP2Race";}
+          if(x==2) {say_to_var "SMP3Race";}
+          if(x==3) {say_to_var "SMP4Race";}
+          if(x==4) {say_to_var "SMP5Race";}
+          if(x==5) {say_to_var "SMP6Race";}
+          if(x==6) {say_to_var "SMP7Race";}
+          if(x==7) {say_to_var "SMP8Race";}
+          if(x==8) {say_to_var "SMP9Race";}
+          if(x==9) {say_to_var "SMP10Race";}
+          if(x==10) {say_to_var "SMP11Race";}
+          if(x==11) {say_to_var "SMP12Race";}
+          if(x==12) {say_to_var "SMP13Race";}
+          if(x==13) {say_to_var "SMP14Race";}
+          if(x==14) {say_to_var "SMP15Race";}
+          say COMM_RACE_LC[$RACE_BITS];
+          COMM_RACE_LC[$RACE_SYNCED_BIT] = 1;
+          target = $P_X_COMM_RACE_LC_AF;
+          PERFORM SET_ACHRONAL_FIELD COMM_RACE_LC;
+        }
+
+        //Get player time rate
+        //Only send on change or when forced
+        PERFORM GET_ACHRONAL_FIELD $CURR_TIME_RATE_Y_AF;
+        int time_rate_x_change = 0;
+        int curr_time_rate_array = perf_ret;
+        PERFORM GET_PLAYER_TIME_RATE x;
+        if(x==0) {
+          time_rate_x_change = curr_time_rate_array[0,2] != perf_ret;
+          curr_time_rate_array[0,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP1Time";}
+        }
+        if(x==1) {
+          time_rate_x_change = curr_time_rate_array[2,2] != perf_ret;
+          curr_time_rate_array[2,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP2Time";}
+        }
+        if(x==2) {
+          time_rate_x_change = curr_time_rate_array[4,2] != perf_ret;
+          curr_time_rate_array[4,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP3Time";}
+        }
+        if(x==3) {
+          time_rate_x_change = curr_time_rate_array[6,2] != perf_ret;
+          curr_time_rate_array[6,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP4Time";}
+        }
+        if(x==4) {
+          time_rate_x_change = curr_time_rate_array[8,2] != perf_ret;
+          curr_time_rate_array[8,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP5Time";}
+        }
+        if(x==5) {
+          time_rate_x_change = curr_time_rate_array[10,2] != perf_ret;
+          curr_time_rate_array[10,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP6Time";}
+        }
+        if(x==6) {
+          time_rate_x_change = curr_time_rate_array[12,2] != perf_ret;
+          curr_time_rate_array[12,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP7Time";}
+        }
+        if(x==7) {
+          time_rate_x_change = curr_time_rate_array[14,2] != perf_ret;
+          curr_time_rate_array[14,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP8Time";}
+        }
+        if(x==8) {
+          time_rate_x_change = curr_time_rate_array[16,2] != perf_ret;
+          curr_time_rate_array[16,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP9Time";}
+        }
+        if(x==9) {
+          time_rate_x_change = curr_time_rate_array[18,2] != perf_ret;
+          curr_time_rate_array[18,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP10Time";}
+        }
+        if(x==10) {
+          time_rate_x_change = curr_time_rate_array[20,2] != perf_ret;
+          curr_time_rate_array[20,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP11Time";}
+        }
+        if(x==11) {
+          time_rate_x_change = curr_time_rate_array[22,2] != perf_ret;
+          curr_time_rate_array[22,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP12Time";}
+        }
+        if(x==12) {
+          time_rate_x_change = curr_time_rate_array[24,2] != perf_ret;
+          curr_time_rate_array[24,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP13Time";}
+        }
+        if(x==13) {
+          time_rate_x_change = curr_time_rate_array[26,2] != perf_ret;
+          curr_time_rate_array[26,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP14Time";}
+        }
+        if(x==14) {
+          time_rate_x_change = curr_time_rate_array[28,2] != perf_ret;
+          curr_time_rate_array[28,2] = perf_ret;
+          if (time_rate_x_change||forceUpdate){ say_to_var "SMP15Time";}
+        }
+        if(time_rate_x_change||forceUpdate){
+          say perf_ret;
+        }
+
+        say_to_var "";
+
+        target = $CURR_TIME_RATE_Y_AF;
+        PERFORM SET_ACHRONAL_FIELD curr_time_rate_array;
+      }
+    }
+  }
+}

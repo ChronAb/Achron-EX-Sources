@@ -1,0 +1,6036 @@
+resolution = 0, 768
+font = "Arial", 16
+#font_color = 192, 20, 20, 255
+font_color = 192, 192, 20, 255
+warning_font_color = 255, 0, 0, 255
+normal_line_width = 1.0
+indicator_line_width = 2.0
+unit_icon_width = 20
+num_unit_icon_colums = 2
+control_color = 192, 192, 192, 80
+#these are for time hash marks above and below time slider
+timeline_static_hashes = 7     #will round this down so that it fits with regular time increments
+timeline_dynamic_hashes = 7    #will round this down so that it fits with regular time increments
+time_wave_default_color = 0, 0, 192, 192 #default color for time waves when ShowUpdaterColors not set
+unit_messages_history = 5	#maximum number of unit messages to store at once
+team_color_image = teamcolormarker
+gauge_image = none1
+chronoenergy_gauge_image = none2
+status_icon_image = none3
+resource_icon_image = none4
+background_music = "music/AllIsLost.ogg"		#will clobber any other songs specified by scenario
+
+MouseOverTile = 1.0 #number of seconds long
+{
+	0.0 none 0, 0, 0, 0
+}
+HighlightCommander = 1
+{
+	0.0 none 0, 0, 0, 0
+}
+CommanderArrowLine = 1.0
+{
+	0.00 none 0, 0, 0, 0
+}
+HighlightPreChronoportee = 1.0
+{
+    0.00 none 0, 0, 0, 0
+}
+PreChronoporteeArrowLine = 1.0
+{
+	0.00 none 0, 0, 0, 0
+}
+SelectedAlly = 1.0 #number of seconds long
+{
+	0.0 none 0, 0, 0, 0
+}
+SelectedEnemy = 1.0 #number of seconds long
+{
+	0.0 none 0, 0, 0, 0
+}
+SelectedNoOwner = 1.0 #number of seconds long
+{
+	0.0 none 0, 0, 0, 0
+}
+HighlightUnit = 1.0 #number of seconds long
+{
+	0.0 none 0, 0, 0, 0
+}
+MarkTerrainTile = 1.0 #number of seconds long
+{
+	0.0 none 0, 0, 0, 0
+}
+
+PositionClassOK = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+PositionClassBad = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+UnitVisibilityRange = 1.0
+{
+     0.0 none 0, 0, 0, 0
+}
+
+UnitDistanceIndicator = 1.0
+{
+     0.0 none 0, 0, 0, 0
+}
+
+TimelineUpdater = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+TimelineUndo = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+TimelineChronoportBoundary = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+TimelineEstimatedObjectiveCompletionTime = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+TimelineChronoenergyLimit = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+UnitControlActiveHighlight = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+UnitControlActiveArrowLine = 1.0
+{
+	0.0 none 0, 0, 0, 0
+}
+
+bind press "esc" esc_pressed
+bind press "enter" enter_pressed
+bind press "tb" tab_pressed
+
+when esc_pressed {
+	when !ReadFromKeyboard set GoBack
+	when ReadFromKeyboard {
+		get_console GoBackTest
+		when !GoBackTest set GoBack
+		set ClearConsole
+	}
+	when EditKeysMode, !input_field_locked clear EditKeysMode #exit out of it if not editing a key
+	clear esc_pressed
+}
+
+
+
+
+### maintain backwards compatibility with previously installed achron versions
+### by reading in stored values for these deprecated persistent vars and 
+### storing them into the current config*** persistent vars if those vars are not set 
+persistent ShowUpdaters
+persistent ShowUpdaterColors
+persistent ShowControlActiveLines
+persistent ShowSelectedControlActiveLines
+persistent ShowPreChronoportees
+persistent ShowPreChronoporteeLines
+persistent AnimatedHierarchyLineSpeed
+persistent AnimatedControlActiveLineSpeed
+persistent AnimatedChronoporteeLineSpeed
+persistent ListScrollSpeed
+persistent CameraRotationSpeed
+
+
+persistent configShowUpdaters
+persistent configShowUpdaterColors
+persistent configShowControlActiveLines
+persistent configShowSelectedControlActiveLines
+persistent configShowPreChronoportees
+persistent configShowPreChronoporteeLines
+persistent configAnimatedHierarchyLineSpeed
+persistent configAnimatedControlActiveLineSpeed
+persistent configAnimatedChronoporteeLineSpeed
+persistent configListScrollSpeed
+persistent configCameraRotationSpeed
+
+clear temp
+eval temp = configCameraRotationSpeed == BLANK
+when temp setval configCameraRotationSpeed CameraRotationSpeed
+
+clear temp
+eval temp = configListScrollSpeed == BLANK
+when temp setval configListScrollSpeed ListScrollSpeed
+
+clear temp
+eval temp = configAnimatedHierarchyLineSpeed == BLANK
+when temp setval configAnimatedHierarchyLineSpeed AnimatedHierarchyLineSpeed
+
+clear temp
+eval temp = configAnimatedControlActiveLineSpeed == BLANK
+when temp setval configAnimatedControlActiveLineSpeed AnimatedControlActiveLineSpeed
+
+clear temp
+eval temp = configAnimatedChronoporteeLineSpeed == BLANK
+when temp setval configAnimatedChronoporteeLineSpeed AnimatedChronoporteeLineSpeed
+
+clear temp
+eval temp = configShowControlActiveLines == BLANK
+when temp setval configShowControlActiveLines ShowControlActiveLines 
+
+clear temp
+eval temp = configShowSelectedControlActiveLines == BLANK
+when temp setval configShowSelectedControlActiveLines ShowSelectedControlActiveLines 
+
+clear temp
+eval temp = configShowPreChronoportees == BLANK
+when temp setval configShowPreChronoportees ShowPreChronoportees 
+
+clear temp
+eval temp = configShowPreChronoporteeLines == BLANK
+when temp setval configShowPreChronoporteeLines ShowPreChronoporteeLines 
+
+clear temp
+eval temp = configShowUpdaters == BLANK
+when temp setval configShowUpdaters ShowUpdaters
+
+clear temp
+eval temp = configShowUpdaterColors == BLANK
+when temp setval configShowUpdaterColors ShowUpdaterColors
+###
+###
+###
+
+macro ../../common/persistent_vars.ski
+
+persistent PlayerTimeChangeTimeoutOverrideInSeconds
+persistent ContinuousPlayerTimeChange
+persistent overrideScenarioTimeJumpDelay
+persistent storedPlayerTimeChangeTimeoutOverrideSlider
+
+persistent DisplayXResolution
+persistent DisplayYResolution
+persistent LowGraphics
+persistent MedGraphics
+persistent HighGraphics
+persistent MaxGraphics
+persistent NumLightSources
+persistent PreciseLighting
+persistent ShadowMapSize
+persistent PCFShadows
+persistent SmoothLines
+persistent AnisotropicLevel
+persistent FullScreenAntiAliasingSamples
+persistent vsync
+persistent vsyncdefault
+persistent DepthBlending
+persistent SaveReplays # toggle the following
+persistent OSDrawnMouse
+persistent LogGameReplayData
+persistent manualChatLogin
+
+#server settings
+persistent StoredLocalGameServerName
+persistent suppressConfigureInternetGateway
+
+persistent RememberUsername
+persistent RememberPassword
+persistent StoredUsername
+persistent StoredPassword
+persistent EnableFogOfWar
+synchronized EnableFogOfWarSync
+persistent DisplayPlayerCommandsInPast
+persistent DisplayPlayerCommandsInPastOnMap
+synchronized DisplayPlayerCommandsInPastOnMapSync
+synchronized chronoportAlertsSync
+synchronized chronoportWithCommanderSync
+synchronized morphDuringRechronoportSync
+synchronized SaveMultiplayerReplaySync
+synchronized aiMask
+synchronized passiveAIMask
+persistent aiMaskOut
+persistent passiveAIMaskOut
+persistent quickPlay
+persistent clearQueueAfterChronoport
+synchronized clearQueueAfterChronoportSync
+synchronized assassinModeSync
+synchronized AchronMultiplayerMuteSoundsBehindFogOfWar
+persistent AchronMultiplayerMuteSoundsBehindFogOfWar
+
+
+persistent RememberProfile
+persistent DefaultProfileName
+
+############
+# Init
+when Init {
+	set runningFromBase
+	setval Win32SteamPlatform "Win32Steam"
+	eval runningFromSteam = EnginePlatform == Win32SteamPlatform
+
+	setval Win32Platform "Win32"
+	eval running_on_win32 = EnginePlatform == Win32Platform
+	eval running_on_win32steam = EnginePlatform == Win32SteamPlatform
+	eval running_win32 = running_on_win32 || running_on_win32steam
+
+
+	when runningFromSteam clear runningFromBase
+	#when runningFromOnlive clear runningFromBase
+
+	#key bindings
+	macro ../../common/KB_map.ski
+	setval ESCAPE "esc"
+	setval ENTER "enter"
+	setval DBLQUOTE "\""
+	setval ZERO 0
+	setval ONE 1
+	setval TWO 2
+	setval THREE 3
+	setval FOUR 4
+	setval FIVE 5
+	setval SIX 6
+	setval SEVEN 7
+	setval EIGHT 8
+	setval NINE 9
+	setval TEN 10
+	setval ELEVEN 11
+	setval TWELVE 12
+	setval THIRTEEN 13
+	setval FOURTEEN 14
+	setval SIXTEEN 16
+	setval THIRTY 30
+	setval THIRTYTWO 32
+	setval FOURTY 40
+	setval SIXTYFOUR 64
+	setval HUNDRED 100
+	setval N200 200
+	setval N300 300
+	setval N400 400
+	setval N500 500
+	setval N600 600
+	setval N700 700
+	setval N800 800
+	setval N900 900
+	setval N1000 1000
+	setval N1100 1100
+	setval N1200 1200
+	setval N1300 1300
+	setval N1400 1400
+	setval N1500 1500
+	setval N1600 1600
+	setval N1700 1700
+	setval N1800 1800
+	setval N1900 1900
+	setval N2000 2000
+	setval N2100 2100
+	setval N2200 2200
+	setval N2300 2300
+
+
+	setval KB2 2047
+	setval KB4 4095
+	setval N128 128
+	setval N256 256
+	setval N512 512
+	setval N1024 1024
+	setval N2048 2048
+	setval N4096 4096
+	setval N8192 8192
+	setval N16384 16384
+	setval N65536 65536
+	setval SLASH "/"
+	setval MapMaxGroundHeight "29"
+	setval MapHeightSpacing "5.8"
+	setval MapWidth 256
+	setval MapLength 256
+	setval MapHeight 7
+	setval MapBorderSize 200
+	setval YOFFSETMAX "2232"
+	setval SCREENHEIGHTMINFOURTY 708
+	setval BLANK ""
+
+	when !ActiveProfile set title_window
+	when ActiveProfile {
+		set game_select_window #skip to game_select_window if already loaded
+		when ConnectToCommunityChat { #	#set the community status message to IN GAME
+			setval CommunityChatStatusMessage STATUS_IN_GAME
+			set UpdateCommunityChatStatusMessage
+		}
+	}
+	set MusicOn
+	clear Init
+	clear DisplayPlayerCommandsInPastOnMap
+	clear DisplayPlayerCommandsInPastOnMapSync
+	set EnableFogOfWar
+	set EnableFogOfWarSync
+	clear LobbyInit #Allow ai selection menus to refresh scenario data
+	clear password_entered
+	when !hideQuickControls set showQuickControls
+	when !LowGraphics, !MedGraphics, !HighGraphics set CustomGraphics
+	set game_select_window_buttons
+	setval replaySubdir "/replays"
+	eval replayDir = ResequenceUserDirectory concat replaySubdir
+
+	#evaluate if the following variables are set, if not, set them to defaults
+	clear temp
+	eval temp = showSubtitles == BLANK
+	when temp setval showSubtitles 1
+	clear temp
+
+	eval temp = AutoSavingEnabled == BLANK
+	when temp setval AutoSavingEnabled 1
+	clear temp
+
+	eval temp = SaveReplays == BLANK
+	when temp setval SaveReplays 1
+	clear temp
+	
+	
+	eval temp = storedPlayerTimeChangeTimeoutOverrideSlider == BLANK
+	when temp setval storedPlayerTimeChangeTimeoutOverrideSlider "1.30103"
+	clear temp
+
+	set runningFromMenu  #used by credits
+
+	set connection  
+	setval CommunityChatServer "irc.coldfront.net"
+	setval CommunityChatPort 6667
+	setval CommunityChatChannel "#achron"
+
+	setval communityChatInfoPreposition " on "
+
+	eval communityChatInfo1 = CommunityChatChannel concat communityChatInfoPreposition
+	eval communityChatInfo = communityChatInfo1 concat CommunityChatServer
+
+	setval STATUS_IN_GAME "in-game"
+	setval STATUS_HOSTING "hosting a game"
+	setval STATUS_PLAYING "playing Achron"
+
+	when ConnectToCommunityChat {
+		setval CommunityChatStatusMessage STATUS_IN_GAME
+		set UpdateCommunityChatStatusMessage
+	}
+	clear preGameFocus
+	clear changePreGameFocus
+	set clearPlayerAIText
+	
+	clear LaunchedFromEditor
+}
+
+############
+# Run every cycle
+clear TIP
+clear showLargeTip
+clear showSmallTip
+clear showMiniTip
+
+when showQuickControls, hideQuickControls clear hideQuickControls
+when !showQuickControls, !hideQuickControls set hideQuickControls
+
+clear ObscureConsole
+
+when ProfileSelected, !profile_window clear ProfileSelected
+
+
+######################################
+#Title Window
+# when title_window
+
+[ #title window
+   	when title_window_clear {
+		set pre_profile_window
+		clear title_window
+		clear title_window_clear
+	}
+
+	when title_window {
+		origin 0.5, 0.0
+		pos = -384, 0
+		size = 768, 768
+		texture = ../achron/title 0, 0, 1024, 1024
+		set_after title_window_clear 3
+		clear LoggingEnabled #disable logging on start of game only when you load achron
+		clear LogPrintDataToFile
+	}
+
+	
+
+	when GoBack {
+		when title_window set pre_profile_window
+		when !ConnectedMultiplayer {
+			clear title_window
+			clear title_windor_clear
+			clear read_account_name
+			clear read_account_password
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear displayAccountAuthenticationFailed
+			clear InternetGatewayError
+			clear RefreshServersFailed
+		}
+		when ConnectedMultiplayer {
+			set ClearConsole
+		}
+
+	}
+
+	when pre_profile_window {
+
+		#auto-use the saved default profile if one exists
+		when RememberProfile, DefaultProfileName {
+
+			#failed to open the profile, go to profile selection screen
+			when opening_profile, !ActiveProfile {
+				clear ProfileName
+				clear OpenProfile
+				setval DefaultProfileName ""
+				set profile_window
+				clear pre_profile_window
+			}
+
+			#try to open the default profile
+			when !ActiveProfile, !opening_profile {
+				set opening_profile
+				setval ProfileName DefaultProfileName
+				clear ProfileSelected
+				setval OpenProfile DefaultProfileName
+			}
+
+			#default profile opened succesfully, go into the menu
+			when ActiveProfile {
+				clear opening_profile
+				clear pre_profile_window
+				set game_select_window
+			}
+
+		}
+
+		#only go to the profile selection if there is no default profile set
+		when !RememberProfile {
+			clear pre_profile_window
+			set profile_window
+		}
+		when !DefaultProfileName {
+			clear pre_profile_window
+			set profile_window
+		}
+	}
+
+	when !title_window size = 0,0
+]
+
+
+######################################
+#Profile Window
+# when profile_window
+
+[
+	origin 0.5, 0.0
+	pos = -512,0
+	size = 0,0
+	when profile_window size = 1024, 768
+	when game_select_window size = 1024, 768
+	when pregame_lobby size = 1024, 768
+	texture = ../achron/menu_background 0, 0, 2048, 1536
+]
+
+[  #profile login
+
+	pos = 0,0
+	size = 1220, 768
+
+	[ #exit button on profile screen
+        origin 0.5, 0.0
+        pos = -426, 580
+		when !WideScreen pos = -526, 580
+		size = 185, 70
+		texture = ../achron/exit 10, 148, 236, 88
+		when MouseOver texture = ../achron/exit 10, 20, 236, 88
+
+		when !profile_window size = 0, 0
+
+        when VerifyExit size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+            set VerifyExit
+        }
+        when profile_window, GoBack, VerifyExit {
+            play_sound 1 menu_click
+            clear VerifyExit
+        }
+	]
+
+    #verify exit
+    [
+        origin 0.0, 0.0
+        pos = 56, 540
+		when !WideScreen {
+			origin 0.5, 0.5
+			pos = -180, 150
+		}
+        size = 240 , 140
+        when !VerifyExit size = 0, 0
+        texture = ../achron/listbox 0, 0, 512, 512
+
+        [
+            pos = 56, 24
+            size = 150, 30
+            when !VerifyExit size = 0, 0
+            color_text 255,255,255,255 = "EXIT THE GAME?"
+        ]
+
+
+        [ #actual exit button
+            pos = 55, 25
+            size = 115,45
+            texture = ../achron/exit 10, 148, 236, 88
+            when MouseOver texture = ../achron/exit 10, 20, 236, 88
+            when !VerifyExit size = 0, 0
+            when MouseOver, MouseLeftClick {
+                play_sound 1 menu_click
+                set Exit
+            }
+        ]
+
+
+        [ #cancel button
+            pos = 55, 75
+            size = 115,45
+            texture = ../achron/cancel 10, 148, 236, 88
+            when MouseOver texture = ../achron/cancel 10, 20, 236, 88
+            when !VerifyExit size = 0, 0
+            when MouseOver, MouseLeftClick {
+                play_sound 1 menu_click
+                clear VerifyExit
+            }
+        ]
+    ]
+
+	[ #login
+        origin 0.5, 0.0
+        pos = -426, 90
+		when !WideScreen pos = -526, 90
+		size = 185, 70
+
+		#don't show when the player hasn't selected a profile
+		when !ProfileSelected size = 0,0
+
+		texture = ../achron/login 10, 148, 236, 88
+		when MouseOver texture = ../achron/login 10, 20, 236, 88
+		when !profile_window size = 0, 0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+            clear VerifyExit
+            set OpenProfile
+        }
+		#if OpenProfile succeeds, it will set ActiveProfile.  if so, move onto next window
+		when profile_window, ActiveProfile {
+			set game_select_window
+			clear profile_window
+			when RememberProfile setval DefaultProfileName ProfileName
+			when !RememberProfile setval DefaultProfileName ""
+
+		}
+	]
+
+	[ #add user
+        origin 0.5, 0.0
+        pos = -426, 170
+		when !WideScreen pos = -526, 170
+		size = 185, 70
+		texture = ../achron/new_player 10, 148, 236, 88
+		when MouseOver texture = ../achron/new_player 10, 20, 236, 88
+		when profile_window, ReadFromKeyboard texture = ../achron/new_player 10, 20, 236, 88
+		when !profile_window size = 0, 0
+		when MouseOver, MouseLeftClick {
+      play_sound 1 menu_click
+      set ClearConsole
+			set ReadFromKeyboard
+			clear ProfileSelected
+			clear ListFocusProfile
+		}
+
+		#add the profile when the user enters it
+		when profile_window, ReadFromKeyboard {
+			when enter_pressed {
+				get_console AddProfile
+				clear enter_pressed
+				clear ReadFromKeyboard
+				set ClearConsole
+			}
+			when GoBack {
+				clear ReadFromKeyboard
+				set ClearConsole
+			}
+		}
+	]
+
+	[ #delete user
+        origin 0.5, 0.0
+        pos = -426, 250
+		when !WideScreen pos = -526, 250
+		size = 185, 70
+
+        when !ProfileSelected size = 0,0
+		texture = ../achron/delete_player 10, 148, 236, 88
+		when MouseOver texture = ../achron/delete_player 10, 20, 236, 88
+		when !profile_window size = 0, 0
+		when MouseOver, MouseLeftClick, set DeleteProfile
+	]
+]
+
+[ #center the profile box in the center of the screen
+
+	origin 0.5, 0.0
+	pos = -512,0
+	size = 1024, 768
+
+	[ #select user box
+        origin 0.5, 0.0
+        pos = -150, 90
+		size = 300, 310
+		texture = ../achron/listbox 0, 0, 512, 512
+		when !profile_window size = 0, 0
+
+		[ #up arrow
+			pos = 86,10
+			size = 128, 32
+			texture = ../achron/arrow_dark_1 0, 0, 128, 32
+            when ListMoreUp texture = ../achron/arrow_1 0, 0, 128, 32
+			when !profile_window size = 0, 0
+
+			when MouseOver, set ListFocusProfile
+			when MouseOver, !MouseLeftClick, set ListScrollUp
+			when MouseOver, MouseLeftClick, set ListPageUp
+		]
+		[ #player profile list
+			pos = 30, 45
+			size = 242, 150
+			built_in = PLAYER_PROFILE
+			when !profile_window size = 0, 0
+
+			when ProfileSelected clear ReadFromKeyboard
+
+			#allow double-click to activate login
+			when ProfileSelected, MouseOver, MouseLeftDblClick {
+				clear VerifyExit
+				set OpenProfile
+			}
+		]
+		[
+      pos =  50, 10
+      size = 0,0
+      when profile_window size = 400, 20
+      color_text 255,255,255,255 = "Select with which profile to log in"
+    ]
+		[ #cursor for console for getting new profile names
+			pos = 32, 237
+			size = 313, 30
+			texture = ../achron/none, 0, 0, 0, 0
+			when !profile_window size = 0, 0
+			when ReadFromKeyboard texture = ../../common/img/input_field_active 0, 0, 512, 64
+		]
+		[ #console for getting new profile names
+			pos = 50, 255
+			size = 400, 12
+			texture = ../achron/none, 0, 0, 0, 0
+			when !profile_window size = 0, 0
+			when ReadFromKeyboard built_in = CONSOLE_IN
+		]
+		[ #down arrow
+			pos = 86, 216
+			size = 128, 32
+			texture = ../achron/arrow_dark_1 0, 32, 128, -32
+            when ListMoreDown texture = ../achron/arrow_1 0, 32, 128, -32
+			when !profile_window size = 0, 0
+
+			when MouseOver, set ListFocusProfile
+			when MouseOver, !MouseLeftClick, set ListScrollDown
+			when MouseOver, MouseLeftClick, set ListPageDown
+		]
+
+		[
+			origin 1.0,1.0
+			pos = -140, -45		
+			size = 0,0
+			when profile_window, ReadFromKeyboard {
+				size = 40,20
+				when MouseOver, MouseLeftClick {
+					get_console AddProfile
+					clear enter_pressed
+					clear ReadFromKeyboard
+					set ClearConsole
+				}
+			}
+
+			texture = ../../common/img/ok, 0, 0, 64, 32
+			when MouseOver texture = ../../common/img/ok_over, 0, 0, 64, 32
+		]		
+		[
+			origin 1.0,1.0
+			pos = -85, -45		
+			size = 0,0
+			when profile_window, ReadFromKeyboard {
+				size = 40,20
+				when MouseOver, MouseLeftClick {
+					set GoBack
+					clear ReadFromKeyboard
+					set ClearConsole
+				}
+			}
+
+			texture = ../../common/img/cancel, 0, 0, 64, 32
+			when MouseOver texture = ../../common/img/cancel_over, 0, 0, 64, 32
+		]
+
+		[ #checkbox to remember profile
+			pos = 35, 245
+			size = 0, 0
+			when profile_window, ProfileSelected size = 32, 32
+			texture = ../achron/checkbox 0,0,32,32
+			when RememberProfile, ProfileSelected texture = ../achron/checkbox_checked 0,0,32,32
+			when MouseOver{
+				set showSmallTip
+				setval TIP "Checking this and logging in will skip this screen whenever you start Achron"
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					when RememberProfile {
+						clear RememberProfile
+						setval DefaultProfileName ""
+						set skipOne
+					}
+					when !skipOne, !RememberProfile {
+						set RememberProfile
+						setval DefaultProfileName ProfileName
+					}
+				}
+			}
+		]
+		[
+			pos = 75, 269
+			size = 0, 0
+			when profile_window, ProfileSelected size = 384, 20
+			color_text 255,255,255,255 = "Use this profile as the default"
+		]
+
+
+	]
+
+
+
+]
+#### IRC CHAT ####
+
+	#auto-connect to chat if the checkbox is checked when first clicking the multiplayer button
+	when AccountAuthenticationSucceeded, !communityChatConnectionAttempted {
+		set communityChatConnectionAttempted
+		when !manualChatLogin, !ConnectToCommunityChat {
+			set wantToCommunityChat
+		}
+		when wantToCommunityChat {
+			set ConnectToCommunityChat
+			set communityChatFocus
+			clear wantToCommunityChat
+		}
+	}
+
+	clear inCommunityChat
+	when ConnectToCommunityChat, AccountAuthenticationSucceeded set inCommunityChat
+
+	#not connected due to error
+	when CommunityChatDisconnectionReason, ConnectToCommunityChat {
+		clear ConnectToCommunityChat
+		clear inCommunityChat
+		clear communityChatFocus
+	}
+
+
+	#mark user as NOT away by clearing the chat status message
+	when ConnectToCommunityChat {
+		when inCommunityChat, !statusChatting {
+			set statusChatting
+			setval CommunityChatStatusMessage BLANK
+			set UpdateCommunityChatStatusMessage
+		}
+
+		when !inCommunityChat, statusChatting {
+			clear statusChatting
+			setval CommunityChatStatusMessage STATUS_IN_GAME
+			set UpdateCommunityChatStatusMessage
+		}
+	}
+
+	[ #irc console output
+		origin 1.0, 0.0
+		pos = -430, 10
+		when !WideScreen pos = -430, 10
+		size = 0, 0
+		texture = ../achron/listbox 0, 0, 512, 512
+		# when AccountAuthenticationSucceeded
+		when !profile_window, !pre_profile_window, !title_window size = 430, 544
+		[
+			pos = 180, 12
+			# when !AccountAuthenticationSucceeded
+			size = 0, 0
+			when !profile_window, !pre_profile_window, !title_window size = 200, 20
+			color_text 255,255,255,255 = "Community Chat"
+			when inCommunityChat {
+				pos = 80, 12
+				color_text 255,255,255,255 = "Community Chat:"
+			}
+			[
+				pos = 110, 0
+				size = 0,0
+				when inCommunityChat size = 200, 20
+				color_text 255,255,255,255 = communityChatInfo
+			]
+		]
+		[ #console output
+			pos = 50, 50
+			size = 0, 0
+			when inCommunityChat size = 340, 460
+			built_in = COMMUNITY_CHAT_OUT
+		]
+
+	    [	#white text to login
+			pos =  190, 90
+			size = 0,0
+			# when AccountAuthenticationSucceeded,
+			when !inCommunityChat, !profile_window, !pre_profile_window, !title_window size = 190, 30
+			color_text 255,255,255,255,{"Arial",16}= "Automatically connect to community chat when looking for multiplayer games"
+		]
+
+		[ #checkbox for auto-login
+			pos =  150, 70
+			size = 0, 0
+			# when AccountAuthenticationSucceeded,
+			when !inCommunityChat, !profile_window, !pre_profile_window, !title_window size= 32, 32
+			when manualChatLogin texture = ../achron/checkbox 0,0,32,32
+			when !manualChatLogin texture = ../achron/checkbox_checked 0,0,32,32
+			when isRunningCredits size = 0,0
+
+
+			when MouseOver,MouseLeftClick {
+				play_sound 1 menu_click
+				when manualChatLogin {
+					set skipOne
+					clear manualChatLogin
+				}
+				when !skipOne, !manualChatLogin{
+					set manualChatLogin
+				}
+			}
+		]
+
+		[ #log into chat button
+			pos = 150, 130
+			size = 0,0
+			# when AccountAuthenticationSucceeded,
+			when !inCommunityChat, !profile_window, !pre_profile_window, !title_window size = 185, 70
+			when isRunningCredits size = 0,0
+			texture = ../achron/connect 10, 148, 236, 88
+			when MouseOver {
+				texture = ../achron/connect 10, 20, 236, 88
+				when MouseLeftClick {
+					when AccountAuthenticationSucceeded {
+						clear CommunityChatDisconnectionReason
+						play_sound 1 menu_click
+						set ConnectToCommunityChat
+					}
+					when !AccountAuthenticationSucceeded{
+						set attemptAuthentication
+						when manualChatLogin set wantToCommunityChat
+						clear leveleditor
+						clear settings
+						clear settings_graphics
+						clear settings_audio
+						clear load_campaign
+						clear ReadFromKeyboard
+						clear load_saved_game
+						clear start_scenario
+						clear join_multiplayer
+						clear start_multiplayer
+						clear singleplayer
+						clear ConnectedMultiplayerFailed
+						clear Disconnected
+						clear InternetGatewayError
+						clear displayAccountAuthenticationFailed
+						clear EditKeysMode
+						clear credits
+						clear VerifyExit
+						when runningFromSteam, !AccountAuthenticationSucceeded {
+							set AuthenticateAccount
+							set displayAccountAuthenticationFailedIfFailed
+						}
+					}
+					clear MouseLeftClick
+				}
+			}
+		]
+
+		[ #could not connect to chat ERROR
+			pos =  100, 220
+			size = 0,0
+			when AccountAuthenticationSucceeded, !inCommunityChat, CommunityChatDisconnectionReason size = 200, 30
+			color_text 255,0,0,255,{"Arial",20} = "ERROR:"
+		]
+		[ #could not connect to chat reason text
+			pos =  180, 220
+			size = 0,0
+			when AccountAuthenticationSucceeded, !inCommunityChat, CommunityChatDisconnectionReason size = 220, 30
+			color_text 255,0,0,255,{"Arial",20} = CommunityChatDisconnectionReason
+		]
+
+	]
+
+	[ #input field for irc console
+		origin 1.0, 0.0
+		pos = -394, 493
+		size = 0, 0
+		when inCommunityChat size = 359, 32
+
+		texture = ../achron/input_field, 0, 0, 512, 64
+		when inCommunityChat, communityChatFocus, ReadFromKeyboard texture = ../achron/input_field_active, 0, 0, 512, 64
+
+		when inCommunityChat, communityChatFocus, !ReadFromKeyboard { #Needed if communityChatFocus is set externally
+			set ClearConsole
+			set ReadFromKeyboard
+		}
+
+		when changeCommunityChatFocus { #changeCommunityChatFocus needed to avoid race condition on console
+			set_console communityChatText
+			set ReadFromKeyboard
+			when !communityChatText set ClearConsole  #Clear any nulls from console if there are any. Otherwise it mucks up message sending
+			set communityChatFocus
+			clear changeCommunityChatFocus
+		}
+
+		when MouseOver, MouseLeftClick, !communityChatFocus, !changeCommunityChatFocus {
+			set changeCommunityChatFocus
+			set different_field_input #In case the input_field.ski fields are active
+		}
+
+		when !MouseOver, MouseLeftClick, communityChatFocus {
+			get_console communityChatText
+			clear communityChatFocus
+			clear ReadFromKeyboard
+		}
+
+
+		[ #console input
+			pos = 16, 18
+			size = 0, 0
+			texture = ../achron/none, 0, 0, 0, 0
+			when inCommunityChat size = 340, 24
+			when ReadFromKeyboard, communityChatFocus built_in = CONSOLE_IN
+			when !communityChatFocus, communityChatText text = communityChatText
+			when ReadFromKeyboard, communityChatFocus, enter_pressed, inCommunityChat {
+				get_console communityChatText
+				when communityChatText {
+					set SubmitCommunityChatMessage
+					clear communityChatText
+				}
+				clear enter_pressed
+
+			}
+		]
+
+	]
+
+	[ #leave chat button
+		origin 1.0, 0.0
+		pos = -140, 536
+		when !WideScreen pos = -140, 536
+		size = 0,0
+		when inCommunityChat size = 128,32
+		texture = ../achron/leavechat 0,0,128,32
+		when MouseOver {
+			texture = ../achron/leavechat_over 0,0,128,32
+			when MouseLeftClick {
+				clear ConnectToCommunityChat
+				play_sound 1 menu_click
+			}
+		}
+	]
+
+#### end IRC CHAT  ##############
+
+######################################
+#Type of Game Choices / Loading
+# when game_select_window
+	[ #start new campaign - campaign button
+		origin 0.0, 0.0
+        pos = 20, 90
+		size = 185, 70
+		when !WideScreen {
+			origin 1.0, 1.0 #origin 1.0,1.0 used for better 5:4 compatibility
+			pos = -820, -65
+			size = 132, 50
+		}
+        texture = ../achron/gametype_newcampaign 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_newcampaign 10, 20, 236, 88
+        when load_campaign texture = ../achron/gametype_newcampaign 10, 20, 236, 88
+		when !game_select_window size = 0, 0
+		when !game_select_window_buttons size = 0, 0
+		when isRunningCredits size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set load_campaign
+            clear ReadFromKeyboard
+			clear load_saved_game
+			clear start_scenario
+			clear join_multiplayer
+			clear start_multiplayer
+            clear multiplayer
+			clear attemptAuthentication
+            clear singleplayer
+            clear settings
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear leveleditor
+			clear EditKeysMode
+			clear credits
+			clear VerifyExit
+		}
+	]
+
+	[ #load saved game button
+		origin 0.0, 0.0
+        pos = 20, 160
+		size = 185, 70
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -684, -65
+			size = 132, 50
+		}
+        texture = ../achron/gametype_load 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_load 10, 20, 236, 88
+        when load_saved_game texture = ../achron/gametype_load 10, 20, 236, 88
+		when !game_select_window size = 0, 0
+		when !game_select_window_buttons size = 0, 0
+		when isRunningCredits size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set load_saved_game
+			clear load_saved_game_save
+			clear load_saved_game_replay
+			clear ReplayFileSelected
+            clear ReadFromKeyboard
+			clear load_campaign
+			clear start_scenario
+			clear join_multiplayer
+			clear start_multiplayer
+            clear singleplayer
+            clear multiplayer
+			clear attemptAuthentication
+            clear settings
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear leveleditor
+			clear EditKeysMode
+			clear credits
+			clear VerifyExit
+		}
+	]
+
+	[ #start a single player game - quick play button
+		origin 0.0, 0.0
+        pos = 20, 230
+		size = 185, 70
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -548, -65
+			size = 132, 50
+		}
+        texture = ../achron/gametype_startsingleplayer 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_startsingleplayer 10, 20, 236, 88
+        when singleplayer texture = ../achron/gametype_startsingleplayer 10, 20, 236, 88
+		when !game_select_window size = 0, 0
+		when !game_select_window_buttons size = 0, 0
+		when isRunningCredits size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set start_scenario
+            clear ReadFromKeyboard
+			clear load_saved_game
+			clear load_campaign
+			clear join_multiplayer
+			clear start_multiplayer
+			set BroadcastGameStats
+            set singleplayer
+            # set quickPlay
+            clear multiplayer
+			clear attemptAuthentication
+            clear settings
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear leveleditor
+			clear EditKeysMode
+			clear credits
+			clear VerifyExit
+		}
+	]
+
+	[ #start a multiplayer game - multiplayer button
+		origin 0.0, 0.0
+        pos = 20, 300
+		size = 185, 70
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -412, -65
+			size = 132, 50
+		}
+        texture = ../achron/gametype_startmultiplayer 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_startmultiplayer 10, 20, 236, 88
+        when multiplayer texture = ../achron/gametype_startmultiplayer 10, 20, 236, 88
+        when start_multiplayer texture = ../achron/gametype_startmultiplayer 10, 20, 236, 88
+        when join_multiplayer texture = ../achron/gametype_startmultiplayer 10, 20, 236, 88
+		when !game_select_window size = 0, 0
+		when !game_select_window_buttons size = 0, 0
+		when isRunningCredits size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			clear start_scenario
+            clear ReadFromKeyboard
+			clear load_saved_game
+			clear load_campaign
+			clear join_multiplayer
+			
+			clear start_multiplayer
+			set BroadcastGameStats
+            #set multiplayer
+			clear AccountAuthenticationFailed  #let authentication start over from beginning if failed
+            clear singleplayer
+            clear settings
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear leveleditor
+			clear EditKeysMode
+			clear credits
+			clear VerifyExit
+
+			when runningFromSteam, !AccountAuthenticationSucceeded, !multiplayer {
+				set AuthenticateAccount
+				set displayAccountAuthenticationFailedIfFailed
+			}
+			set attemptAuthentication
+
+			set multiplayer
+
+
+		}
+	]
+
+    [ #configure settings - settings button
+		origin 0.0, 0.0
+        pos = 20, 370
+		size = 185, 70
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -276, -65
+			size = 132, 50
+		}
+        texture = ../achron/gametype_settings 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_settings 10, 20, 236, 88
+        when settings texture = ../achron/gametype_settings 10, 20, 236, 88
+		when !game_select_window size = 0, 0
+		when !game_select_window_buttons size = 0, 0
+		when isRunningCredits size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set settings
+			set settings_gameplay
+			clear settings_graphics
+			clear settings_audio
+            clear load_campaign
+            clear ReadFromKeyboard
+			clear load_saved_game
+			clear start_scenario
+			clear join_multiplayer
+			clear start_multiplayer
+            clear multiplayer
+			clear attemptAuthentication
+            clear singleplayer
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear leveleditor
+			clear EditKeysMode
+			clear credits
+			clear VerifyExit
+		}
+	]
+
+
+    [ #level editor button
+		origin 0.0, 0.0
+        pos = 20, 440
+		size = 185, 70
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -140, -65
+			size = 132, 50
+		}
+        texture = ../achron/leveleditor 10, 148, 236, 88
+		when MouseOver texture = ../achron/leveleditor 10, 20, 236, 88
+        when leveleditor texture = ../achron/leveleditor 10, 20, 236, 88
+		when !game_select_window size = 0, 0
+		when !game_select_window_buttons size = 0, 0
+		when isRunningCredits size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set leveleditor
+			clear settings
+			clear settings_graphics
+			clear settings_audio
+            clear load_campaign
+            clear ReadFromKeyboard
+			clear load_saved_game
+			clear start_scenario
+			clear join_multiplayer
+			clear start_multiplayer
+            clear multiplayer
+			clear attemptAuthentication
+            clear singleplayer
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear EditKeysMode
+			clear credits
+			clear VerifyExit
+		}
+	]
+
+
+    [
+        pos = 115, 728
+		when !WideScreen pos = 85, 648
+        size = 250, 20
+        text = ProfileName
+        when !game_select_window size = 0, 0
+    ]
+    [
+        pos = 50, 728
+		when !WideScreen pos = 20, 648
+        size = 100, 20
+        when !game_select_window size = 0,0
+        color_text 255,255,255,255 = "Welcome "
+    ]
+	[
+		when runningFromBase {
+			pos = 192, 744
+			when !WideScreen pos = 165, 664
+		}
+		when runningFromSteam {
+			pos = 115, 744
+			when !WideScreen pos = 85, 664
+		}
+        size = 250, 20
+        text = AccountName
+        when !game_select_window  size = 0, 0
+		when  !AccountAuthenticationSucceeded size = 0, 0
+    ]
+    [
+        pos = 50, 744
+		when !WideScreen pos = 20, 664
+        size = 180, 20
+        when !game_select_window size = 0,0
+        when !AccountAuthenticationSucceeded size = 0, 0
+		when runningFromBase color_text 255,255,255,255 = "Achron Community ID:"
+		when runningFromSteam color_text 255,255,255,255 = "Steam ID:"
+
+    ]
+
+	[ #exit button in main screen
+		origin 0.0, 0.0
+        pos = 20, 580
+		size = 185, 70
+		when !WideScreen {
+			origin  0.0, 0.0
+			pos = 110, 674
+			size = 92,35
+		}
+		texture = ../achron/exit 10, 148, 236, 88
+		when MouseOver texture = ../achron/exit 10, 20, 236, 88
+
+		#when !profile_window size = 0, 0
+		when !game_select_window size = 0, 0
+		when !game_select_window_buttons size = 0, 0
+		when isRunningCredits size = 0,0
+
+        when VerifyExit size = 0,0
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			clear leveleditor
+			clear settings
+			clear settings_graphics
+			clear settings_audio
+            clear load_campaign
+            clear ReadFromKeyboard
+			clear load_saved_game
+			clear start_scenario
+			clear join_multiplayer
+			clear start_multiplayer
+            clear multiplayer
+			clear attemptAuthentication
+            clear singleplayer
+			clear ConnectedMultiplayerFailed
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear EditKeysMode
+			clear credits
+            set VerifyExit
+        }
+        when profile_window, GoBack, VerifyExit {
+            play_sound 1 menu_click
+            clear VerifyExit
+        }
+	]
+
+	##################################
+	#level editor
+
+
+    [ #load level
+        origin 0.0, 0.0
+		pos = 230, 430
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -187, -200
+		}
+		size = 0, 0
+        when leveleditor size = 185, 70
+        texture = ../achron/load 10, 148, 236, 88
+		when MouseOver texture = ../achron/load 10, 20, 236, 88
+		when OpenLevel texture = ../achron/load 10, 20, 236, 88
+		when MouseOver, MouseLeftClick {
+			clear NewLevelEditor
+			play_sound 1 menu_click
+			set OpenLevel
+			set filechooser
+			clear newlevelchooser
+			setval DirectoryChooserCurrentDirectory "./levels"
+			setval FileChooserCurrentDirectory "./levels"
+			set DirectoryChooserUpdateCurrentDirectory
+			setval FileChooserCurrentExtension "tsc"
+			set FileChooserUpdateCurrentDirectory
+
+			set ClearConsole
+			set ClearConsoleOutput
+		}
+		when !leveleditor, OpenLevel clear OpenLevel
+	]
+
+	[ #new level
+        origin 0.0, 0.0
+		pos = 230, 500
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -187, -130
+		}
+		size = 0,0
+        when leveleditor size = 185, 70
+		texture = ../achron/newlevel 10, 148, 236, 88
+        when MouseOver texture = ../achron/newlevel 10, 20, 236, 88
+		when NewLevelEditor texture = ../achron/newlevel 10, 20, 236, 88
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set NewLevelEditor
+			setval ScenarioFileName "./levels/new_level.scn" #default new levels to use these parameters
+			setval UnitControlsFileName "./Achron.uia"
+			setval ObjectClassSetFileName "./Achron.ocs"
+
+			#setval DirectoryChooserCurrentDirectory "./levels/"
+			#setval FileChooserCurrentDirectory "./levels/"
+
+			setval MapMaxGroundHeight "29"
+			setval MapHeightSpacing "5.8"
+			setval MapWidth 256
+			setval MapLength 256
+			setval MapHeight 7
+			setval MapBorderSize 200
+			setval MapFileName ""
+			set customMapFileName
+
+			clear OpenLevel
+			set newlevelchooser
+			set ClearConsole
+			set ClearConsoleOutput
+		}
+		when !leveleditor, NewLevelEditor clear NewLevelEditor
+
+	]
+
+	[ #drop shadow
+		origin 0.0,0.0
+		pos= 231, 581
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -385, -149
+		}
+		size = 0,0
+		when leveleditor size = 200, 100
+		color_text 0,0,0,255,{"Tahoma",10} = "NOTE: For the level editor to work, Achron must be able to write to the files in its directory.  Operating systems such as Windows Vista and 7 install Achron into a read-only directory.  To use the level editor, copy the Achron directory to another location and make the entire tree writable.  Being able to save levels to user directories is a planned feature for future releases."
+
+	]
+	[ #readable text
+		origin 0.0,0.0
+		pos= 230, 580
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -386, -150
+		}
+		size = 0,0
+		when leveleditor size = 200, 100
+		color_text 192,192,192,255,{"Tahoma",10} = "NOTE: For the level editor to work, Achron must be able to write to the files in its directory.  Operating systems such as Windows Vista and 7 install Achron into a read-only directory.  To use the level editor, copy the Achron directory to another location and make the entire tree writable.  Being able to save levels to user directories is a planned feature for future releases."
+
+	]
+
+	when !leveleditor, filechooser clear filechooser
+	when !leveleditor, newlevelchooser set Cancelnewlevelchooser
+	when !leveleditor, newMAP set Cancelnewmapchooser
+	macro ../../common/filechooser.ski
+    macro ../../common/newlevel.ski
+
+	##################################
+	#load_saved_game
+	[ #select game to load
+		origin 0.0, 0.0
+        pos = 200, 90
+		when !WideScreen pos = 10, 80
+		size = 512, 512
+
+		texture = ../achron/listbox 0, 0, 512, 512
+		when !load_saved_game_save size = 0, 0
+		[ #saved-games list
+			pos = 60, 45
+			size = 400, 410
+			built_in = SAVED_GAMES
+			when !load_saved_game_save size = 0, 0
+
+            when SaveGameSelected, MouseOver, MouseLeftDblClick {
+				when ConnectToCommunityChat { #	#set the community status message to playing
+					setval CommunityChatStatusMessage STATUS_PLAYING
+					set UpdateCommunityChatStatusMessage
+				}
+				set LoadingSaveGame
+				when SaveReplays set LogGameReplayData
+				when !SaveReplays clear LogGameReplayData
+				set LoadSavedGame
+			}
+		]
+		[ #load game button
+			pos = 100, 490
+			when SaveGameSelected size = 185, 70
+			texture = ../achron/load, 10, 148, 236, 88
+            when MouseOver texture = ../achron/load, 10, 20, 236, 88
+			when !load_saved_game_save size = 0, 0
+			when !SaveGameSelected size = 0, 0
+            when MouseOver, MouseLeftClick {
+				when ConnectToCommunityChat { #	#set the community status message to playing
+					setval CommunityChatStatusMessage STATUS_PLAYING
+					set UpdateCommunityChatStatusMessage
+				}
+				set LoadingSaveGame
+				when SaveReplays set LogGameReplayData
+				when !SaveReplays clear LogGameReplayData
+				set LoadSavedGame
+			}
+		]
+		[ #delete selected game button
+			pos = 290, 490
+			when SaveGameSelected size = 185, 70
+			texture = ../achron/delete, 10, 148, 236, 88
+            when MouseOver texture = ../achron/delete, 10, 20, 236, 88
+			when !load_saved_game_save size = 0, 0
+            when !SaveGameSelected size = 0, 0
+			when MouseOver, MouseLeftClick {
+				set DeleteSavedGame
+				set ReloadSavedGames
+			}
+		]
+        [ #up arrow
+            pos = 200,25
+			size = 128, 32
+			texture = ../achron/arrow_dark_1 0, 0, 128, 32
+            when ListMoreUp texture = ../achron/arrow_1 0, 0, 128, 32
+			when !load_saved_game_save size = 0, 0
+			when MouseOver {
+				set ListFocusSavedGames
+				when !MouseLeftClick, set ListScrollUp
+				when MouseLeftClick, set ListPageUp
+			}
+		]
+
+		[ #down arrow
+			#pos = 160, 475
+			#size = 200, 15
+            pos = 200, 450
+			size = 128, 32
+            texture = ../achron/arrow_dark_1 0, 32, 128, -32
+			when ListMoreDown texture = ../achron/arrow_1 0, 32, 128, -32
+			when !load_saved_game_save size = 0, 0
+
+			when MouseOver {
+				set ListFocusSavedGames
+				when !MouseLeftClick, set ListScrollDown
+				when MouseLeftClick, set ListPageDown
+			}
+		]
+
+	]
+
+    #settings menu
+    [
+		origin 0.0, 0.0
+        pos = 200, 70
+		when !WideScreen pos = 10, 60
+		size = 512, 582
+		texture = ../achron/listbox_opaque 0, 0, 512, 512
+		when !settings size = 0, 0
+
+		[ # Gameplay Settings Tab
+			pos = 60, 40
+			size = 120, 50
+			when !settings size = 0,0
+			texture = ../achron/settings_gameplay 10, 148, 236, 88
+			when settings_gameplay texture = ../achron/settings_gameplay 10,20,236,88
+
+			when MouseOver {
+				texture = ../achron/settings_gameplay 10, 20, 236, 88
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					set settings_gameplay
+					clear settings_graphics
+					clear settings_audio
+				}
+			}
+		]
+
+        [ # Graphics Settings Tab
+            pos = 195, 40
+            size = 120, 50
+            when !settings size = 0,0
+			texture = ../achron/settings_graphics 10, 148, 236, 88
+			when settings_graphics texture = ../achron/settings_graphics 10,20,236,88
+			when MouseOver {
+				texture = ../achron/settings_graphics 10,20,236,88
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					clear settings_gameplay
+					set settings_graphics
+					clear settings_audio
+				}
+			}
+        ]
+
+        [ # Audio tab
+            pos = 330, 40
+            size = 120, 50
+            when !settings size = 0,0
+			texture = ../achron/settings_audio 10, 148, 236, 88
+			when settings_audio texture = ../achron/settings_audio 10,20,236,88
+			when MouseOver {
+				texture = ../achron/settings_audio 10,20,236,88
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					clear settings_gameplay
+					clear settings_graphics
+					set settings_audio
+				}
+			}
+		]
+
+   		[ # "Music" label
+       		pos = 70, 140
+       		size = 80, 30
+            when !settings size = 0,0
+       		when !settings_audio size = 0, 0
+            color_text 255,255,255,255 = "Music"
+   		]
+
+		[ #music_slider
+			pos = 180, 124
+			size = 256, 32
+			when !settings size = 0, 0
+			when !settings_audio size = 0, 0
+			texture = ../achron/slider_background 0, 0, 256, 64
+
+			when MouseOver, MouseLeftClick set drag_music_slider
+			when MouseLeftRelease clear drag_music_slider
+			when drag_music_slider {
+				setval_mouse_x_scale MusicVolume 0.0, 1.0, 16, 240
+				set SetMusicVolume
+			}
+
+			[ #slider position
+				pos = 0, 0
+				size = 32, 32
+				when !settings size = 0, 0
+				when !settings_audio size = 0, 0
+				pos_x_scale MusicVolume 0.0, 1.0, 0, 224
+				texture = ../achron/slider_position 0, 0, 64, 64
+			]
+		]
+
+		[
+			pos = 70, 190
+			size = 80, 30
+			when !settings_audio size = 0, 0
+			color_text 255,255,255,255 = "Effects"
+		]
+
+		[ #effects_slider
+			pos = 180, 174
+			size = 256, 32
+			when !settings size = 0,0
+       		when !settings_audio size = 0, 0
+			texture = ../achron/slider_background 0, 0, 256, 64
+
+			when MouseOver, MouseLeftClick set drag_effects_slider
+			when MouseLeftRelease clear drag_effects_slider
+			when drag_effects_slider {
+				setval_mouse_x_scale EffectsVolume 0.0, 1.0, 16, 240
+				set SetEffectsVolume
+			}
+
+			[ #slider position
+				pos = 0, 0
+				size = 32, 32
+				when !settings size = 0,0
+				when !settings_audio size = 0, 0
+				pos_x_scale EffectsVolume 0.0, 1.0, 0, 224
+				texture = ../achron/slider_position 0, 0, 64, 64
+			]
+		]
+
+		[
+			pos = 70, 240
+			size = 80, 30
+			when !settings_audio size = 0, 0
+			color_text 255,255,255,255 = "Cinematics"
+		]
+
+		[ #cinimatic volume slider
+			pos = 180, 224
+			size = 256, 32
+			when !settings size = 0,0
+       		when !settings_audio size = 0, 0
+			texture = ../achron/slider_background 0, 0, 256, 64
+
+			when MouseOver, MouseLeftClick set drag_cinematic_slider
+			when MouseLeftRelease clear drag_cinematic_slider
+			when drag_cinematic_slider {
+				setval_mouse_x_scale CinematicVolume 0.0, 1.0, 16, 240
+				set SetCinematicVolume
+			}
+
+			[ #slider position
+				pos = 0, 0
+				size = 32, 32
+				when !settings size = 0,0
+				when !settings_audio size = 0, 0
+				pos_x_scale CinematicVolume 0.0, 1.0, 0, 224
+				texture = ../achron/slider_position 0, 0, 64, 64
+			]
+		]
+
+
+		[ # "Console Sound" label
+			pos = 70, 300
+			size = 180, 20
+            when !settings size = 0,0
+			when !settings_audio size = 0, 0
+			color_text 255,255,255,255 = "Console Msg Sound"
+		]
+		[ # Console sound button
+			pos = 250, 286
+			size = 36, 18
+            when !settings size = 0,0
+			when !settings_audio size = 0, 0
+       		when consoleSoundOn texture = ../achron/on_button 0,0, 32, 16
+       		when !consoleSoundOn texture = ../achron/off_button 0,0, 32, 16
+
+			when MouseOver {
+				when consoleSoundOn {
+					texture = ../achron/on_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						clear consoleSoundOn
+						set skipOne
+						play_sound 1 menu_click
+					}
+				}
+				when !consoleSoundOn, !skipOne {
+					texture = ../achron/off_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						set consoleSoundOn
+						play_sound 1 menu_click
+					}
+				}
+			}
+			clear skipOne
+		]
+
+		[ # show subtitle
+			pos = 70, 320
+			size = 180, 20
+            when !settings size = 0,0
+			when !settings_audio size = 0, 0
+			color_text 255,255,255,255 = "Display Subtitles"
+		]
+		[ # toggle display subtitles
+			pos = 250, 306
+			size = 36, 18
+            when !settings size = 0,0
+			when !settings_audio size = 0, 0
+       		when showSubtitles texture = ../achron/on_button 0,0, 32, 16
+       		when !showSubtitles texture = ../achron/off_button 0,0, 32, 16
+
+			when MouseOver {
+				when showSubtitles {
+					texture = ../achron/on_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						clear showSubtitles
+						set skipOne
+						play_sound 1 menu_click
+					}
+				}
+				when !showSubtitles, !skipOne {
+					texture = ../achron/off_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						set showSubtitles
+						play_sound 1 menu_click
+					}
+				}
+			}
+			clear skipOne
+		]
+
+
+		[  #parameters reset
+			pos = 210, 480
+			size = 96,24
+			when !settings size = 0, 0
+			texture = ../../common/img/reset 0, 0, 128, 32
+			when MouseOver {
+				texture = ../../common/img/reset_over 0, 0, 128, 32
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					when !settings_audio set ResetGame
+					when settings_audio {
+						set consoleSoundOn
+						setval MusicVolume 0.45
+						setval EffectsVolume 0.8
+						setval CinematicVolume 1.0
+					}
+					when settings_graphics { #reset to medium
+						clear LowGraphics
+						set MedGraphics
+						clear HighGraphics
+						clear MaxGraphics
+						clear CustomGraphics
+						set ResetGame
+						setval NumLightSources "2"
+						setval PreciseLighting "2"
+						setval ShadowMapSize "2048"
+						setval PCFShadows "1"
+						setval SmoothLines "0"
+						setval AnisotropicLevel "2"
+						#antialiasing has issues on platforms other than win32
+						when running_win32 setval FullScreenAntiAliasingSamples "2"
+						setval DepthBlending "0"
+						clear Bloom
+						setval DepthOfField "0"
+						setval AmbientOcclusion "0"
+						clear OSDrawnMouse
+						setval vsync "-1"
+						set vsyncdefault
+					}
+					when settings_gameplay {
+						set showTooltips
+						setval CameraRotationSpeed 100
+						setval configCameraRotationSpeed 100
+						setval ListScrollSpeed 5
+						setval configListScrollSpeed 5
+						clear SaveReplays
+						clear ShowUpdaterColors
+						clear configShowUpdaterColors
+						set ShowUpdaters
+						set configShowUpdaters
+						set hideQuickControls
+						clear showQuickControls
+						set AutoSavingEnabled
+						clear showFPS
+						clear ContinuousPlayerTimeChange
+						clear overrideScenarioTimeJumpDelay
+						clear resetTimeJumpDelay
+					}
+
+				}
+			}
+		]
+
+		
+		[
+            pos = 56, 522
+            when ResetGame size = 450, 18
+            when !settings size = 0,0
+            color_text 255,0,0,255,{"Arial", 15 } = "NOTE: You must restart Achron for these changes to take effect"
+        ]
+        [
+            pos = 200, 540
+            size = 300, 18
+            when !settings size = 0,0
+            color_text 255,255,0,255,{"Arial", 11 } = "Changes are auto-saved"
+        ]
+
+		
+
+        [ #show updaters
+            pos = 70, 120
+            size = 200, 18
+            when !settings size = 0,0
+			when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Autohide Control Submenu"
+        ]
+		#timewaves on/off
+		macro ../../common/onoff_button.ski <x=320,y=106,xsize=36,ysize=18,show=settings_gameplay,var=autoHideControlSubmenu>
+		
+		# eval suChanged = configShowUpdaters != ShowUpdaters
+		# when suChanged {
+			# setval configShowUpdaters ShowUpdaters #update persistent variable
+		# }
+
+		[ #timewave colors
+            pos = 70, 140
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Advanced Timeline UI"
+        ]
+		#toggle timewave colors
+		macro ../../common/onoff_button.ski <x=320,y=126,xsize=36,ysize=18,show=settings_gameplay,var=ShowUpdaterColors>
+
+		eval sucChanged = configShowUpdaterColors != ShowUpdaterColors
+		when sucChanged {
+			setval configShowUpdaterColors ShowUpdaterColors #update persistent variable
+		}
+		
+		
+		[ #objective lines
+            pos = 70, 160
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Visible objective lines"
+        ]
+		#toggle objective lines
+		macro ../../common/onoff_button.ski <x=320,y=146,xsize=36,ysize=18,show=settings_gameplay,var=ShowControlActiveLines>
+
+		eval scalChanged = configShowControlActiveLines != ShowControlActiveLines
+		when scalChanged {
+			setval configShowControlActiveLines ShowControlActiveLines #update persistent variable
+		}
+		
+        [ #toggle objective lines for all or only selected
+            pos = 364, 146
+            size = 36, 18
+            when !settings_gameplay size= 0, 0
+            texture = ../../common/img/all_button_active 0,0, 32, 16
+			when ShowSelectedControlActiveLines texture = ../../common/img/all_button 0,0, 32, 16
+            when !ShowControlActiveLines  texture = ../../common/img/all_button 0,0, 32, 16
+
+            when MouseOver, ShowControlActiveLines  {
+                when ShowSelectedControlActiveLines {
+                    texture = ../../common/img/all_button_over, 0, 0, 32, 16
+                    when MouseLeftClick {
+                        clear ShowSelectedControlActiveLines
+						clear configShowSelectedControlActiveLines
+                        set skipOne
+                        play_sound 1 menu_click
+                    }
+                }
+                when !ShowSelectedControlActiveLines, !skipOne {
+                    texture = ../../common/img/all_button_over, 0, 0, 32, 16
+                    when MouseLeftClick {
+                        set ShowSelectedControlActiveLines
+						set configShowSelectedControlActiveLines
+                        play_sound 1 menu_click
+                    }
+                }
+            }
+
+            clear skipOne
+        ]
+
+
+		[
+		    pos = 320, 146
+            size = 80, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+
+			when MouseOver {
+			setval TIP "On/Off toggles whether you see the unit's objective lines.  Once enabled, selecting 'ALL' will display objective lines for all units, while disabling 'ALL' will only show objective lines for the currently selected units."
+			set showLargeTip
+			}
+		]
+
+		[ #unit stats
+            pos = 70, 180
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Always display units' stats"
+        ]
+
+		#toggle unit stats
+		macro ../../common/onoff_button.ski <x=320,y=166,xsize=36,ysize=18,show=settings_gameplay,var=defaultShowAllStatusOverlays>
+
+
+
+        [ #quick controls
+            pos = 70, 200
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Quick Controls (Radial Menu)"
+        ]
+		#quickcontrols on/off
+		macro ../../common/onoff_button.ski <x=320,y=186,xsize=36,ysize=18,show=settings_gameplay,var=showQuickControls>
+
+        [ #tooltips
+            pos = 70, 220
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Tooltips"
+        ]
+		#tooltips on/off
+		macro ../../common/onoff_button.ski <x=320,y=206,xsize=36,ysize=18,show=settings_gameplay,var=showTooltips>
+
+
+		[ #camera pan arrows
+            pos = 70, 240
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Hide Camera Pan Arrows"
+        ]
+		#hiding pan arrows on/off
+		macro ../../common/onoff_button.ski <x=320,y=226,xsize=36,ysize=18,show=settings_gameplay,var=HidePanArrows>
+
+
+		[ #fps
+            pos = 70, 260
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Show FPS"
+        ]
+		#toggle fps
+		macro ../../common/onoff_button.ski <x=320,y=246,xsize=36,ysize=18,show=settings_gameplay,var=showFPS>
+
+
+		[ #autosaves
+            pos = 70, 280
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Autosaves in campaign levels"
+        ]
+		#toggle autosaving
+		macro ../../common/onoff_button.ski <x=320,y=266,xsize=36,ysize=18,show=settings_gameplay,var=AutoSavingEnabled>
+
+
+		[ #replay
+            pos = 70, 300
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Save Replays"
+        ]
+		#toggle save replay
+		macro ../../common/onoff_button.ski <x=320,y=286,xsize=36,ysize=18,show=settings_gameplay,var=SaveReplays>
+
+		[ #unit gauges display value or name of gauge
+            pos = 70, 320
+            size = 280, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Unit gauges show numerical values"
+        ]
+		#toggle gauges values button
+		macro ../../common/onoff_button.ski <x=320,y=306,xsize=36,ysize=18,show=settings_gameplay,var=ShowNumericalUnitInfoBars>
+
+		[ # fullscreen
+            pos = 70, 120
+            size = 200, 18
+            when !settings size = 0,0
+			when !settings_graphics size = 0,0
+            color_text 200,200,255,255 = "Fullscreen"
+        ]
+
+		[ # fullscreen off
+            pos = 260, 106
+            size = 36, 18
+            when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+			when !DisplayFullScreen texture = ../../common/img/off_button 0,0, 32, 16
+			when DisplayFullScreen texture = ../../common/img/on_button 0,0, 32, 16
+			when MouseOver {
+				when !DisplayFullScreen {
+					texture = ../../common/img/off_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						set ResetGame
+						set DisplayFullScreen
+						set skipOne
+						play_sound 1 menu_click
+					}
+				}
+				when DisplayFullScreen, !skipOne {
+					texture = ../../common/img/on_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						clear DisplayFullScreen
+						set ResetGame
+						when !DisplayYResolution setval DisplayYResolution 768
+						when !DisplayXResolution {
+							when WideScreen setval DisplayXResolution 1366
+							when !WideScreen setval DisplayXResolution 1024
+						}
+						play_sound 1 menu_click
+					}
+				}
+			}
+		]
+
+
+		[ #resolution
+			pos = 69, 145
+			size = 200, 18
+      when !settings size = 0,0
+      when !settings_graphics size = 0,0
+      color_text 255,255,255,255 = "Set resolution"
+      when DisplayFullScreen color_text 255,255,255,255 = "Set resolution (0 is maximum)"
+    ]
+
+     #resolution x
+			macro ../../common/input_field_short.ski <posx=260,posy=127,showfield=settings_graphics,var=DisplayXResolution,nextvar=DisplayYResolution,ix=268,iy=145,
+			toInt=1,upper=N65536,lower=ZERO,resetgame=ONE>
+
+
+    [ #resolution "X"
+		  pos = 320, 145
+			size = 20, 18
+      when !settings size = 0,0
+      when !settings_graphics size = 0,0
+      color_text 255,255,255,255 = "x"
+    ]
+
+     #resolution y
+			macro ../../common/input_field_short.ski <posx=335,posy=127,showfield=settings_graphics,var=DisplayYResolution,nextvar=ZERO,ix=348,iy=145,
+			toInt=1,upper=N65536,lower=ZERO,resetgame=ONE>
+
+
+
+		[ #os drawn mouse
+      pos = 69, 170
+      size = 200, 18
+      when !settings size = 0,0
+      when !settings_graphics size = 0,0
+      color_text 255,255,255,255 = "OS mouse (hide default cursor)"
+    ]
+
+		[ #OSDrawnMouse off
+      pos = 260, 156
+      size = 36, 18
+      when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+	    texture = ../achron/off_button 0,0, 32, 16
+			when !OSDrawnMouse texture = ../achron/off_button_over, 0, 0, 32, 16
+			when MouseOver {
+				setval TIP "May improve responsiveness on slower machines"
+				set showMiniTip
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set ResetGame
+					setval OSDrawnMouse "0"
+					play_sound 1 menu_click
+				}
+			}
+		]
+
+		[ #OSDrawnMouse on
+      pos = 300, 156
+      size = 36, 18
+      when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+	    texture = ../achron/on_button 0,0, 32, 16
+			when OSDrawnMouse texture = ../achron/on_button_over, 0, 0, 32, 16
+			when MouseOver {
+				setval TIP "May improve responsiveness on slower machines"
+				set showMiniTip
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set ResetGame
+					setval OSDrawnMouse "1"
+					play_sound 1 menu_click
+				}
+			}
+		]
+
+		[ # v sync
+      pos = 70, 190
+      size = 200, 18
+      when !settings size = 0,0
+			when !settings_graphics size = 0,0
+            color_text 200,200,255,255 = "V-Sync (stops visual shearing)"
+        ]
+
+		[ #vsync off
+      pos = 260, 176
+      size = 36, 18
+      when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+	    texture = ../achron/off_button 0,0, 32, 16
+			when !vsync, !vsyncdefault texture = ../achron/off_button_over, 0, 0, 32, 16
+			when MouseOver {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set ResetGame
+					setval vsync "0"
+					clear vsyncdefault
+					play_sound 1 menu_click
+				}
+			}
+		]
+
+		[ #vsync on
+      pos = 300, 176
+      size = 36, 18
+      when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+	    texture = ../achron/on_button 0,0, 32, 16
+			when vsync, !vsyncdefault texture = ../achron/on_button_over, 0, 0, 32, 16
+			when MouseOver {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set ResetGame
+					setval vsync "1"
+					clear vsyncdefault
+					play_sound 1 menu_click
+				}
+			}
+		]
+
+		[ ###^^^ vsync default
+			pos = 340, 176
+			size = 44,18
+			when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+			texture = ../achron/default_button 0,0, 64, 16
+			when vsyncdefault texture = ../achron/default_button_over 0,0, 64, 16
+			when MouseOver {
+				texture = ../achron/default_button_over 0,0, 64, 16
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					set ResetGame
+					setval vsync "-1"
+					set vsyncdefault
+				}
+			}
+		]
+
+    [ # "graphics settings" label
+      pos = 70, 210
+      size = 200, 18
+      when !settings size = 0,0
+			when !settings_graphics size = 0,0
+      color_text 200,200,255,255 = "Graphics Settings"
+    ]
+
+		[ ###^^^ graphics settings low
+			pos = 260, 196
+			size = 36,18
+			when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+			when !LowGraphics texture = ../achron/low_button 0,0, 32, 16
+			when LowGraphics texture = ../achron/low_button_over 0,0, 32, 16
+			when MouseOver {
+				texture = ../achron/low_button_over 0,0, 32, 16
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					set LowGraphics
+					clear MedGraphics
+					clear HighGraphics
+					clear MaxGraphics
+					clear CustomGraphics
+					set ResetGame
+					setval NumLightSources "2"
+					setval PreciseLighting "0"
+					setval ShadowMapSize "2048"
+					setval PCFShadows "0"
+					setval SmoothLines "0"
+					setval AnisotropicLevel "0"
+					setval FullScreenAntiAliasingSamples "0"
+					setval DepthBlending "0"
+					clear Bloom
+					clear DepthOfField
+					clear AmbientOcclusion
+				}
+			}
+		]
+		[ ###^^^ graphics settings med
+			pos = 300, 196
+			size = 36,18
+			when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+			when !MedGraphics texture = ../achron/med_button 0,0, 32, 16
+			when MedGraphics texture = ../achron/med_button_over 0,0, 32, 16
+			when MouseOver {
+				texture = ../achron/med_button_over 0,0, 32, 16
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					clear LowGraphics
+					set MedGraphics
+					clear HighGraphics
+					clear MaxGraphics
+					clear CustomGraphics
+					set ResetGame
+					setval NumLightSources "4"
+					setval PreciseLighting "2"
+					setval ShadowMapSize "4096"
+					setval PCFShadows "1"
+					setval SmoothLines "0"
+					setval AnisotropicLevel "2"
+					#antialiasing has issues on platforms other than win32
+					when running_win32 setval FullScreenAntiAliasingSamples "2"
+					setval DepthBlending "0"
+					clear Bloom
+					setval DepthOfField "0"
+					clear AmbientOcclusion
+				}
+			}
+		]
+		[ ###^^^ graphics settings high
+			pos = 340, 196
+			size = 36,18
+			when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+			when !HighGraphics texture = ../achron/high_button 0,0, 32, 16
+			when HighGraphics texture = ../achron/high_button_over 0,0, 32, 16
+			when MouseOver {
+				texture = ../achron/high_button_over 0,0, 32, 16
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					clear LowGraphics
+					clear MedGraphics
+					set HighGraphics
+					clear MaxGraphics
+					clear CustomGraphics
+					set ResetGame
+					setval NumLightSources "8"
+					setval PreciseLighting "3"
+					setval ShadowMapSize "4096"
+					setval PCFShadows "2"
+					setval SmoothLines "0"
+					setval AnisotropicLevel "4"
+					#antialiasing has issues on platforms other than win32
+					when running_win32 setval FullScreenAntiAliasingSamples "4"
+					setval DepthBlending "1"
+					set Bloom
+					setval DepthOfField "1"
+					clear AmbientOcclusion
+				}
+			}
+		]
+		[ ###^^^ graphics settings max
+			pos = 380, 196
+			size = 36,18
+			when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+			when !MaxGraphics texture = ../achron/max_button 0,0, 32, 16
+			when MaxGraphics texture = ../achron/max_button_over 0,0, 32, 16
+			when MouseOver {
+				texture = ../achron/max_button_over 0,0, 32, 16
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					clear LowGraphics
+					clear MedGraphics
+					clear HighGraphics
+					set MaxGraphics
+					clear CustomGraphics
+					set ResetGame
+					setval NumLightSources "8"
+					setval PreciseLighting "3"
+					setval ShadowMapSize "8192"
+					setval PCFShadows "2"
+					setval SmoothLines "0"
+					setval AnisotropicLevel "16"
+					#antialiasing has issues on platforms other than win32
+					when running_win32 setval FullScreenAntiAliasingSamples "8"
+					setval DepthBlending "1"
+					set Bloom
+					setval DepthOfField "1"
+					set AmbientOcclusion
+				}
+			}
+		]
+		[ ###^^^ graphics custom
+			pos = 420, 196
+			size = 44,18
+			when !settings size= 0, 0
+			when !settings_graphics size= 0, 0
+			texture = ../achron/custom_button 0,0, 64, 16
+			when !LowGraphics !MedGraphics !HighGraphics !MaxGraphics texture = ../achron/custom_button_over 0,0, 64, 16
+			when MouseOver {
+				texture = ../achron/custom_button_over 0,0, 64, 16
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					clear LowGraphics
+					clear MedGraphics
+					clear HighGraphics
+					clear MaxGraphics
+					set CustomGraphics
+				}
+			}
+		]
+
+		[
+			pos = 0, 30
+			size = 400,270
+
+			[ # NumLightSources Label
+				pos = 70, 204
+				size = 218, 18
+				when !settings size = 0,0
+				when !settings_graphics size = 0,0
+				color_text 255,255,255,255 = "Maximum Number of Lights"
+			]
+
+	 	  [ # NumLightSources (2)
+				pos = 260, 190
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 48,0,24,24
+				eval numLights2 = NumLightSources == TWO
+				when numLights2 texture = ../achron/numbers_over 48,0,24,24
+				when MouseOver, CustomGraphics {
+					texture = ../achron/numbers_over 48,0,24,24
+					when MouseLeftClick {
+						setval NumLightSources "2"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # NumLightSources (4)
+				pos = 280, 190
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 96,0,24,24
+				eval numLights4 = NumLightSources == FOUR
+				when numLights4 texture = ../achron/numbers_over 96,0,24,24
+				when MouseOver, CustomGraphics {
+					texture = ../achron/numbers_over 96,0,24,24
+					when MouseLeftClick {
+						setval NumLightSources "4"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # NumLightSources (6)
+				pos = 300, 190
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 144,0,24,24
+				eval numLights6 = NumLightSources == SIX
+				when numLights6 texture = ../achron/numbers_over 144,0,24,24
+				when MouseOver, CustomGraphics {
+					texture = ../achron/numbers_over 144,0,24,24
+					when MouseLeftClick {
+						setval NumLightSources "6"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # NumLightSources (8)
+				pos = 320, 190
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 192,0,24,24
+				eval numLights8 = NumLightSources == EIGHT
+				when numLights8 texture = ../achron/numbers_over 192,0,24,24
+				when MouseOver, CustomGraphics {
+					texture = ../achron/numbers_over 192,0,24,24
+					when MouseLeftClick {
+						setval NumLightSources "8"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Lighting Quality
+				pos = 70, 224
+				size = 218, 18
+				when !settings size = 0,0
+				when !settings_graphics size = 0,0
+				color_text 255,255,255,255 = "Per-Pixel Lighting Quality"
+			]
+
+			[ # Lighting Quality None
+				pos = 260, 210
+				size = 36, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/off_button 0,0, 32, 16
+				eval preclight0 = PreciseLighting == ZERO
+				when preclight0 texture = ../achron/off_button_over 0,0, 32, 16
+				when MouseOver, CustomGraphics {
+					setval TIP "No specularity, normal mapping, or parallax occlusion mapping"
+					set showSmallTip
+					texture = ../achron/off_button_over 0,0, 32, 16
+					when MouseLeftClick {
+						setval PreciseLighting "0"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # Lighting Quality Low
+				pos = 300, 210
+				size = 36, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/low_button 0,0, 32, 16
+				eval preclight1 = PreciseLighting == ONE
+				when preclight1 texture = ../achron/low_button_over 0,0, 32, 16
+				when MouseOver, CustomGraphics {
+					setval TIP "Specularity on. No normal mapping or parallax occlusion mapping"
+					set showSmallTip
+					texture = ../achron/low_button_over 0,0, 32, 16
+					when MouseLeftClick {
+						setval PreciseLighting "1"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # Lighting Quality Medium
+				pos = 340, 210
+				size = 36, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/med_button 0,0, 32, 16
+				eval preclight2 = PreciseLighting == TWO
+				when preclight2 texture = ../achron/med_button_over 0,0, 32, 16
+				when MouseOver, CustomGraphics {
+					setval TIP "Specularity and normal mapping on. No parallax occlusion mapping"
+					set showSmallTip
+					texture = ../achron/med_button_over 0,0, 32, 16
+					when MouseLeftClick {
+						setval PreciseLighting "2"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # Lighting Quality High
+				pos = 380, 210
+				size = 36, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/high_button 0,0, 32, 16
+				eval preclight3 = PreciseLighting == THREE
+				when preclight3 texture = ../achron/high_button_over 0,0, 32, 16
+				when MouseOver, CustomGraphics {
+					setval TIP "Specularity, normal mapping, and parallax occlusion mapping on"
+					set showSmallTip
+					texture = ../achron/high_button_over 0,0, 32, 16
+					when MouseLeftClick {
+						setval PreciseLighting "3"
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Shadow Detail
+				pos = 70, 244
+				size = 218, 18
+				when !settings size = 0,0
+				when !settings_graphics size = 0,0
+				color_text 255,255,255,255 = "PCF Shadow Detail"
+			]
+
+			[ # Shadow detail 0
+				pos = 260, 230
+				size = 36, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/low_button 0,0, 32, 16
+				eval pcf0 = PCFShadows == ZERO
+				when pcf0 texture = ../achron/low_button_over 0,0, 32, 16
+				when MouseOver, CustomGraphics {
+					setval TIP "Smoothens shadow maps at edges when on"
+					set showMiniTip
+					texture = ../achron/low_button_over 0,0, 32, 16
+					when MouseLeftClick {
+						setval PCFShadows 0
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Shadow detail 1
+				pos = 300, 230
+				size = 36, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/med_button 0,0, 32, 16
+				eval pcf1 = PCFShadows == ONE
+				when pcf1 texture = ../achron/med_button_over 0,0, 32, 16
+				when MouseOver, CustomGraphics {
+					setval TIP "Smoothens shadow maps at edges"
+					set showMiniTip
+					texture = ../achron/med_button_over 0,0, 32, 16
+					when MouseLeftClick {
+						setval PCFShadows 1
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Shadow detail 2
+				pos = 340, 230
+				size = 36, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/high_button 0,0, 32, 16
+				eval pcf2 = PCFShadows == TWO
+				when pcf2 texture = ../achron/high_button_over 0,0, 32, 16
+				when MouseOver, CustomGraphics {
+					setval TIP "Smoothens shadow maps at edges"
+					set showMiniTip
+					texture = ../achron/high_button_over 0,0, 32, 16
+					when MouseLeftClick {
+						setval PCFShadows 2
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+
+
+
+			[ # Shadow Map Size Label
+				pos = 70, 264
+				size = 218, 18
+				when !settings size = 0,0
+				when !settings_graphics size = 0,0
+				color_text 255,255,255,255 = "Shadow Map Size (KB)"
+			]
+
+			[ # Shadow Map Size (0)
+				pos = 260, 250
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 0,0,24,24
+				eval shadow0 = ShadowMapSize == ZERO
+				when shadow0 texture = ../achron/numbers_over 0,0,24,24
+				when MouseOver, CustomGraphics {
+					texture = ../achron/numbers_over 0,0,24,24
+					when MouseLeftClick {
+						setval ShadowMapSize 0
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # Shadow Map Size (2)
+				pos = 280, 250
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 48,0,24,24
+				eval shadow2 = ShadowMapSize == N2048
+				when shadow2 texture = ../achron/numbers_over 48,0,24,24
+				when MouseOver, CustomGraphics {
+					texture = ../achron/numbers_over 48,0,24,24
+					when MouseLeftClick {
+						setval ShadowMapSize N2048
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Shadow Map Size (4)
+				pos = 300, 250
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 96,0,24,24
+				eval shadow4 = ShadowMapSize == N4096
+				when shadow4 texture = ../achron/numbers_over 96,0,24,24
+				when MouseOver, CustomGraphics {
+					texture = ../achron/numbers_over 96,0,24,24
+					when MouseLeftClick {
+						setval ShadowMapSize N4096
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anisotropic Levels
+				pos = 70, 284
+				size = 218, 18
+				when !settings size = 0,0
+				when !settings_graphics size = 0,0
+				color_text 255,255,255,255 = "Anisotropic Levels"
+			]
+
+			[ # Anisotropic Levels (0)
+				pos = 260, 270
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 0,0,24,24
+				eval anis0 = AnisotropicLevel == ZERO
+				when anis0 texture = ../achron/numbers_over 0,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves texture quality when at an angle when on"
+					set showMiniTip
+					texture = ../achron/numbers_over 0,0,24,24
+					when MouseLeftClick {
+						setval AnisotropicLevel 0
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anisotropic Levels (2)
+				pos = 280, 270
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 48,0,24,24
+				eval anis2 = AnisotropicLevel == TWO
+				when anis2 texture = ../achron/numbers_over 48,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves texture quality when at an angle"
+					set showMiniTip
+					texture = ../achron/numbers_over 48,0,24,24
+					when MouseLeftClick {
+						setval AnisotropicLevel 2
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anisotropic Levels (4)
+				pos = 300, 270
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 96,0,24,24
+				eval anis4 = AnisotropicLevel == FOUR
+				when anis4 texture = ../achron/numbers_over 96,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves texture quality when at an angle"
+					set showMiniTip
+					texture = ../achron/numbers_over 96,0,24,24
+					when MouseLeftClick {
+						setval AnisotropicLevel 4
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anisotropic Levels (8)
+				pos = 320, 270
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 192,0,24,24
+				eval anis8 = AnisotropicLevel == EIGHT
+				when anis8 texture = ../achron/numbers_over 192,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves texture quality when at an angle"
+					set showMiniTip
+					texture = ../achron/numbers_over 192,0,24,24
+					when MouseLeftClick {
+						setval AnisotropicLevel 8
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anisotropic Levels (16)
+				pos = 340, 270
+				size = 18, 18
+				when !settings size = 0,0
+				when !settings_graphics size= 0,0
+				texture = ../achron/numbers 144,24,24,24
+				eval anis16 = AnisotropicLevel == SIXTEEN
+				when anis16 texture = ../achron/numbers_over 144,24,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves texture quality when at an angle"
+					set showMiniTip
+					texture = ../achron/numbers_over 144,24,24,24
+					when MouseLeftClick {
+						setval AnisotropicLevel 16
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+
+			[ # Anti-Aliasing Samples Label
+				pos = 70, 304
+				size = 218, 18
+				when !settings size= 0,0
+				when !settings_graphics size= 0,0
+				color_text 255,255,255,255 = "Anti-aliasing Samples"
+			]
+
+			[ # Anti-Aliasing Samples (0)
+				pos = 260, 290
+				size = 18, 18
+				when !settings size =0,0
+				when !settings_graphics size =0,0
+				texture = ../achron/numbers 0,0,24,24
+				eval faa0 = FullScreenAntiAliasingSamples == ZERO
+				when faa0 texture = ../achron/numbers_over 0,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves image quality by smoothing colour changes across pixels when on"
+					set showSmallTip
+					texture = ../achron/numbers_over 0,0,24,24
+					when MouseLeftClick {
+						setval FullScreenAntiAliasingSamples 0
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anti-Aliasing Samples (2)
+				pos = 280, 290
+				size = 18, 18
+				when !settings size =0,0
+				when !settings_graphics size =0,0
+				texture = ../achron/numbers 48,0,24,24
+				eval faa2 = FullScreenAntiAliasingSamples == TWO
+				when faa2 texture = ../achron/numbers_over 48,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves image quality by smoothing colour changes across pixels"
+					set showSmallTip
+					texture = ../achron/numbers_over 48,0,24,24
+					when MouseLeftClick {
+						setval FullScreenAntiAliasingSamples 2
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anti-Aliasing Samples (4)
+				pos = 300, 290
+				size = 18, 18
+				when !settings size =0,0
+				when !settings_graphics size =0,0
+				texture = ../achron/numbers 96,0,24,24
+				eval faa4 = FullScreenAntiAliasingSamples == FOUR
+				when faa4 texture = ../achron/numbers_over 96,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves image quality by smoothing colour changes across pixels"
+					set showSmallTip
+					texture = ../achron/numbers_over 96,0,24,24
+					when MouseLeftClick {
+						setval FullScreenAntiAliasingSamples 4
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Anti-Aliasing Samples (8)
+				pos = 320, 290
+				size = 18, 18
+				when !settings size =0,0
+				when !settings_graphics size =0,0
+				texture = ../achron/numbers 192,0,24,24
+				eval faa8 = FullScreenAntiAliasingSamples == EIGHT
+				when faa8 texture = ../achron/numbers_over 192,0,24,24
+				when MouseOver, CustomGraphics {
+					setval TIP "Improves image quality by smoothing colour changes across pixels"
+					set showSmallTip
+					texture = ../achron/numbers_over 192,0,24,24
+					when MouseLeftClick {
+						setval FullScreenAntiAliasingSamples 8
+						set ResetGame
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+
+			[ # Depth Blending
+				pos = 70, 324
+				size = 218, 18
+				when !settings size= 0,0
+				when !settings_graphics size= 0,0
+				color_text 255,255,255,255 = "Depth Blending"
+			]
+
+			[ #depthblending off
+				pos = 260, 310
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/off_button 0,0, 32, 16
+				when !DepthBlending texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Smoothens transitions between semi-transparent effects when on"
+					set showSmallTip
+					texture = ../achron/off_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						set ResetGame
+						setval DepthBlending "0"
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ #depthblending on
+				pos = 300, 310
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/on_button 0,0, 32, 16
+				when DepthBlending texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Smoothens transitions between semi-transparent effects"
+					set showSmallTip
+					texture = ../achron/on_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						set ResetGame
+						setval DepthBlending "1"
+						play_sound 1 menu_click
+					}
+				}
+			]
+			[ # Bloom
+				pos = 70, 344
+				size = 218, 18
+				when !settings size= 0,0
+				when !settings_graphics size= 0,0
+				color_text 255,255,255,255 = "Bloom"
+			]
+
+			[ #bloom off
+				pos = 260, 330
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/off_button 0,0, 32, 16
+				when !Bloom texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Makes bright surfaces appear brighter when on"
+					set showMiniTip
+					texture = ../achron/off_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						clear Bloom
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ #bloom on
+				pos = 300, 330
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/on_button 0,0, 32, 16
+				when Bloom texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Makes bright surfaces appear brighter"
+					set showMiniTip
+					texture = ../achron/on_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						set Bloom
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Ambient Occlusion
+				pos = 70, 364
+				size = 218, 18
+				when !settings size= 0,0
+				when !settings_graphics size= 0,0
+				color_text 255,255,255,255 = "Ambient Occlusion"
+			]
+
+			[ #ambientocclusion off
+				pos = 260, 350
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/off_button 0,0, 32, 16
+				when !AmbientOcclusion texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Darkens concave regions in the scene"
+					set showMiniTip
+					texture = ../achron/off_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						clear AmbientOcclusion
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ #ambientocclusion on
+				pos = 300, 350
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/on_button 0,0, 32, 16
+				when AmbientOcclusion texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Darkens concave regions in the scene"
+					set showMiniTip
+					texture = ../achron/on_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						set AmbientOcclusion
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ # Depth of Field
+				pos = 70, 384
+				size = 218, 18
+				when !settings size= 0,0
+				when !settings_graphics size= 0,0
+				color_text 255,255,255,255 = "Depth of Field"
+			]
+
+			[ #depthoffield off
+				pos = 260, 370
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/off_button 0,0, 32, 16
+				when !DepthOfField texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Makes background objects go out of focus when on"
+					set showMiniTip
+					texture = ../achron/off_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						clear DepthOfField
+						play_sound 1 menu_click
+					}
+				}
+			]
+
+			[ #depthoffield on
+				pos = 300, 370
+				size = 36, 18
+				when !settings size= 0, 0
+				when !settings_graphics size= 0, 0
+				texture = ../achron/on_button 0,0, 32, 16
+				eval DepthOfFieldLow = DepthOfField == ONE
+				when DepthOfFieldLow texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseOver {
+					setval TIP "Makes background objects go out of focus."
+					set showSmallTip
+					texture = ../achron/on_button_over, 0, 0, 32, 16
+					when MouseLeftClick {
+						setval DepthOfField "1"
+						play_sound 1 menu_click
+					}
+				}
+			]
+			# [ #depthoffield high
+			# 	pos = 340, 350
+			# 	size = 36, 18
+			# 	when !settings size= 0, 0
+			# 	when !settings_graphics size= 0, 0
+			# 	texture = ../../common/img/hq_button 0,0, 32, 16
+			# 	eval DepthOfFieldHigh = DepthOfField == TWO
+			# 	when DepthOfFieldHigh texture = ../../common/img/hq_button_over, 0, 0, 32, 16
+			# 	when MouseOver {
+			# 		setval TIP "Makes background objects go out of focus, and makes objects near the camera blur better"
+			# 		set showSmallTip
+			# 		texture = ../../common/img/hq_button_over, 0, 0, 32, 16
+			# 		when MouseLeftClick {
+			# 			setval DepthOfField "2"
+			# 			play_sound 1 menu_click
+			# 		}
+			# 	}
+
+			# ]
+		]
+		[
+			pos = 250, 212
+			size = 0,0
+			when settings_graphics, !CustomGraphics size = 200, 220
+			texture = ../../common/img/pausegrey 0,0,32,32
+		]
+
+
+		[ # Camera rotation speed
+			pos = 70, 345
+			size = 200, 18
+			when !settings size = 0,0
+			when !settings_gameplay size = 0,0
+			color_text 200,200,255,255 = "Camera Sensitivity"
+		]
+
+		[ #
+			pos = 260, 331
+			size = 0, 0
+			when settings_gameplay size = 192, 24
+			texture = ../achron/eta_bar 0, 32, 256, 32
+
+			when MouseOver, MouseLeftClick {
+				set drag_camera_slider
+				set ResetGame
+			}
+			when MouseLeftRelease {
+				when drag_camera_slider { #update persistent variable
+					setval configCameraRotationSpeed CameraRotationSpeed
+				}
+				clear drag_camera_slider
+			}
+			when drag_camera_slider {
+				setval_mouse_x_scale CameraRotationSpeed 10.0, 200.0, 12, 180
+			}
+
+			[ #slider position
+				pos = 0, 1
+				size = 0, 0
+				when settings_gameplay size = 22, 22
+				pos_x_scale CameraRotationSpeed 10.0, 200.0, 0, 168
+				texture = ../achron/orb_teal 0, 0, 32, 32
+			]
+
+			[
+				pos = 91, 17
+				size = 0, 0
+				when settings_gameplay size = 80, 12
+				eval tempSpeed = int CameraRotationSpeed
+				setval CameraRotationSpeed tempSpeed
+				color_text 0,0,0,255 = CameraRotationSpeed
+			]
+
+			[
+				pos = 90, 16
+				size = 0, 0
+				when settings_gameplay size = 80, 12
+				color_text 255,255,255,255 = CameraRotationSpeed
+			]
+		]
+
+
+
+		[ #
+			pos = 70, 374
+			size = 200, 18
+			when !settings size = 0,0
+			when !settings_gameplay size = 0,0
+			color_text 200,200,255,255 = "List Scrolling Speed"
+		]
+		[
+			pos = 360, 374
+			size = 100, 18
+			when !settings_gameplay size = 0,0
+			color_text 200,200,255,255,{"Tahoma",12} = "(entries/sec)"
+		]
+
+		macro ../../common/input_field.ski <posx=260,posy=356,showfield=settings_gameplay,var=ListScrollSpeed,ix=268,iy=374,
+		toInt=1,upper=HUNDRED,lower=ONE>
+
+		eval lssChanged = configListScrollSpeed != ListScrollSpeed
+		when lssChanged {
+			setval configListScrollSpeed ListScrollSpeed #update persistent variable
+		}
+
+
+		[ #keys
+            pos = 70, 396
+            size = 200, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 200,200, 255,255 = "Key Bindings"
+        ]
+		[
+			pos = 260, 384
+			size = 80, 20
+			when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+			texture = ../achron/edit 0,0,128,32
+			when MouseOver {
+				texture = ../achron/edit_over 0,0,128,32
+				when MouseLeftClick {
+					play_sound 1 menu_click
+					clear settings
+					clear settings_graphics
+					clear settings_audio
+					set edit_global_ui_keys
+					set EditKeysMode
+					eval maxKeyInputYOffset = KeyInputYOffset >= YOFFSETMAX # 768 - 3000 = -2232
+					eval minKeyInputYOffset = KeyInputYOffset <= ZERO
+				}
+			}
+
+		]
+		
+		[ #slidable timeline
+            pos = 70, 420
+            size = 280, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Slidable Timeline"
+        ]
+		
+		[ #slidable timeline on/off
+			pos = 320, 406
+			size = 36, 18
+			when !settings size = 0, 0
+			when !settings_gameplay size = 0, 0
+			texture = ../achron/off_button 0,0, 32, 16
+			when ContinuousPlayerTimeChange texture = ../achron/on_button 0,0, 32, 16		
+			when MouseOver {
+			
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when !ContinuousPlayerTimeChange {
+					texture = ../achron/off_button_over, 0, 0, 32, 16
+					setval TIP "Sliding on the timeline may increase CPU usage and increase bandwidth for multiplayer"
+					set showSmallTip
+				}
+				when MouseLeftClick {
+					set ResetGame
+					play_sound 1 menu_click
+					
+					when ContinuousPlayerTimeChange {
+						clear ContinuousPlayerTimeChange
+						set skipOne
+					}
+					when !ContinuousPlayerTimeChange, !skipOne {
+						set ContinuousPlayerTimeChange
+					}
+				}
+			}
+		]
+		
+		
+		
+		[ #override jump delay
+            pos = 70, 440
+            size = 280, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+            color_text 255,255,255,255 = "Override scenario time jump delay"
+        ]
+		#toggle gauges values button
+		macro ../../common/onoff_button.ski <x=320,y=426,xsize=36,ysize=18,show=settings_gameplay,var=overrideScenarioTimeJumpDelay>
+		
+				
+		
+		when !overrideScenarioTimeJumpDelay, !resetTimeJumpDelay {
+			setval storedPlayerTimeChangeTimeoutOverrideSlider "1.30103" #when enabled, defaults delay to 0.1
+			setval PlayerTimeChangeTimeoutOverrideInSeconds "-1" #negative value means use scenario's setting
+			set resetTimeJumpDelay
+		}
+		
+		
+		[ #tooltip for jump delay
+		    pos = 320, 426
+            size = 40, 18
+            when !settings size = 0,0
+            when !settings_gameplay size = 0,0
+
+			when MouseOver {
+				setval TIP "Lower time jump delay values make sliding smoother (if Slidable Timeline is enabled) but may increase CPU usage and increase bandwidth for multiplayer"
+				set showLargeTip
+			}
+		]
+		
+		
+		[ # time jump delay
+			pos = 70, 460
+			size = 200, 18
+			when !settings size = 0,0
+			when !settings_gameplay size = 0,0
+			color_text 255,255,255,96 = "Time Jump Delay (seconds)"
+			when overrideScenarioTimeJumpDelay color_text 255,255,255,255 = "Time Jump Delay (seconds)"
+			
+		]
+
+		[ #
+			pos = 260, 446
+			size = 0, 0
+			when settings_gameplay size = 192, 24
+			texture = ../achron/eta_bar 0, 32, 256, 32
+			
+			when !overrideScenarioTimeJumpDelay setval WindowOpacity 0.2
+			when overrideScenarioTimeJumpDelay setval WindowOpacity 1.0
+			
+			when overrideScenarioTimeJumpDelay, MouseOver, MouseLeftClick {
+				set drag_timedelay_slider
+				set ResetGame
+			}
+			when MouseLeftRelease clear drag_timedelay_slider
+			# range is 0-5 seconds
+			#between log(10 + 100 * 0) - log(10 + 100 * 5) is [1.0,2.7078]
+			when drag_timedelay_slider {
+				setval_mouse_x_scale storedPlayerTimeChangeTimeoutOverrideSlider 1.0, 2.7078, 12, 180
+			}
+
+			[ #slider position
+				pos = 0, 1
+				size = 0, 0
+				when overrideScenarioTimeJumpDelay, settings_gameplay size = 22, 22
+				pos_x_scale storedPlayerTimeChangeTimeoutOverrideSlider 1.0, 2.7078, 0, 168
+				texture = ../achron/orb_teal 0, 0, 32, 32
+			]
+
+			
+			when !HUNDRED_FLOAT {
+				setval TEN 10
+				setval HUNDRED_FLOAT 100.0
+			}
+			
+			#to convert log(10 + 100 * sec) back to sec, it's (10 ^ value - 10 ) / 100
+			[
+				pos = 91, 17
+				size = 0, 0
+				when overrideScenarioTimeJumpDelay {
+					clear resetTimeJumpDelay
+					when settings_gameplay size = 80, 12
+					eval tempTimeDelay = TEN ** storedPlayerTimeChangeTimeoutOverrideSlider
+					eval tempTimeDelay = tempTimeDelay - TEN
+					eval tempTimeDelayInt = int tempTimeDelay #convert to int rounds up to nice hundredth of a sec intervals
+					setval PlayerTimeChangeTimeoutOverrideInSeconds tempTimeDelayInt
+					eval PlayerTimeChangeTimeoutOverrideInSeconds = PlayerTimeChangeTimeoutOverrideInSeconds / HUNDRED_FLOAT
+				}
+				color_text 0,0,0,255 = PlayerTimeChangeTimeoutOverrideInSeconds
+			]
+
+			[
+				pos = 90, 16
+				size = 0, 0
+				when overrideScenarioTimeJumpDelay, settings_gameplay size = 80, 12
+				color_text 255,255,255,255 = PlayerTimeChangeTimeoutOverrideInSeconds
+			]
+		]
+		
+		
+		
+
+    ]
+    when !settings {
+		clear settings_audio
+		clear settings_gameplay
+		clear settings_graphics
+	}
+	##################################
+	#load_campaign
+	[
+        origin 0.0, 0.0
+        pos = 260, 154
+		when !WideScreen pos = 60, 154
+		size = 384, 384
+		built_in = CAMPAIGN_SELECT
+		when !load_campaign size = 0, 0
+	]
+
+    when !load_campaign clear CampaignSelected
+
+	#load_campaign_level
+	[
+		origin 0.0, 0.0
+        pos = 200, 90
+		when !WideScreen pos = 10, 80
+		size = 512, 512
+		#texture = ../achron/clearlistbox 0, 0, 512, 512
+        texture = ../achron/listbox 0, 0, 512, 512
+		when !CampaignSelected size = 0, 0
+
+        [ #campaign level to load
+			pos = 60, 48
+			size = 400, 410
+			built_in = CAMPAIGN_LEVEL
+			when !CampaignSelected size = 0, 0
+            when CampaignLevelSelected, MouseOver, MouseLeftDblClick {
+				when ConnectToCommunityChat { #	#set the community status message to playing
+					setval CommunityChatStatusMessage STATUS_PLAYING
+					set UpdateCommunityChatStatusMessage
+				}
+				clear LoadingSaveGame
+				when SaveReplays set LogGameReplayData
+				when !SaveReplays clear LogGameReplayData
+				set SpawnCampaign
+			}
+		]
+
+		[ #up arrow
+            pos = 200,25
+			size = 128, 32
+
+            #pos = 160,25
+			#size = 200, 15
+			texture = ../achron/arrow_dark_1 0, 0, 128, 32
+            when ListMoreUp texture = ../achron/arrow_1 0, 0, 128, 32
+			when !CampaignSelected size = 0, 0
+			when MouseOver {
+				set ListFocusCampaign
+				when !MouseLeftClick, set ListScrollUp
+				when MouseLeftClick, set ListPageUp
+			}
+		]
+
+		[ #down arrow
+			#pos = 160, 475
+			#size = 200, 15
+            pos = 200, 450
+			size = 128, 32
+            texture = ../achron/arrow_dark_1 0, 32, 128, -32
+			when ListMoreDown texture = ../achron/arrow_1 0, 32, 128, -32
+			when !CampaignSelected size = 0, 0
+
+			when MouseOver {
+				set ListFocusCampaign
+				when !MouseLeftClick, set ListScrollDown
+				when MouseLeftClick, set ListPageDown
+			}
+		]
+
+
+		[ #cancel button
+			#check mouse click before setting anything, so don't exit right away
+			when MouseOver, MouseLeftClick, clear CampaignSelected
+			pos = 400, -17
+			size = 72,36
+            texture = ../achron/cancel, 10, 148, 236, 88
+			when !CampaignSelected size = 0, 0
+			when MouseOver texture = ../achron/cancel, 10, 20, 236, 88
+		]
+	]
+
+	[ #start single player game
+		#check mouse click before setting anything, so don't exit right away
+		when MouseOver, MouseLeftClick {
+			when ConnectToCommunityChat { #	#set the community status message to playing
+				setval CommunityChatStatusMessage STATUS_PLAYING
+				set UpdateCommunityChatStatusMessage
+			}
+			
+			when SaveReplays set LogGameReplayData
+			when !SaveReplays clear LogGameReplayData
+			
+			set SpawnCampaign
+			play_sound 1 menu_click
+		}
+		pos = 540, 580
+		when !WideScreen pos = 60, 570
+		size = 185,70
+		when !CampaignSelected size = 0,0
+		when !CampaignLevelSelected size = 0, 0
+		texture = ../achron/gametype_startscenario 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_startscenario 10, 20, 236, 88
+	]
+
+	##################################
+	#start_scenario
+    [
+        origin 0.0, 0.0
+        pos =  240, 100
+		when !WideScreen pos = 40, 90
+        size = 0,0
+        when start_scenario size = 500, 20
+        color_text 255,255,255,255  = "Choose a scenario, then select Start"
+        when start_multiplayer color_text 255,255,255,255  = "Choose a scenario, then select Create Lobby"
+    ]
+	[
+        origin 0.0, 0.0
+        pos =  240, 100
+		when !WideScreen pos = 40, 90
+        size = 0,0
+        when CampaignSelected size = 500, 20
+        color_text 255,255,255,255  = "Choose a level, then select Start"
+    ]
+    [
+        origin 0.0, 0.0
+        pos =  240, 100
+		when !WideScreen pos = 40, 90
+        size = 0,0
+        when load_saved_game_save size = 500, 20
+        color_text 255,255,255,255  = "Choose a saved game, then select Load"
+    ]
+	[
+        origin 0.0, 0.0
+        pos =  240, 90
+		when !WideScreen pos = 40, 90
+        size = 0,0
+        when load_saved_game_replay size = 500, 20
+		when !ReplayFileSelected color_text 255,255,255,255  = "Choose a saved replay, then select OK"
+    ]
+
+
+
+
+    [
+        origin 0.0, 0.0
+        pos =  240, 100
+		when !WideScreen pos = 40, 90
+        size = 0,0
+        when join_multiplayer, connection size = 600, 20
+        color_text 255,255,255,255  = "Choose an available game to play, then select Join Game"
+    ]
+
+	[ #start quickplay game
+
+		pos = 540, 580
+		when !WideScreen pos = 60, 570
+		size = 0,0
+		when ScenarioSelected, start_scenario, singleplayer size = 185, 70
+        texture = ../achron/gametype_startscenario 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_startscenario 10, 20, 236, 88
+
+		when MouseOver, MouseLeftClick {
+			when ConnectToCommunityChat { #	#set the community status message to playing
+				setval CommunityChatStatusMessage STATUS_PLAYING
+				set UpdateCommunityChatStatusMessage
+			}
+            play_sound 1 menu_click
+			# when SaveReplays set LogGameReplayData
+   #          when !SaveReplays clear LogGameReplayData
+            # set quickPlay
+			# set SpawnScenario
+				clear start_scenario
+			set in_pregame_server
+			set pregame_lobby
+
+			clear DisplayPlayerCommandsInPast
+			clear DisplayPlayerCommandsInPastOnMap
+			clear DisplayPlayerCommandsInPastOnMapSync
+			set EnableFogOfWar
+			set EnableFogOfWarSync
+			when SaveReplays {
+				set SaveMultiplayerReplay
+				set SaveMultiplayerReplaySync
+			}
+			when !SaveReplays {
+				clear SaveMultiplayerReplay
+				clear SaveMultiplayerReplaySync
+			}
+			setval chronoportAlertsSync chronoportAlerts
+			setval chronoportWithCommanderSync chronoportWithCommander
+			setval morphDuringRechronoportSync morphDuringRechronoport
+			setval clearQueueAfterChronoportSync clearQueueAfterChronoport
+			clear AchronMultiplayerMuteSoundsBehindFogOfWar
+			setval assassinModeSync assassinMode
+			clear LobbyInit #Allow ai selection menus to refresh scenario data
+				set StartScenario
+			clear singleplayer
+        }
+
+	]
+
+	[ # load saved games
+		size = 0,0
+		pos = 230, 140
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -711, -200
+		}
+
+		when !load_saved_game_replay, !load_saved_game_save, load_saved_game size = 185, 70
+		when ReplayFileSelected size = 0,0
+
+		texture = ../achron/gametype_loadsaved 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_loadsaved 10, 20, 236, 88
+
+		when MouseOver, MouseLeftClick {
+			set load_saved_game_save
+            play_sound 1 menu_click
+
+        }
+	]
+
+	[ #save meta replay drop shadow
+		pos = 441, 551
+		when !WideScreen pos = 241, 551
+		size = 0,0
+		when load_saved_game_replay size = 200, 18
+		color_text 0,0,0,255 = "Save Meta Replays"
+	]
+	[ #save meta replay
+		pos = 440, 550
+		when !WideScreen pos = 240, 550
+		size = 0,0
+		when load_saved_game_replay size = 200, 18
+		color_text 255,255,255,255 = "Save Meta Replays"
+	]
+	#toggle save replay
+	when WideScreen {macro ../../common/onoff_button.ski <x=580,y=536,xsize=36,ysize=18,show=load_saved_game_replay,var=SaveMetaReplays>}
+	when !WideScreen {macro ../../common/onoff_button.ski <x=380,y=536,xsize=36,ysize=18,show=load_saved_game_replay,var=SaveMetaReplays>}
+
+	[
+		pos = 580, 536
+		when !WideScreen pos = 380, 536
+		size = 0,0
+		when load_saved_game_replay size = 36, 18
+
+		when MouseOver {
+			setval TIP "Toggles saving the replay of a replay.\nEnable this if you want to edit a replay and save the result."
+			set showSmallTip
+		}
+	]
+
+	when SpawnReplay {
+		when ConnectToCommunityChat { #	#set the community status message to playing
+			setval CommunityChatStatusMessage STATUS_PLAYING
+			set UpdateCommunityChatStatusMessage
+		}
+		clear SpawnReplay
+		when SaveMetaReplays set LogGameReplayData
+		when !SaveMetaReplays clear LogGameReplayData
+		set SpawnScenarioFromFile
+	}
+
+
+	[ # load replays
+		size = 0,0
+		pos = 230, 210
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -711, -130
+		}
+		when !load_saved_game_replay, !load_saved_game_save, load_saved_game size = 185, 70
+		when ReplayFileSelected, load_saved_game size = 185, 70
+
+		texture = ../achron/gametype_loadreplay 10, 148, 236, 88
+		when MouseOver texture = ../achron/gametype_loadreplay 10, 20, 236, 88
+		when ReplayFileSelected texture = ../achron/gametype_loadreplay 10, 20, 236, 88
+
+		when MouseOver, MouseLeftClick {
+			clear SaveMetaReplays
+			set load_saved_game_replay
+			setval DirectoryChooserCurrentDirectory  replayDir
+			setval FileChooserCurrentDirectory replayDir
+			set DirectoryChooserUpdateCurrentDirectory
+			setval FileChooserCurrentExtension "rrp"
+			set FileChooserUpdateCurrentDirectory
+			clear ReplayFileSelected
+            play_sound 1 menu_click
+        }
+
+		when ReplayFileSelected {
+			clear ReplayFileSelected
+			set SpawnReplay
+		}
+
+	]
+
+	when !load_saved_game {
+		clear load_saved_game_save
+		clear load_saved_game_replay
+		clear ReplayFileSelected
+	}
+
+[
+	pos = 0,0
+	size = 1220, 768
+	when !game_select_window size = 0,0
+
+	macro ../include/edit_key_bindings.ski
+
+
+
+ when AccountAuthenticationFailed {
+	 when displayAccountAuthenticationFailedIfFailed {
+		set displayAccountAuthenticationFailed
+		setval authenticationFailedReason AccountAuthenticationFailed
+		clear displayAccountAuthenticationFailedIfFailed
+	}
+	clear AccountAuthenticationFailed
+	clear AccountAuthenticationSucceeded
+	clear read_account_name
+	clear read_account_password
+	# clear multiplayer
+}
+
+when AccountAuthenticationSucceeded {
+	clear displayAccountAuthenticationFailed
+	clear attemptAuthentication
+	clear authenticationFailedReason
+	clear displayAccountAuthenticationFailedIfFailed
+	clear AccountAuthenticationFailed
+	clear read_account_name
+	clear read_account_password
+}
+
+[  #Log into multiplayer account
+	size = -0,-0
+	pos = -200, 0
+	when !WideScreen pos = -330, 0
+
+	[ #login button
+		#origin 0.5, 0.5
+		#pos = -226, 330
+		pos = 640, 580
+		when !WideScreen pos = 590, 580
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 185, 70
+		texture = ../achron/login 10, 148, 236, 88
+		when MouseOver texture = ../achron/login 10, 20, 236, 88
+		when MouseOver, MouseLeftClick {
+			when read_account_name get_console AccountName  #store the name
+			when read_account_password get_console AccountPassword #store the password
+			play_sound 1 menu_click
+			set AuthenticateAccount
+			clear displayAccountAuthenticationFailed
+			clear authenticationFailedReason
+			set displayAccountAuthenticationFailedIfFailed
+			#set AccountAuthenticationSucceeded
+			#set ClearConsole
+			set different_field_input
+			clear ReadFromKeyboard
+			when RememberUsername setval StoredUsername AccountName
+			when RememberPassword setval StoredPassword AccountPassword
+			when !RememberUsername setval StoredUsername ""
+			when !RememberPassword setval StoredPassword ""
+		}
+	]
+
+	[ #account info input box
+		origin 0.5, 0.0
+		pos = -200, 90
+		when !WideScreen pos = -356, 90
+		size = 0,0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 512,512
+		texture = ../achron/listbox 0, 0, 512, 512
+	]
+	[
+		origin 0.5, 0.0
+		pos = -140, 154
+		when !WideScreen pos = -290, 154
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 320, 20
+		color_text 255,255,255,255 = "ACHRON ACCOUNT LOGIN"
+	]
+
+	[
+		origin 0.5, 0.0
+		pos =  106, 136
+		when !WideScreen pos = -44, 136
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 24, 24
+		texture = ../achron/question 0,0,32,32
+		clear displayAccountHelp
+		when MouseOver set displayAccountHelp
+	]
+	[
+		origin 0.5, 0.0
+		pos =  136, 150
+		when !WideScreen pos = -14, 150
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, displayAccountHelp size = 120, 40
+		color_text 255,255,64,255, {"Arial", 11 }  = "Use the same login as your on-line Achron account"
+	]
+
+
+	[
+		origin 0.5, 0.0
+		pos = -140, 194
+		when !WideScreen pos = -290, 194
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 384, 20
+		color_text 255,255,255,255 = "Username"
+	]
+
+	when !attemptAuthentication {
+		when read_account_name clear read_account_name
+		when read_account_password clear read_account_password
+	}
+
+	#input field for account name
+	[
+		origin 0.5, 0.0
+		pos = -145, 202
+		when !WideScreen pos = -295, 202
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 384, 48
+		texture = ../achron/input_field, 0, 0, 512, 64
+		when read_account_name texture = ../achron/input_field_active, 0, 0, 512, 64
+		when MouseOver, MouseLeftClick {
+			when read_account_password get_console AccountPassword #store the password
+			when !read_account_name set_console AccountName #input the name
+			set ReadFromKeyboard
+			set read_account_name
+			clear read_account_password
+			play_sound 1 menu_click
+		}
+
+
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, !read_account_name, !read_account_password {
+			clear nextInputField
+			when enter_pressed  clear enter_pressed
+			when tab_pressed clear tab_pressed
+		}
+
+	]
+
+	[ #input console for account name
+		origin 0.5, 0.0
+		pos = -132, 234
+		when !WideScreen pos = -282, 234
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 380, 40
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, read_account_name {
+			built_in = CONSOLE_IN
+			clear ObscureConsole
+		}
+		when !AccountName, StoredUsername setval AccountName StoredUsername
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, !read_account_name {
+			text = AccountName
+		}
+
+		clear nextInputField
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, read_account_name {
+			when enter_pressed  {
+				set nextInputField
+				clear enter_pressed
+			}
+			when tab_pressed {
+				set nextInputField
+				clear tab_pressed
+			}
+
+			when nextInputField {
+				when read_account_name get_console AccountName  #store the name
+				when !read_account_password set_console AccountPassword #input the password
+				set ReadFromKeyboard
+				clear read_account_name
+				set read_account_password
+				play_sound 1 menu_click
+				clear nextInputField
+			}
+
+		}
+	]
+
+	[
+		origin 0.5, 0.0
+		pos = -140, 294
+		when !WideScreen pos = -290, 294
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 384, 20
+		color_text 255,255,255,255 = "Password"
+	]
+	[ #input field for account password
+		origin 0.5, 0.0
+		pos = -145, 302
+		when !WideScreen pos = -295, 302
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 384, 48
+		texture = ../achron/input_field, 0, 0, 512, 64
+		when read_account_password texture = ../achron/input_field_active, 0, 0, 512, 64
+		when MouseOver, MouseLeftClick {
+			when read_account_name get_console AccountName  #store the name
+			when !read_account_password set_console AccountPassword #input the password
+			set ReadFromKeyboard
+			clear read_account_name
+			set read_account_password
+			play_sound 1 menu_click
+		}
+	]
+
+	[ #input console for account password
+		origin 0.5, 0.0
+		pos = -132, 334
+		when !WideScreen pos = -282, 334
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 380, 40
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, read_account_password {
+			set ObscureConsole
+			built_in = CONSOLE_IN
+		}
+
+		when !AccountPassword, StoredPassword setval AccountPassword StoredPassword
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, !read_account_password {
+			when !AccountPassword text = ""  #AccountPassword
+			when AccountPassword text = "* * * * *"
+		}
+
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase, read_account_password {
+			when enter_pressed  {
+				set nextInputField
+				clear enter_pressed
+			}
+			when tab_pressed {
+				set nextInputField
+				clear tab_pressed
+			}
+
+			when nextInputField {
+				when read_account_password get_console AccountPassword #store the password
+				clear read_account_name
+				clear read_account_password
+				play_sound 1 menu_click
+				clear nextInputField
+				clear ReadFromKeyboard
+			}
+
+		}
+
+	]
+
+	[ #checkbox to remember username
+		origin 0.5, 0.0
+		pos = -140, 380
+		when !WideScreen pos = -290, 380
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 32, 32
+		texture = ../achron/checkbox 0,0,32,32
+		when RememberUsername texture = ../achron/checkbox_checked 0,0,32,32
+		when MouseOver, MouseLeftClick {
+			play_sound 1 menu_click
+			when RememberUsername {
+				clear RememberUsername
+				setval StoredUsername ""
+				set skipOne
+			}
+			when !skipOne, !RememberUsername{
+				set RememberUsername
+				setval StoredUsername AccountName
+			}
+		}
+	]
+	[
+		origin 0.5, 0.0
+		pos = -100, 404
+		when !WideScreen pos = -250, 404
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 384, 20
+		color_text 255,255,255,255 = "Remember Username"
+	]
+
+
+	[ #checkbox to remember password
+		origin 0.5, 0.0
+		pos = -140, 420
+		when !WideScreen pos = -290, 420
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 32, 32
+		texture = ../achron/checkbox 0,0,32,32
+		when RememberPassword texture = ../achron/checkbox_checked 0,0,32,32
+		when MouseOver, MouseLeftClick {
+			play_sound 1 menu_click
+			when RememberPassword {
+				clear RememberPassword
+				setval StoredPassword ""
+				set skipOne
+			}
+			when !skipOne, !RememberPassword {
+				set RememberPassword
+				setval StoredPassword AccountPassword
+			}
+		}
+	]
+	[
+		origin 0.5, 0.0
+		pos = -100, 444
+		when !WideScreen pos = -250, 444
+		size = 0, 0
+		when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromBase size = 384, 20
+		color_text 255,255,255,255 = "Remember Password"
+	]
+
+	[
+		origin 0.5, 0.0
+		pos = -130, 485
+		when !WideScreen pos = -290, 490
+		size = 0, 0
+		when displayAccountAuthenticationFailed {
+			size = 404, 20
+			when authenticationFailedReason color_text 255,0,0,255,{"Arial",22} = authenticationFailedReason #"Incorrect Username/Password combination"
+			when !authenticationFailedReason color_text 255,0,0,255,{"Arial",22} = "Error: Could not log in"
+		}
+	]
+	[
+		origin 0.5, 0.0
+		pos = -110, 520
+		when !WideScreen pos = -260, 520
+		size = 0, 0
+		when displayAccountAuthenticationFailed {
+			size = 384, 20
+			when runningFromBase color_text 255,0,0,255,{"Arial",12} = "Please check your CAPS key as passwords are case sensitive"
+			when runningFromSteam color_text 255,0,0,255,{"Arial",12} = "There appears to be a problem authenticating with Steam"
+		}
+	]
+
+]
+
+    [ #join game
+        origin 0.0, 0.0
+		pos = 230, 330
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -639, -130
+		}
+		size = 0, 0
+        when multiplayer, AccountAuthenticationSucceeded size = 185, 70
+        texture = ../achron/join_game 10, 148, 236, 88
+		when MouseOver texture = ../achron/join_game 10, 20, 236, 88
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set join_multiplayer
+			clear load_saved_game
+			clear load_campaign
+			clear start_scenario
+			clear start_multiplayer
+            clear multiplayer
+			clear in_pregame_server
+			set ClearConsole
+			set ClearConsoleOutput
+			when !suppressConfigureInternetGateway set configureRouter
+			when suppressConfigureInternetGateway set RefreshServers
+		}
+	]
+
+	[ #host game
+        origin 0.0, 0.0
+		pos = 230, 260
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -639, -200
+		}
+		size = 0,0
+        when multiplayer, AccountAuthenticationSucceeded size = 185, 70
+		texture = ../achron/gametype_startserver 10, 148, 236, 88
+        when MouseOver texture = ../achron/gametype_startserver 10, 20, 236, 88
+
+		when MouseOver, MouseLeftClick {
+            play_sound 1 menu_click
+			set start_multiplayer
+			set start_scenario
+			clear join_multiplayer
+            clear multiplayer
+			clear in_pregame_server
+			set ClearConsole
+			clear read_server_password
+			clear read_server_name
+		}
+
+	]
+
+
+
+
+	[ #scenario to start - choose scenario
+        origin 0.0, 0.0
+        pos = 200, 90
+		when !WideScreen pos = 10, 80
+		#pos = 400, 90
+        when singleplayer size = 512, 512
+        when start_multiplayer size = 512, 512
+		texture = ../achron/listbox 0, 0, 512, 512
+		when !start_scenario size = 0, 0
+
+		[ #scenario to load
+			pos = 55, 50
+			size = 400, 400
+			built_in = SELECT_SCENARIO
+			when !start_scenario size = 0, 0
+            when ScenarioSelected, start_scenario, MouseOver, MouseLeftClick {
+							clear chat_text
+							set different_field_input
+							set ClearConsole
+							clear ReadFromKeyboard
+
+            }
+            when ScenarioSelected, start_scenario, MouseOver, MouseLeftDblClick {
+                when singleplayer {
+					when ConnectToCommunityChat { #	#set the community status message to playing
+						setval CommunityChatStatusMessage STATUS_PLAYING
+						set UpdateCommunityChatStatusMessage
+					}
+                    play_sound 1 menu_click
+					# when SaveReplays set LogGameReplayData
+					# when !SaveReplays clear LogGameReplayData
+          # set SpawnScenario
+                }
+                when start_multiplayer {  #start the lobby via doubleclick
+					when ConnectToCommunityChat { #set the community status message to HOSTING
+						setval CommunityChatStatusMessage STATUS_HOSTING
+						set UpdateCommunityChatStatusMessage
+					}
+					play_sound 1 menu_click
+					clear game_select_window_buttons
+					clear multiplayer
+					when read_server_name {
+						get_console LocalGameServerName #store the name
+						setval StoredLocalGameServerName LocalGameServerName
+					}
+					when !read_server_name setval LocalGameServerName StoredLocalGameServerName
+					when read_server_password get_console LocalGameServerPassword #store the pw
+					when !LocalGameServerName setval LocalGameServerName AccountName
+					clear chat_text
+					set ClearConsole
+					set ClearConsoleOutput
+					clear ReadFromKeyboard
+					set changePreGameFocus
+				}
+				clear start_scenario
+				set in_pregame_server
+
+					clear communityChatFocus
+					clear DisplayPlayerCommandsInPast
+					clear DisplayPlayerCommandsInPastOnMap
+					clear DisplayPlayerCommandsInPastOnMapSync
+					set EnableFogOfWar
+					set EnableFogOfWarSync
+				clear aiMask
+				clear passiveAIMask
+					when SaveReplays {
+						set SaveMultiplayerReplay
+						set SaveMultiplayerReplaySync
+					}
+					when !SaveReplays {
+						clear SaveMultiplayerReplay
+						clear SaveMultiplayerReplaySync
+					}
+					setval chronoportAlertsSync chronoportAlerts
+					setval chronoportWithCommanderSync chronoportWithCommander
+					setval morphDuringRechronoportSync morphDuringRechronoport
+					setval clearQueueAfterChronoportSync clearQueueAfterChronoport
+					setval assassinModeSync assassinMode
+					clear AchronMultiplayerMuteSoundsBehindFogOfWar
+					clear LobbyInit #Allow ai selection menus to refresh scenario data
+				when singleplayer {
+					set pregame_lobby
+					set StartScenario
+					clear singleplayer
+				}
+				when start_multiplayer {
+					when !suppressConfigureInternetGateway set configureRouter
+					when suppressConfigureInternetGateway {
+						set StartScenarioMulti
+						set pregame_lobby
+					} 
+					clear start_multiplayer
+                }
+            }
+
+		]
+        [ #up arrow
+            pos = 200,25
+			size = 128, 32
+			texture = ../achron/arrow_dark_1 0, 0, 128, 32
+            when ListMoreUp texture = ../achron/arrow_1 0, 0, 128, 32
+			when !start_scenario size = 0, 0
+
+			when MouseOver {
+				set ListFocusScenario
+				when !MouseLeftClick, set ListScrollUp
+				when MouseLeftClick, set ListPageUp
+			}
+		]
+        [ #down arrow
+			pos = 200, 450
+			size = 128, 32
+			texture = ../achron/arrow_dark_1 0, 32, 128, -32
+            when ListMoreDown texture = ../achron/arrow_1 0, 32, 128, -32
+			when !start_scenario size = 0, 0
+
+			when MouseOver, set ListFocusScenario
+			when MouseOver, !MouseLeftClick, set ListScrollDown
+			when MouseOver, MouseLeftClick, set ListPageDown
+        ]
+
+	]
+
+
+	[	#black shadow upnp
+		origin 0.0, 0.0
+		pos = 266, 426
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -738, -173
+		}
+		size = 0,0
+		when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer  size = 120, 20 #don't show in pre-game lobby
+		color_text 0,0,0,255,{"Arial",16}= "Automatic port\nforwarding (UPnP)"
+		#color_text 0,0,0,255,{"Arial",16}= "Enable automatic router port forwarding (Requires a UPnP compatible router)\nIf this is not checked, you must manually configure ports forwarding on your router to host muliplayer games."
+	]
+
+    [	#white text upnp
+		origin 0.0, 0.0
+		pos =  265, 425
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -739, -174
+		}
+		size = 0,0
+		when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer  size = 120, 20 #don't show in pre-game lobby
+		color_text 255,255,255,255,{"Arial",16}= "Automatic port\nforwarding (UPnP)"
+		#color_text 255,255,255,255,{"Arial",16}= "Enable automatic router port forwarding (Requires a UPnP compatible router)\nIf this is not checked, you must manually configure ports forwarding on your router to host muliplayer games."
+
+	]
+
+	[ #upnp tooltip area
+		origin 0.0, 0.0
+		pos = 230, 410
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -774, -190
+		}
+		size = 0,0
+		when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer size = 130, 32
+		when MouseOver {
+			setval TIP "Enable automatic router port forwarding (Requires a UPnP compatible router).\nIf this is not checked, you must manually configure ports forwarding on your router to host muliplayer games."
+			set showLargeTip
+		}
+
+	]
+
+	[
+		origin 0.0, 0.0
+		pos = 230, 410
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -774, -190
+		}
+		size = 0, 0
+		when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer size= 32, 32
+		when suppressConfigureInternetGateway texture = ../achron/checkbox 0,0,32,32
+		when !suppressConfigureInternetGateway texture = ../achron/checkbox_checked 0,0,32,32
+		when MouseOver,MouseLeftClick {
+			play_sound 1 menu_click
+			when suppressConfigureInternetGateway {
+				set skipOne
+				clear suppressConfigureInternetGateway
+			}
+			when !skipOne, !suppressConfigureInternetGateway {
+				set suppressConfigureInternetGateway
+			}
+		}
+	]
+
+	#port forwarding information message
+	[ #drop shadow
+		origin 0.0,0.0
+		pos= 231, 481
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -823, -129
+		}
+		size = 0,0
+		when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer size = 200, 100
+		color_text 0,0,0,255,{"Tahoma",12} = "NOTE: If you can't use UPnP, you need to forward ports:\n\n\n\n\n\n\n\nTo your local machine in order to host"
+		[
+			pos = 20, 25
+			size = 0,0
+			when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer size = 200, 100
+			color_text 0,0,0,255,{"Tahoma",12} = "TCP 7014\nTCP 7614\nUDP 7013"
+		]
+
+	]
+	[ #readable text
+		origin 0.0,0.0
+		pos= 230, 480
+		when !WideScreen {
+			origin 1.0, 1.0
+			pos = -824, -130
+		}
+		size = 0,0
+		when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer size = 200, 100
+		color_text 224,192,192,255,{"Tahoma",12} = "NOTE: If you can't use UPnP, you need to forward ports:\n\n\n\n\n\n\n\nTo your local machine in order to host"
+		[
+			pos = 20, 25
+			size = 0,0
+			when multiplayer, AccountAuthenticationSucceeded, !ConnectedMultiplayer size = 200, 100
+			color_text 255,224,224,255,{"Tahoma",12} = "TCP 7014\nTCP 7614\nUDP 7013"
+		]
+
+	]
+
+	[ #start multiplayer, go into lobby
+		pos = 540, 580
+		when !WideScreen pos = 60, 570
+		size = 185, 70
+        texture = ../achron/create_game 10, 148, 236, 88
+        when MouseOver texture = ../achron/create_game 10, 20, 236, 88
+		when !start_multiplayer size = 0, 0
+        when !ScenarioSelected size = 0, 0
+		when MouseOver, MouseLeftClick {
+			when ConnectToCommunityChat { #set the community status message to HOSTING
+				setval CommunityChatStatusMessage STATUS_HOSTING
+				set UpdateCommunityChatStatusMessage
+			}
+            play_sound 1 menu_click
+			clear game_select_window_buttons
+			clear multiplayer
+			when read_server_name {
+				get_console LocalGameServerName #store the name
+				setval StoredLocalGameServerName LocalGameServerName
+			}
+			when !read_server_name setval LocalGameServerName StoredLocalGameServerName
+			when read_server_password get_console LocalGameServerPassword #store the pw
+			when !LocalGameServerName setval LocalGameServerName AccountName
+			clear chat_text
+			set ClearConsole
+			set ClearConsoleOutput
+			clear ReadFromKeyboard
+			set changePreGameFocus
+
+			clear start_scenario
+			set in_pregame_server
+
+			clear communityChatFocus
+			clear DisplayPlayerCommandsInPast
+			clear DisplayPlayerCommandsInPastOnMap
+			clear DisplayPlayerCommandsInPastOnMapSync
+			set EnableFogOfWar
+			set EnableFogOfWarSync
+			clear aiMask
+			clear passiveAIMask
+			when SaveReplays {
+				set SaveMultiplayerReplay
+				set SaveMultiplayerReplaySync
+			}
+			when !SaveReplays {
+				clear SaveMultiplayerReplay
+				clear SaveMultiplayerReplaySync
+			}
+			setval chronoportAlertsSync chronoportAlerts
+			setval chronoportWithCommanderSync chronoportWithCommander
+			setval morphDuringRechronoportSync morphDuringRechronoport
+			setval clearQueueAfterChronoportSync clearQueueAfterChronoport
+			clear AchronMultiplayerMuteSoundsBehindFogOfWar
+			setval assassinModeSync assassinMode
+
+			clear LobbyInit #Allow ai selection menus to refresh scenario data
+			when !suppressConfigureInternetGateway set configureRouter
+			when suppressConfigureInternetGateway {
+				set StartScenarioMulti
+				set pregame_lobby
+			}
+			clear start_multiplayer
+		}
+		#when in_pregame_server, ConnectedMultiplayer
+	]
+
+	[ #server name and password fields
+        origin 0.0, 0.0
+		pos = 220, 610
+		when !WideScreen pos = 220, 590
+		size = 300, 120
+		#texture = ../achron/listbox 0, 0, 512, 512
+		when !start_multiplayer size = 0, 0
+
+		[
+			pos = 35, 15
+			size = 0, 0
+			when start_multiplayer size = 384, 12
+			color_text 255,255,255,255 = "Hosted Game Name"
+		]
+		[ #input field for server name
+			pos = 30, 17
+			size = 0, 0
+			when start_multiplayer size = 256, 32
+			texture = ../achron/input_field, 0, 0, 512, 64
+			when read_server_name texture = ../achron/input_field_active, 0, 0, 512, 64
+			when MouseOver, MouseLeftClick {
+				when read_server_password get_console LocalGameServerPassword #store the password
+				when !read_server_name set_console StoredLocalGameServerName #input the name
+				set ReadFromKeyboard
+				set read_server_name
+				clear read_server_password
+				clear MouseLeftClick
+				play_sound 1 menu_click
+			}
+
+			when start_multiplayer, !read_server_name, !read_server_password {
+				clear nextInputField
+				when enter_pressed  clear enter_pressed
+				when tab_pressed clear tab_pressed
+			}
+		]
+
+		[ #input console for server name
+			pos = 40, 39
+			size = 0, 0
+			when start_multiplayer {
+				size = 250, 40
+
+				when read_server_name {
+					when !ReadFromKeyboard set ReadFromKeyboard
+					clear ObscureConsole
+					built_in = CONSOLE_IN
+				}
+
+				when !read_server_name text = StoredLocalGameServerName
+			}
+
+			when start_multiplayer, read_server_name {
+				when enter_pressed  {
+					set nextInputField
+					clear enter_pressed
+				}
+				when tab_pressed {
+					set nextInputField
+					clear tab_pressed
+				}
+				when !MouseOver, MouseLeftClick set nextInputField
+
+				when different_field_input { #So that other input fields only have to set one variable to take the lock, and it fits common/input_field.ski
+					set nextInputField
+					clear different_field_input
+				}
+
+				when nextInputField {
+					when read_server_name {
+						get_console LocalGameServerName
+						setval StoredLocalGameServerName LocalGameServerName
+					}
+					clear read_server_name
+					clear read_server_password
+					play_sound 1 menu_click
+					clear nextInputField
+					clear ReadFromKeyboard
+				}
+
+			}
+
+		]
+
+		[
+			pos = 35, 73
+			size = 0, 0
+			when start_multiplayer, privateGame size = 384, 12
+			color_text 255,255,255,255 = "Hosted Game Password"
+		]
+		[ #input field for server password
+			pos = 30, 75
+			size = 0, 0
+			when start_multiplayer, privateGame size = 256, 32
+			texture = ../achron/input_field, 0, 0, 512, 64
+			when read_server_password texture = ../achron/input_field_active, 0, 0, 512, 64
+			when MouseOver, MouseLeftClick {
+				when read_server_name {
+					get_console LocalGameServerName  #store the name
+					setval StoredLocalGameServerName LocalGameServerName
+				}
+				when !read_server_password set_console LocalGameServerPassword #input the password
+				set ReadFromKeyboard
+				clear read_server_name
+				set read_server_password
+				clear MouseLeftClick
+				play_sound 1 menu_click
+			}
+		]
+
+		[ #input console for server password
+			pos = 40, 96
+			size = 0, 0
+			when start_multiplayer, privateGame {
+				size = 250, 40
+
+				when read_server_password {
+					clear ObscureConsole
+					built_in = CONSOLE_IN
+				}
+
+				when !read_server_password text = LocalGameServerPassword
+			}
+
+			when start_multiplayer, privateGame, read_server_password {
+				when enter_pressed  {
+					set nextInputField
+					clear enter_pressed
+				}
+				when tab_pressed {
+					set nextInputField
+					clear tab_pressed
+				}
+
+				when !MouseOver, MouseLeftClick set nextInputField
+
+				when different_field_input { #So that other input fields only have to set one variable to take the lock, and it fits common/input_field.ski
+					set nextInputField
+					clear different_field_input
+				}
+
+				when nextInputField {
+					when read_server_password get_console LocalGameServerPassword
+					clear read_server_name
+					clear read_server_password
+					play_sound 1 menu_click
+					clear nextInputField
+					clear ReadFromKeyboard
+				}
+			}
+		]
+
+
+	]
+
+	[
+		origin 0.0, 0.0
+        pos = 450, 680
+		when !WideScreen pos = 450, 660
+		size = 0,0
+		when start_multiplayer size = 100, 70
+		color_text 255,255,255,255,{"Arial",16}= "Private Game"
+	]
+
+	[
+		origin 0.0, 0.0
+		pos = 420, 662
+		when !WideScreen pos = 420, 642
+		size = 0, 0
+		when start_multiplayer size= 32, 32
+		when !privateGame texture = ../achron/checkbox 0,0,32,32
+		when privateGame texture = ../achron/checkbox_checked 0,0,32,32
+		when MouseOver,MouseLeftClick {
+			play_sound 1 menu_click
+			when !privateGame {
+				set skipOne
+				set privateGame
+			}
+			when !skipOne, privateGame {
+				clear privateGame
+				set ClearConsole
+				clear read_server_password
+				setval LocalGameServerPassword ""
+			}
+		}
+	]
+
+	##################################
+	#join_multiplayer
+	[ #select game to join
+        origin 0.0, 0.0
+		pos = 200, 90
+		when !WideScreen pos = 10, 80
+		size = 630, 512
+		texture = ../achron/listbox 0, 0, 512, 512
+
+		when !join_multiplayer size = 0, 0
+		when !connection size = 0, 0
+		[ #games list
+			pos = 70, 73
+			size = 500, 380
+			built_in = SELECT_SERVER
+			when !join_multiplayer size = 0, 0
+			when !connection size = 0, 0
+			when ServerSelected, MouseOver, MouseLeftDblClick {
+				set JoinMultiplayerConnect
+				clear game_select_window_buttons
+				clear in_pregame_server
+				play_sound 1 menu_click
+			}
+
+		]
+
+		[ #join game button
+			pos = 100, 490
+			size = 185, 70
+			texture = ../achron/join_game, 10, 148, 236, 88
+            when MouseOver texture = ../achron/join_game, 10, 20, 236, 88
+			when !join_multiplayer size = 0, 0
+			when !connection size = 0, 0
+			when Disconnected size = 0,0
+			when InternetGatewayError size = 0,0
+			when !ServerSelected size = 0,0
+			when MouseOver, MouseLeftClick {
+				set JoinMultiplayerConnect
+				clear game_select_window_buttons
+				clear in_pregame_server
+                set ClearConsole
+					clear LobbyInit #Allow ai selection menus to refresh scenario data
+			}
+			when in_pregame_client, ConnectedMultiplayer clear join_multiplayer
+		]
+		[ #refresh server list
+			pos = 290, 490
+			size = 185, 70
+            texture = ../achron/refresh_list, 10, 148, 236, 88
+			when MouseOver texture = ../achron/refresh_list, 10, 20, 236, 88
+			when !join_multiplayer size = 0, 0
+			when !connection size = 0, 0
+			when Disconnected size = 0,0
+			when InternetGatewayError size = 0,0
+			when MouseOver, MouseLeftClick {
+				set RefreshServers
+				play_sound 1 menu_click
+			}
+		]
+
+		[ #up arrow
+            pos = 200,25
+			size = 128, 32
+			texture = ../achron/arrow_dark_1 0, 0, 128, 32
+            when ListMoreUp texture = ../achron/arrow_1 0, 0, 128, 32
+			when !join_multiplayer size = 0, 0
+			when !connection size = 0, 0
+			when MouseOver {
+				set ListFocusServers
+				when !MouseLeftClick, set ListScrollUp
+				when MouseLeftClick, set ListPageUp
+			}
+		]
+        [ #down arrow
+			pos = 200, 450
+			size = 128, 32
+			texture = ../achron/arrow_dark_1 0, 32, 128, -32
+            when ListMoreDown texture = ../achron/arrow_1 0, 32, 128, -32
+			when !join_multiplayer size = 0, 0
+			when !connection size = 0, 0
+			when MouseOver, set ListFocusServers
+			when MouseOver, !MouseLeftClick, set ListScrollDown
+			when MouseOver, MouseLeftClick, set ListPageDown
+        ]
+
+		[
+			pos =  70, 70
+			size = 0,0
+			when join_multiplayer, connection size = 150, 10
+			color_text 255,255,255,255  = "PING"
+		]
+		[
+			pos =  145, 70
+			size = 0,0
+			when join_multiplayer, connection size = 150, 10
+			color_text 255,255,255,255  = "MAP"
+		]
+		[
+			pos =  400, 70
+			size = 0,0
+			when join_multiplayer, connection size = 150, 10
+			color_text 255,255,255,255  = "GAME NAME"
+		]
+		[
+			pos =  505, 70
+			size = 0,0
+			when join_multiplayer, connection size = 150, 10
+			color_text 255,255,255,255  = "PLAYERS"
+		]
+
+	]
+]
+
+
+##################################
+#credits
+
+# when credits {
+	# clear credits
+	# set InitCredits
+# }
+# macro ../../HUD/achron/include/end_credits/end_credits.ski
+
+[
+	when forceJoinMultiplayer {
+		set JoinMultiplayer
+		set in_pregame_client
+		set pregame_lobby
+		clear JoinMultiplayerConnect
+		clear forceJoinMultiplayer
+	}
+]
+[ #join "connecting" message
+	origin 0.5, 0.5
+	pos = -100, -100
+	size = 0,0
+	texture = ../achron/connecting 0, 0, 200, 200
+	#when clicked multiplayer from steam
+	when attemptAuthentication, !AccountAuthenticationSucceeded, runningFromSteam size = 200,200
+	#when clicked mp-login from base load
+	when attemptAuthentication, !AccountAuthenticationSucceeded, displayAccountAuthenticationFailedIfFailed, !AccountAuthenticationFailed size = 200,200
+	when JoinMultiplayerConnect {
+		size = 200,200
+		set forceJoinMultiplayer
+	}
+]
+
+
+[ #configure router here
+	when forceConfigureRouter {
+		set ConfigureInternetGateway
+		when in_pregame_server {
+			set StartScenarioMulti
+			set pregame_lobby
+		}
+		when join_multiplayer set RefreshServers
+		clear configureRouter
+		clear forceConfigureRouter
+	}
+]
+
+[ #configure router "connecting" message
+
+	origin 0.5, 0.5
+	pos = -100, -100
+	size = 0,0
+	texture = ../achron/connecting 0, 0, 200, 200
+	when configureRouter {
+		size = 200,200
+		set forceConfigureRouter
+	}
+	when JoinMultiplayerConnect {
+		size = 200,200
+		set forceJoinMultiplayer
+	}
+]
+
+#############################
+#in pregame lobby
+[
+	origin 0.0, 0.0
+	pos = 24, 24
+	size = 400, 384
+	when !WideScreen {
+		pos = 24, 400
+		size = 400, 360
+	}
+	texture = ../achron/listbox 0, 0, 512, 512
+	when !pregame_lobby size = 0, 0
+	when pregame_lobby clear game_select_window
+
+	[ #player selection
+		pos = 50, 42
+		size = 0, 0
+		when WideScreen size = 300, 300
+		when !WideScreen, !preGameSettings size = 300, 300
+		built_in = SELECT_PLAYERS
+		when !pregame_lobby size = 0, 0
+        when pregame_lobby, PlayerSelected, MouseOver, MouseLeftDblClick, !currentPlayerUnselectable {
+            set SelectPlayer
+            play_sound 1 menu_click
+        }
+	]
+
+	[
+		pos = 0,0
+		size = 0,0
+		eval preGamePlayers = !preGameSettings
+		eval preGamePlayers = preGamePlayers || WideScreen
+
+		when !LobbyInit {
+			clear aiMask
+			clear passiveAIMask
+		}
+
+		# eval preGamePlayers = !preGameSettings
+		# eval preGamePlayers = preGamePlayers || WideScreen
+		#macros for AI selection subwindows
+		macro ../include/ai_text.ski <posx=-50,posy=46,currentPlayer=ZERO,aiMaskBit=ONE,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=62,currentPlayer=ONE,aiMaskBit=TWO,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=78,currentPlayer=TWO,aiMaskBit=FOUR,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=94,currentPlayer=THREE,aiMaskBit=EIGHT,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=110,currentPlayer=FOUR,aiMaskBit=SIXTEEN,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=126,currentPlayer=FIVE,aiMaskBit=THIRTYTWO,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=142,currentPlayer=SIX,aiMaskBit=SIXTYFOUR,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=158,currentPlayer=SEVEN,aiMaskBit=N128,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=174,currentPlayer=EIGHT,aiMaskBit=N256,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=190,currentPlayer=NINE,aiMaskBit=N512,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=206,currentPlayer=TEN,aiMaskBit=N1024,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=222,currentPlayer=ELEVEN,aiMaskBit=N2048,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=238,currentPlayer=TWELVE,aiMaskBit=N4096,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=254,currentPlayer=THIRTEEN,aiMaskBit=N8192,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-50,posy=270,currentPlayer=FOURTEEN,aiMaskBit=N16384,page=preGamePlayers>
+		macro ../include/ai_text.ski <posx=-20000,posy=-28300,currentPlayer=FIFTEEN,aiMaskBit=N65536,page=preGamePlayers>
+
+		clear skipOne
+		when !LobbyInit, pregame_lobby {
+			set LobbyInit
+			clear LobbyInitLock
+		}
+	]
+
+]
+
+[
+	origin 0.0, 0.0
+	pos = 24, 400
+	size = 0, 0
+	when WideScreen size = 400, 360
+	texture = ../achron/listbox 0, 0, 512, 512
+	when !pregame_lobby size = 0, 0
+
+	[
+		pos = 50, 40
+		size = 0, 0
+		when WideScreen size = 200, 20
+		when !WideScreen, preGameSettings size = 200, 20
+		when !pregame_lobby size = 0,0
+		color_text 255,255,255,255 = "GAME SETTINGS"
+	]
+
+	[
+		pos = 250, 40
+		size = 0, 0
+		when WideScreen size = 200, 20
+		when !WideScreen, preGameSettings size = 200, 20
+		when !pregame_lobby size = 0,0
+		color_text 64,64,255,255 = "[private server]"
+		when !LocalGameServerPassword, !password_entered, !password_requested  {
+			color_text 64,255,64,255 = "(public server)"
+		}
+		when !ConnectedMultiplayer color_text 64,255,64,255 = "(quickplay game)"
+
+	]
+
+
+	[
+		pos = 89, 65
+		size = 0, 0
+		when WideScreen size = 300, 20
+		when !WideScreen, preGameSettings size = 300, 20
+		when !pregame_lobby size = 0,0
+		text = ScenarioName
+	]
+	[
+		pos = 50, 65
+		size = 0, 0
+		when WideScreen size = 100, 20
+		when !WideScreen, preGameSettings size = 100, 20
+		when !pregame_lobby size = 0,0
+		color_text 255,255,255,255 = "MAP:"
+	]
+
+	[
+		pos = 118, 90
+		size = 0, 0
+		when WideScreen size = 300, 20
+		when !WideScreen, preGameSettings size = 300, 20
+		when !pregame_lobby size = 0,0
+		when !ConnectedMultiplayer size = 0,0
+		text = LocalGameServerName
+	]
+	[
+		pos = 50, 90
+		size = 0, 0
+		when WideScreen size = 300, 20
+		when !WideScreen, preGameSettings size = 300, 20
+		when !pregame_lobby size = 0,0
+		when !ConnectedMultiplayer size = 0,0
+		color_text 255,255,255,255 = "SERVER:"
+	]
+
+	[
+		pos = 50, 110
+		size = 0,0
+		when pregame_lobby size = 200, 20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Assassin Mode: "
+	]
+	[ #display assassin on/off button
+		pos = 270, 96
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when assassinModeSync texture = ../achron/on_button 0,0, 32, 16
+		when !assassinModeSync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when assassinMode {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear assassinMode
+					clear assassinModeSync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !assassinMode, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set assassinMode
+					set assassinModeSync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+
+	[
+		pos = 50, 134
+		size = 0,0
+		when pregame_lobby size = 200, 20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Fog of war"
+	]
+	[ # fog of war on/off button
+		pos = 270, 122
+		size = 0,0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when EnableFogOfWarSync texture = ../achron/on_button 0,0, 32, 16
+		when !EnableFogOfWarSync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when EnableFogOfWar {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear EnableFogOfWar
+					clear EnableFogOfWarSync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !EnableFogOfWar, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set EnableFogOfWar
+					set EnableFogOfWarSync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+
+
+	[
+		pos = 50, 154
+		size = 0, 0
+		when pregame_lobby size = 250,20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Minimap displays players' temporal commands"
+	]
+	[ # DisplayPlayerCommandsInPastOnMap on/off button
+		pos = 270, 149
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when DisplayPlayerCommandsInPastOnMapSync texture = ../achron/on_button 0,0, 32, 16
+		when !DisplayPlayerCommandsInPastOnMapSync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when DisplayPlayerCommandsInPast{
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear DisplayPlayerCommandsInPast
+					clear DisplayPlayerCommandsInPastOnMap
+					clear DisplayPlayerCommandsInPastOnMapSync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !DisplayPlayerCommandsInPast, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set DisplayPlayerCommandsInPast
+					set DisplayPlayerCommandsInPastOnMap
+					set DisplayPlayerCommandsInPastOnMapSync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+
+
+	[ #display chronoport alerts of multiplayer game
+		pos = 50, 190
+		size = 0,0
+		when pregame_lobby size = 250,20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Display Chronoport alerts"
+	]
+	[ #display chronoport alerts on/off button
+		pos = 270, 176
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when chronoportAlertsSync texture = ../achron/on_button 0,0, 32, 16
+		when !chronoportAlertsSync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when chronoportAlerts {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear chronoportAlerts
+					clear chronoportAlertsSync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !chronoportAlerts, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set chronoportAlerts
+					set chronoportAlertsSync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+
+
+
+	[ #save replay of multiplayer game
+		pos = 50, 216
+		size = 0,0
+		when pregame_lobby size = 250,20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Save Replay of this game"
+	]
+	[ # Save multiplayer replay on/off button
+		pos = 270, 202
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when SaveMultiplayerReplaySync texture = ../achron/on_button 0,0, 32, 16
+		when !SaveMultiplayerReplaySync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when SaveMultiplayerReplay {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear SaveMultiplayerReplay
+					clear SaveMultiplayerReplaySync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !SaveMultiplayerReplay, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set SaveMultiplayerReplay
+					set SaveMultiplayerReplaySync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+
+
+	[ #
+		pos = 50, 242
+		size = 0,0
+		when pregame_lobby size = 250,20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Chronoport with commander"
+	]
+	[ # on/off button
+		pos = 270, 228
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when chronoportWithCommanderSync texture = ../achron/on_button 0,0, 32, 16
+		when !chronoportWithCommanderSync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when chronoportWithCommander {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear chronoportWithCommander
+					clear chronoportWithCommanderSync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !chronoportWithCommander, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set chronoportWithCommander
+					set chronoportWithCommanderSync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+
+	[ #
+		pos = 50, 268
+		size = 0,0
+		when pregame_lobby size = 250,20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Morph during rechronoport delay"
+	]
+	[ # on/off button
+		pos = 270, 254
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when morphDuringRechronoportSync texture = ../achron/on_button 0,0, 32, 16
+		when !morphDuringRechronoportSync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when morphDuringRechronoport {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear morphDuringRechronoport
+					clear morphDuringRechronoportSync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !morphDuringRechronoport, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set morphDuringRechronoport
+					set morphDuringRechronoportSync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+
+	[ #
+		pos = 50, 294
+		size = 0,0
+		when pregame_lobby size = 250,20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Allow Hierarchical Control"
+	]
+	[ # on/off button
+		pos = 270, 280
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when clearQueueAfterChronoportSync texture = ../achron/on_button 0,0, 32, 16
+		when !clearQueueAfterChronoportSync texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when clearQueueAfterChronoport {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear clearQueueAfterChronoport
+					clear clearQueueAfterChronoportSync
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when !clearQueueAfterChronoport, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set clearQueueAfterChronoport
+					set clearQueueAfterChronoportSync
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]	
+
+
+	[ #
+		pos = 50, 320
+		size = 0,0
+		when pregame_lobby size = 250,20
+		when !WideScreen, !preGameSettings size = 0,0
+		color_text 255,255,255,255 = "Enable Sounds Behind Fog Of War"
+	]
+	[ # on/off button
+		pos = 270, 306
+		size = 0, 0
+		when pregame_lobby size = 36,18
+		when !WideScreen, !preGameSettings size = 0,0
+		when !AchronMultiplayerMuteSoundsBehindFogOfWar texture = ../achron/on_button 0,0, 32, 16
+		when AchronMultiplayerMuteSoundsBehindFogOfWar texture = ../achron/off_button 0,0, 32, 16
+
+		when MouseOver, in_pregame_server {
+			when !AchronMultiplayerMuteSoundsBehindFogOfWar {
+				texture = ../achron/on_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					set AchronMultiplayerMuteSoundsBehindFogOfWar
+					set skipOne
+					play_sound 1 menu_click
+				}
+			}
+			when AchronMultiplayerMuteSoundsBehindFogOfWar, !skipOne {
+				texture = ../achron/off_button_over, 0, 0, 32, 16
+				when MouseLeftClick {
+					clear AchronMultiplayerMuteSoundsBehindFogOfWar
+					play_sound 1 menu_click
+				}
+			}
+		}
+		when MouseOver, !in_pregame_server {
+			setval TIP "Only game host can \nchange settings"
+			set showMiniTip
+		}
+		clear skipOne
+	]
+	
+
+	[
+		when runningFromBase {
+			pos = 593, 350
+		}
+		when runningFromSteam {
+			pos = 520, 350
+		}
+
+		size = 300, 20
+		when !ConnectedMultiplayer size = 0,0
+		text = AccountName
+	]
+	[
+		pos = 450, 350
+		size = 300, 20
+		when !ConnectedMultiplayer size = 0,0
+		when runningFromBase color_text 255,255,255,255 = "Achron Community ID:"
+		when runningFromSteam color_text 255,255,255,255 = "Steam ID:"
+	]
+
+]
+#non-widescreen toggle for pregame settings
+[
+	origin 0.0, 0.0
+	pos = 300, 700
+	size = 0, 0
+	when pregame_lobby, !WideScreen size = 92, 35
+	texture = ../achron/gametype_settings 10, 148, 236, 88
+	when MouseOver texture = ../achron/gametype_settings 10, 20, 236, 88
+	when preGameSettings texture = ../achron/gametype_settings 10, 20, 236, 88
+	when MouseOver, MouseLeftClick toggle preGameSettings
+]
+
+#console window
+[
+	origin 0.5, 0.0
+	pos = -240, 12
+	size = 480, 512
+	when !WideScreen {
+		origin 0.0, 0.0
+		pos = 20, 8
+		size = 512, 430
+	}
+	texture = ../achron/listbox 0, 0, 512, 512
+	when !ConnectedMultiplayer size = 0, 0
+
+	[
+		pos = 200, 12
+		size = 200, 20
+		when !ConnectedMultiplayer size = 0, 0
+		color_text 255,255,255,255 = "Pregame Chat"
+	]
+
+	[ #console output
+		pos = 23, 50
+		size = 395, 424
+		when !WideScreen size = 445, 342
+		when !ConnectedMultiplayer size = 0, 0
+		built_in = CONSOLE_OUT
+	]
+
+
+    when ConsoleMessageReceived {
+        play_sound 1 message
+        clear ConsoleMessageReceived
+    }
+]
+
+####
+[ #input field for lobby console
+	origin 0.5, 0.0
+	pos = -200, 466
+	when !WideScreen {
+		origin 0.0, 0.0
+		pos = 61, 385
+	}
+	size = 0, 0
+	when ConnectedMultiplayer {
+		size = 400, 32
+		when !WideScreen size = 426, 32
+	}
+
+	texture = ../achron/input_field, 0, 0, 512, 64
+
+  when ConnectedMultiplayer, preGameFocus, ReadFromKeyboard texture = ../achron/input_field_active, 0, 0, 512, 64
+
+  when !ConnectedMultiplayer, changePreGameFocus { #First connection to server, clear everything out
+		get_console chatText
+  	clear chatText
+  	set_console chatText
+  	set ClearConsole
+  	set preGameFocus
+    set ReadFromKeyboard
+  	clear changePreGameFocus
+  }
+
+	when ConnectedMultiplayer, changePreGameFocus { #changePreGameFocus needed to avoid race condition on console
+		set_console chatText
+		set preGameFocus
+		set ReadFromKeyboard
+		when !chatText set ClearConsole #Clear any nulls from console if there are any
+		clear changePreGameFocus
+	}
+
+	when ConnectedMultiplayer, MouseOver, MouseLeftClick, !preGameFocus, !changePreGameFocus {
+		set changePreGameFocus
+		set different_field_input #In case the input_field.ski fields are active
+	}
+
+	when ConnectedMultiplayer, !MouseOver, MouseLeftClick, preGameFocus {
+		get_console chatText
+		clear preGameFocus
+		clear ReadFromKeyboard
+	}
+
+	[ #console input
+		pos = 18, 18
+		size = 378, 24
+		texture = ../achron/none, 0, 0, 0, 0
+		when !ConnectedMultiplayer size = 0, 0
+		when ReadFromKeyboard, preGameFocus built_in = CONSOLE_IN
+		when !preGameFocus, chatText text = chatText
+		when ReadFromKeyboard, enter_pressed, ConnectedMultiplayer, !password_requested {
+			get_console chatText
+			when chatText {
+				set SubmitConsoleInput
+				clear chatText
+			}
+			clear enter_pressed
+
+		}
+	]
+
+]
+#buttons for controling player #'s and starting game
+[ #select a player in the pre-game lobby
+	when WideScreen {
+		origin 0.5, 0.0
+		pos = -92, 520
+	}
+	when !WideScreen {
+		origin 0.0, 0.0
+		pos = 445, 630
+	}
+	size = 185, 70
+	texture = ../achron/select_player, 10, 148, 236, 88
+	when MouseOver  texture = ../achron/select_player, 10, 20, 236, 88
+    when !pregame_lobby size = 0,0
+    when !PlayerSelected size = 0,0
+    when currentPlayerUnselectable size = 0,0 #can't occupy a player reserved slot
+	when multiplayer_ready size = 0,0
+	when password_requested size = 0,0
+	when Disconnected size = 0,0
+	when MouseOver, MouseLeftClick {
+        set SelectPlayer
+        play_sound 1 menu_click
+    }
+]
+[  #ready to start multi-player game
+	when WideScreen {
+		origin 0.5, 0.0
+		pos = -187, 590
+	}
+	when !WideScreen {
+		origin 0.0, 0.0
+		pos = 445, 560
+	}
+	size = 185, 70
+	texture = ../achron/ready_to_start, 10, 148, 236, 88
+    when MouseOver texture = ../achron/ready_to_start, 10, 20, 236, 88
+	when !pregame_lobby size = 0,0
+	when password_requested size = 0,0
+	when Disconnected size = 0,0
+	when multiplayer_ready size = 0,0
+	when MouseOver, MouseLeftClick {
+        play_sound 1 menu_click
+		set multiplayer_ready
+		set ToggleMultiplayerReady
+		clear MouseLeftClick
+	}
+]
+[  #start multi-player game
+	when WideScreen {
+		origin 0.5, 0.0
+		pos = -187, 590
+	}
+	when !WideScreen {
+		origin 0.0, 0.0
+		pos = 445, 560
+	}
+	size = 185, 70
+	texture = ../achron/start_game, 10, 148, 236, 88
+	when MouseOver texture = ../achron/start_game, 10, 20, 236, 88
+    when !pregame_lobby size = 0,0
+	when !multiplayer_ready size = 0,0
+	when !in_pregame_server size = 0,0
+	when MouseOver, MouseLeftClick {
+		setval aiMaskOut aiMask
+		setval passiveAIMaskOut passiveAIMask
+		# clear quickPlay
+
+		when ConnectToCommunityChat { #	#set the community status message to playing
+			setval CommunityChatStatusMessage STATUS_PLAYING
+			set UpdateCommunityChatStatusMessage
+		}
+
+		when SaveMultiplayerReplay set LogGameReplayData
+		when !SaveMultiplayerReplay clear LogGameReplayData
+		when ConnectedMultiplayer	set SpawnScenarioMulti
+		when !ConnectedMultiplayer set SpawnScenario
+	}
+]
+[  #cancel ready to start
+	when WideScreen {
+		origin 0.5, 0.0
+		pos = -92, 660
+	}
+	when !WideScreen {
+		origin 0.0, 0.0
+		pos = 445, 630
+	}
+	size = 185, 70
+	texture = ../achron/cancel_ready, 10, 148, 236, 88
+	when MouseOver texture = ../achron/cancel_ready, 10, 20, 236, 88
+    when !pregame_lobby size = 0,0
+	when !multiplayer_ready size = 0,0
+	when MouseOver, MouseLeftClick {
+        play_sound 1 menu_click
+		clear multiplayer_ready
+		set ToggleMultiplayerReady
+        set ClearConsole
+		clear MouseLeftClick
+	}
+]
+
+[ #cancel out of pre-game lobby
+	when WideScreen {
+		origin 0.5, 0.0
+		pos = 2, 590
+	}
+	when !WideScreen {
+		origin 0.0, 0.0
+		pos = 635, 560
+	}
+	size = 185, 70
+	texture = ../achron/cancel 10, 148, 236, 88
+	when MouseOver texture = ../achron/cancel 10, 20, 236, 88
+	when !pregame_lobby size = 0, 0
+	when password_requested size = 0,0
+	when Disconnected size = 0,0
+	when MouseOver, MouseLeftClick {
+
+		when ConnectToCommunityChat { #	#set the community status message to IN-Game
+			setval CommunityChatStatusMessage STATUS_IN_GAME
+			set UpdateCommunityChatStatusMessage
+		}
+
+		play_sound 1 menu_click
+		set game_select_window_buttons
+		set ClearConsole
+		set ClearConsoleOutput
+		clear ReadFromKeyboard
+		clear ToggleMultiplayerReady
+		clear multiplayer_ready
+		clear in_pregame_server
+		clear StartScenarioMulti
+		clear DisplayPlayerCommandsInPast
+		clear DisplayPlayerCommandsInPastOnMap
+		clear DisplayPlayerCommandsInPastOnMapSync
+		set EnableFogOfWar
+		set EnableFogOfWarSync
+		clear LobbyInit #Allow ai selection menus to refresh scenario data
+		set game_select_window
+		when ConnectedMultiplayer	set multiplayer
+		when !ConnectedMultiplayer {
+			set singleplayer
+			set start_scenario
+		}
+		clear ConnectedMultiplayer
+		clear pregame_lobby
+		set StopScenarioMulti
+		clear password_entered
+	}
+]
+
+[ #if grey out background
+	#set password_requested only when RequestPassword is set the first time, then clear RequestPassword immediately
+	when RequestPassword {
+		set password_requested
+		set ClearConsole
+		set ReadFromKeyboard
+	}
+
+	pos = 0,0
+	size = 0, 0
+	when password_requested size = -0, -0
+	when Disconnected, ConnectedMultiplayer, password_entered size = -0,-0
+	when ConnectedMultiplayerFailed, ConnectedMultiplayer size = -0,-0
+	texture = ../achron/static 0, 0, 512, 512
+]
+
+[  #if password request
+
+	origin 0.5, 0.0
+	pos = -256, 100
+	size = 512, 512
+	texture = ../achron/listbox 0, 0, 512, 512
+	when !password_requested size = 0, 0
+
+	[
+		pos = 62, 172
+		size = 384, 48
+		when !password_requested size = 0, 0
+		texture = ../achron/input_field_active, 0, 0, 512, 64
+	]
+
+	[
+		pos = 80, 200
+		size = 380, 12
+		texture = ../achron/none, 0, 0, 0, 0
+		when !password_requested size = 0, 0
+		when password_requested built_in = CONSOLE_IN
+	]
+	[
+		pos = 70, 100
+		size = 500, 12
+		when !password_requested size = 0,0
+		text = "ENTER THE PASSWORD TO JOIN THIS PRIVATE GAME"
+	]
+
+
+	[ #input password
+		pos = 55, 400
+		size = 185, 70
+		texture = ../achron/ok 10, 148, 236, 88
+		when MouseOver texture = ../achron/ok 10, 20, 236, 88
+		when !password_requested size = 0, 0
+		when password_requested, enter_pressed  {
+			clear enter_pressed
+			get_console SubmitPassword
+			when SubmitPassword {
+				clear password_requested
+				set password_entered
+				set ClearConsole
+				clear ReadFromKeyboard
+			}
+		}
+		when password_requested, tab_pressed {
+			clear tab_pressed
+		}
+		when MouseOver, MouseLeftClick {
+			get_console SubmitPassword
+			when SubmitPassword {
+				clear password_requested
+				set password_entered
+				set ClearConsole
+				clear ReadFromKeyboard
+			}
+		}
+
+
+
+
+
+	]
+
+
+	[ #cancel out of password - locked game
+		pos = 260, 400
+		size = 185, 70
+		texture = ../achron/cancel 10, 148, 236, 88
+        when MouseOver texture = ../achron/cancel 10, 20, 236, 88
+		when !password_requested size = 0, 0
+		when MouseOver, MouseLeftClick {
+			set game_select_window_buttons
+			clear password_requested
+			clear password_entered
+			play_sound 1 menu_click
+			set join_multiplayer
+			clear load_saved_game
+			clear load_campaign
+			clear start_scenario
+			clear start_multiplayer
+            set multiplayer
+
+			set ClearConsole
+			set ClearConsoleOutput
+			clear ReadFromKeyboard
+			clear in_pregame_server
+			clear in_pregame_client
+			clear ToggleMultiplayerReady
+			set StopScenarioMulti
+			clear StartScenarioMulti
+			clear pregame_lobby
+			clear ConnectedMultiplayer
+
+			set game_select_window
+		}
+	]
+
+
+	clear RequestPassword
+]
+
+when ConnectedMultiplayerFailed set ConnectionError
+when Disconnected set ConnectionError
+
+
+
+
+[ #connection error
+	pos = 240, 90
+	when !WideScreen pos = 254, 90
+	size = 512, 512
+
+	texture = ../achron/listbox 0, 0, 512, 512
+	when !ConnectionError size = 0, 0
+	when ConnectionError clear ReadFromKeyboard
+
+	[ #text to show error
+		pos = 56, 60
+		size = 400, 410
+		when ConnectedMultiplayerFailed text = ConnectedMultiplayerFailed
+		when Disconnected text = DisconnectionReason
+		when !ConnectionError size = 0, 0
+	]
+
+    [ #ok button
+        pos = 240, 400
+		size = 0,0
+        when ConnectionError size = 185, 70
+        texture = ../achron/ok 10, 148, 236, 88
+		when MouseOver texture = ../achron/ok 10, 20, 236, 88
+
+        when MouseOver, MouseLeftClick, ConnectionError, ConnectedMultiplayer {
+			set ClearConsole
+			set ClearConsoleOutput
+			clear ReadFromKeyboard
+			clear ToggleMultiplayerReady
+			clear multiplayer_ready
+			clear ConnectedMultiplayer
+			clear pregame_lobby
+			clear in_pregame_server
+			set multiplayer
+			clear StartScenarioMulti
+			clear DisplayPlayerCommandsInPast
+			clear DisplayPlayerCommandsInPastOnMap
+			clear DisplayPlayerCommandsInPastOnMapSync
+			set EnableFogOfWar
+			set EnableFogOfWarSync
+			clear LobbyInit #Allow ai selection menus to refresh scenario data
+			set game_select_window
+
+			when password_entered {  #here from incorrect password, return to host list
+				clear password_entered
+				set join_multiplayer
+				set multiplayer
+			}
+			set game_select_window_buttons
+		}
+
+        when MouseOver, MouseLeftClick {
+			set join_multiplayer
+			clear ReadFromKeyboard
+			clear ToggleMultiplayerReady
+			clear multiplayer_ready
+			clear ConnectedMultiplayer
+			clear pregame_lobby
+			clear in_pregame_server
+			clear LobbyInit #Allow ai selection menus to refresh scenario data
+            clear ConnectionError
+			clear ConnectedMultiplayerFailed
+			clear StartScenarioMulti
+			set StopScenarioMulti
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+            clear RefreshServersFailed
+            play_sound 1 menu_click
+			clear password_entered
+			set game_select_window
+			set game_select_window_buttons
+        }
+    ]
+]
+
+[ #refresh servers error
+	pos = 240, 90
+	when !WideScreen pos = 254, 90
+	size = 512, 512
+
+	texture = ../achron/listbox 0, 0, 512, 512
+	when !RefreshServersFailed size = 0, 0
+	when RefreshServersFailed clear ReadFromKeyboard
+
+	[ #text to show error
+		pos = 56, 60
+		size = 400, 410
+		text = RefreshServersFailed
+		when !RefreshServersFailed size = 0, 0
+	]
+
+    [ #ok button
+        pos = 240, 400
+		size = 0,0
+        when RefreshServersFailed size = 185, 70
+        texture = ../achron/ok 10, 148, 236, 88
+		when MouseOver texture = ../achron/ok 10, 20, 236, 88
+
+        when MouseOver, MouseLeftClick {
+            clear ConnectedMultiplayerFailed
+			set StopScenarioMulti
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+            clear RefreshServersFailed
+            play_sound 1 menu_click
+        }
+    ]
+]
+
+
+
+[ #router error
+	origin 0.5,0.0
+	pos = -256, 90
+	size = 512, 512
+
+	texture = ../achron/listbox 0, 0, 512, 512
+	when !InternetGatewayError  size = 0, 0
+
+	[ #text to show error
+		pos = 56, 60
+		size = 400, 410
+		text = InternetGatewayError
+		when !InternetGatewayError  size = 0, 0
+	]
+
+	[
+		pos = 54, 200
+		size = 404, 140
+		color_text 192, 192, 20, 255, {"Arial", 14} = "If your router does not support UPnP (Universal Plug-n-Play), you must manually configure your ports.  If you have manually configured your router, or do not use a router, uncheck the \"Automatic port forwarding (UPnP)\" box.  See the readme.txt for further information."
+		when !InternetGatewayError size = 0,0
+	]
+
+    [ #ok button
+        pos = 240, 400
+		size = 0,0
+        when InternetGatewayError  size = 185, 70
+        texture = ../achron/ok 10, 148, 236, 88
+		when MouseOver texture = ../achron/ok 10, 20, 236, 88
+
+        when MouseOver, MouseLeftClick, InternetGatewayError , ConnectedMultiplayer {
+			set ClearConsole
+			set ClearConsoleOutput
+			clear ReadFromKeyboard
+			clear ToggleMultiplayerReady
+			clear multiplayer_ready
+			clear ConnectedMultiplayer
+			clear pregame_lobby
+			set multiplayer
+			clear in_pregame_server
+			clear StartScenarioMulti
+			clear DisplayPlayerCommandsInPast
+			clear DisplayPlayerCommandsInPastOnMap
+			clear DisplayPlayerCommandsInPastOnMapSync
+			set EnableFogOfWar
+			set EnableFogOfWarSync
+			clear LobbyInit #Allow ai selection menus to refresh scenario data
+			set game_select_window
+			set game_select_window_buttons
+		}
+
+        when MouseOver, MouseLeftClick {
+            clear ConnectedMultiplayerFailed
+			set StopScenarioMulti
+			clear Disconnected
+			clear InternetGatewayError
+			clear displayAccountAuthenticationFailed
+			clear RefreshServersFailed
+            play_sound 1 menu_click
+        }
+    ]
+]
+
+
+
+[ #generic tooltip
+    pos_mouse
+    size = 0,0
+	when showMiniTip size = 160,32
+    when showSmallTip size = 240, 42
+	when showLargeTip size = 256, 86
+    when !showTooltips size = 0,0
+    [
+
+        size = 0,0
+		when showMiniTip {
+			size = 160, 32
+			pos = -150, -40
+		}
+		when showSmallTip {
+			size = 240, 42
+			pos = -230, -60
+		}
+		when showLargeTip {
+			pos = -230, -110
+			size = 256, 86
+		}
+        when !showTooltips size = 0,0
+
+        texture = ../../common/img/tooltip 0, 0, 512, 84
+		when showLargeTip texture = ../../common/img/bigtooltip 0, 0, 512, 172
+        [
+
+            size = 0,0
+			when showMiniTip {
+				pos = 4, 10
+				size = 154, 32
+			}
+			when showSmallTip {
+				pos = 5,12
+				size = 234, 20
+			}
+			when showLargeTip {
+				pos = 6,18
+				size = 250, 60
+			}
+			when !showTooltips size = 0,0
+            color_text 128,255,0,255, {"Tahoma",12} = TIP
+        ]
+    ]
+]
+
+######################################
+
+# [ #credits button
+
+	# when WideScreen {
+		# origin  1.0, 1.0
+		# pos = -110,-94
+	# }
+	# when !WideScreen {
+		# origin  0.0, 0.0
+		# pos = 10, 720
+	# }
+	# size = 92,35
+
+	# texture = ../achron/credits 10, 148, 236, 88
+	# when MouseOver texture = ../achron/credits 10, 20, 236, 88
+	# when credits texture = ../achron/credits 10, 20, 236, 88
+	# when !game_select_window size = 0, 0
+	# when !game_select_window_buttons size = 0, 0
+	# when isRunningCredits size = 0,0
+	# when MouseOver, MouseLeftClick {
+		# play_sound 1 menu_click
+		# set credits
+		# clear leveleditor
+		# clear settings
+		# clear settings_graphics
+		# clear settings_audio
+		# clear load_campaign
+		# clear ReadFromKeyboard
+		# clear load_saved_game
+		# clear start_scenario
+		# clear join_multiplayer
+		# clear start_multiplayer
+		# clear multiplayer
+		# clear singleplayer
+		# clear ConnectedMultiplayerFailed
+		# clear Disconnected
+		# clear InternetGatewayError
+		# clear displayAccountAuthenticationFailed
+		# clear EditKeysMode
+	# }
+# ]
+
+[ #change profile button
+
+
+	origin  0.0, 0.0
+	pos = 10, 674
+	when !WideScreen pos = 10,674
+	size = 92,35
+
+	texture = ../achron/change_profile 10, 148, 236, 88
+	when MouseOver texture = ../achron/change_profile 10, 20, 236, 88
+	when !game_select_window size = 0, 0
+	when !game_select_window_buttons size = 0, 0
+	when isRunningCredits size = 0,0
+	when MouseOver, MouseLeftClick {
+		play_sound 1 menu_click
+		clear game_select_window
+		set profile_window
+		clear ReadFromKeyboard
+		clear ActiveProfile
+		clear OpenProfile
+		clear join_multiplayer
+		clear AccountAuthenticationSucceeded
+		clear inCommunityChat
+		clear ConnectToCommunityChat
+		clear load_saved_game
+		clear load_campaign
+		clear start_scenario
+		clear start_multiplayer
+		clear multiplayer
+		clear attemptAuthentication
+		clear settings
+		clear displayAccountAuthenticationFailed
+		clear leveleditor
+		clear EditKeysMode
+		clear credits
+		clear pre_profile_window
+		clear title_window
+	}
+	when game_select_window, GoBack {
+		#play_sound 1 menu_click
+		clear join_multiplayer
+		clear load_saved_game
+		clear load_campaign
+		clear start_scenario
+		clear start_multiplayer
+		clear ReadFromKeyboard
+		clear BroadcastGameStats
+		clear singleplayer
+		clear multiplayer
+		clear attemptAuthentication
+		clear settings
+		clear leveleditor
+		clear EditKeysMode
+		clear credits
+	}
+]
+
+
+[ #upgrade reminder
+	origin 1.0, 1.0
+	pos = -700, -18
+	size = 500, 20
+	when title_window size = 0,0
+
+	when !runningFromSteam { #Steam users don't need to see this message - Steam auto-upgrades versions automatically
+
+		#only display when version is set and mismatched
+		when !MostRecentVersion size = 0, 0
+		eval is_current_version = MostRecentVersion == EngineVersion
+		when is_current_version size = 0, 0
+
+		#blinking to draw attention
+		when !show_version_upgrade set_after show_version_upgrade 1
+		when show_version_upgrade clear_after show_version_upgrade 2
+		when !show_version_upgrade size = 0, 0
+
+		color_text 255,0,0,200  {"Tahoma", 18}  = "New Achron update available. Go to achrongame.com to upgrade."
+	}
+]
+
+[
+	origin 1.0, 1.0
+	pos = -200, -10
+	size = 140, 20
+	when title_window size = 0,0
+	color_text 255,255,128,64  {"Tahoma", 14}  = "Achron Release"
+]
+[
+	origin 1.0, 1.0
+	pos = -60, -10
+	size = 70, 20
+	when title_window size = 0,0
+	color_text 255,255,128,64  {"Tahoma", 14} = EngineVersion
+]
+
+#Cursor
+
+[ #cursor
+
+   pos_mouse
+   [
+        pos = -1, -1
+		size = 24, 24
+		when OSDrawnMouse, !ResetGame size = 0, 0
+		when title_window size = 0, 0
+		when configureRouter size = 0,0
+        when !ResetGame texture = ../achron/cursor1 0, 0, 32, 32
+		when ResetGame texture = ../achron/cursor2 0, 0, 32, 32
+        set IgnoreMouse
+   ]
+
+]
+
+clear GoBack
+
+

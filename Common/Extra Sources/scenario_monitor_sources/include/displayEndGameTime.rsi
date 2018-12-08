@@ -1,0 +1,37 @@
+    //game is over (af1 == 1), so display the endgame time to the winning player by
+    //cycling through enabled and still-playing(active) players showing that player the time
+	if ( af1[30,2]==1) { //1 team remains, other player just lost
+        int x=0;
+		//loop through the 15 possible players
+        for (x=0;x<=15;x=x+1) {
+            if ( ( enabled >> x) & 1 == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+				player = x;
+				say_to_var "endgamePause";
+				say 1;				 
+                if ( ((active&(~nonPlayer)) >> x) & 1 == 1) { //active players who are currently still alive, ignoring barracks, mines, and comm centers
+					int class = 0;
+					int playerNum = x;
+                    #include include/calculatePlayerHealth.rsi
+					
+                    if ( playerHealth > 0 ) {  //show the winner their winning time
+						 int winTime = af1[0,28];
+                         int totalSecs = winTime / $TPS;
+                         $CALCULATE_MIN_SEC_HOUR
+						 //direct which player sees the message
+                         player = x;
+                         say_to_var "endgameTime";  //exported skin variable
+                         say "AT: ";
+                         $SAY_CALCULATED_TIME
+                    }
+                }
+				
+            }
+        }
+		
+		af1[30,2]=2;
+		target = 0; PERFORM SET_ACHRONAL_FIELD  af1; //leave game paused so players can chat until they exit out 
+		PERFORM END_SCENARIO; 
+		//do NOT perform EXIT_ENGINE, so players can continue chatting
+	}
+	
+	

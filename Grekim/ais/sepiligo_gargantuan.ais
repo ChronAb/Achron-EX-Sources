@@ -1,0 +1,68 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+if (player->$LCrystals < $GARGANTUAN_LC || player->$QPlasma < $GARGANTUAN_QP) {
+    PERFORM SET_OBJECTIVE 0;    
+    $SAY_RESOURCES
+    PERFORM $ACTION_ERROR1;
+    PERFORM NOTHING;
+}
+
+int op = unit->ObjectiveParameters;
+
+if (unit <_> op == 0) {
+    
+    if (!(unit->IsCommjam)) { //not comm-jammed
+	
+		//"buildings" , or anything that's placed down must be oriented south
+		if (unit->Rotation != $ROT_S ) {
+			PERFORM $ACTION_ROTATE $ROT_S;
+			if (perf_ret!=1) { //failed to rotate
+				$SAY_MORPH 
+				PERFORM SET_ADDITIONAL_PARAMS 0;
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+			}
+			PERFORM NOTHING;
+		}
+	
+	
+		PERFORM SET_OBJECTIVE $OBJ_BLDG_CONSTRUCTION;
+		target = $GARGANTUAN_CLASS;
+		PERFORM CAN_CLASS_FIT_AT unit->Position;
+		if (perf_ret[$ROT_S]) {
+			
+			PERFORM $ACTION_MAKE_CARRIER $OCTOPOD_CLASS; 
+			if (perf_ret == 0) $SAY_MORPH
+		}
+    }
+    else $SAY_JAMMED
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM NOTHING;
+
+}
+
+else {
+
+
+    
+	//if the unit is more than 5 spaces away, don't land on the ground
+	if (unit<_>op > 25) {
+		PERFORM GET_MAP_NEXT_Z_POSITION_UP op;
+		//store the heighest position between current location and the spot above destination
+		int higherZ = unit->ZPosition |> op[$Zpos]; 
+		op[$Zpos] = higherZ;
+	}
+	else {
+		op[$Zpos] = 0; 
+	}
+	
+    int dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ query <=> op] WHERE [1];
+    if(dir)	PERFORM $ACTION_MOVE dir;
+    else {
+	//can't get to where we need to go, so give up!
+	    PERFORM SET_OBJECTIVE 0;
+    }
+}
+    

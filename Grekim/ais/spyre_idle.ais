@@ -1,0 +1,42 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+/*
+all production units run the following check every 36 ticks (2 seconds):
+
+1) if cap bit 5 is not set, then clear cap bit 1
+2) clear cap bit 5
+
+capbit5 is used as a keep-alive ping
+capbit1 is used to allow-air-unit production
+
+
+the spyre therefore runs a check every half a second and sets those two bits on production units
+
+*/
+
+
+PERFORM GET_CUR_TIME;
+
+if (perf_ret%87==0) {
+	PERFORM CLEAR_LAST_ATTACKED_DIRECTION;
+	if (unit->Objective!=0) { PERFORM SET_OBJECTIVE 0; } //set objective to idle if running idle script
+}
+
+if (perf_ret % 9 != 0) { PERFORM NOTHING; } //only run this 2/sec
+
+int rank=0;
+
+while (1) {
+	
+	target = QUERY UNIT [unit] MIN [ query<_>unit]
+		WHERE [ query->IsAlly==1 && !(query->Status[$CAP_BIT_5]) && ( (rank=query.Rank)==$GREKIM_PROGENERATION_RANK || rank==$GREKIM_POD_PROGENERATION_RANK || rank==$ARCTICUS_RANK )
+		];	
+	if (target->IsAlive==1) {
+		PERFORM $ACTION_SET_BIT target;
+	} else { break; }
+	
+}
+
+

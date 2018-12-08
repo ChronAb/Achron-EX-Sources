@@ -1,0 +1,37 @@
+
+//script for wreckage to damage nearby units
+
+#include common/include/unit_common_header.aih
+
+if (unit->Armour > 0) {
+	int uclass = unit->Class;
+
+	//find nearest enemy unit...
+	query_vis_distance = 7;
+	if (uclass==1300) {
+		query_vis_distance = 10; //Octoligo, Tank, Heavy Tank, Twin MAR, MFB
+	}
+
+	target = unit->Position;
+	object near = QUERY UNIT [unit] MIN [ unit <_> query ] 
+		WHERE [!(query->IsAlly) && query->ZPosition==0 && query->IsStasis==0 ]; 
+
+	if ( near > 0 ){ //If there is something to hit, attack
+		//say "Boom, gotcha!";
+		PERFORM $ACTION_ATTACK;
+		PERFORM NOTHING;
+	}
+	
+	PERFORM RAND;
+	if (perf_ret < 2048) { //otherwise only blow 1/16th of the time
+		//say "Boom, because why not!";
+		PERFORM $ACTION_ATTACK;
+	}
+	else {
+		//say "hmm, shall I blow? Nah.", perf_ret;
+		PERFORM 37;//junk action so next cycle can start
+	}
+}
+else {
+	PERFORM 37;//junk action so next cycle can start
+}

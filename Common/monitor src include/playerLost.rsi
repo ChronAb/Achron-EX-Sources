@@ -1,0 +1,21 @@
+
+//In this mode the player has been defeated at some point in time at or before present.
+//Though if the player were given a chance, they may be able to recover from this
+//defeat, this mode makes them lose for dying at any time along the timeline
+//Assassin mode also uses this condition
+if ((END_GAME_MODE == $ANYTIME_DEFEAT || pre_game_settings[$MP_ASSASSIN_MODE]) && current <= present) {
+	#include include/playerLostAnytime.rsi
+}
+
+
+//This mode is an unrecoverable defeat that happens towards the edge of the time window 
+//before it falls off the timeline. This logic is only executed within 1 timewave separation distance 
+//from the edge of the window nd only by pre-set timewives.
+//Player loses if a timewave near the edge of the time window sees that this player has been defeated
+//and that this is the final timewave that will propagate this loss, before this event falls off.
+//This loss is unrecoverable because it is the closest to the edge of the timewindow (furthest in the 
+//past), so it's just a matter of time before this timewave propagates the player's defeat to the 
+//whole timeline, so any future actions by the player are futile.
+if (END_GAME_MODE == $TOTAL_DEFEAT && !pre_game_settings[$MP_ASSASSIN_MODE]) {
+	#include include/playerLostTotal.rsi
+}

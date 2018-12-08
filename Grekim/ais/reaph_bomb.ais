@@ -1,0 +1,23 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+// mound_bomb.ais - mound fires the plasma bomb
+//takes in POSITION as parameter for where to shoot the bomb
+
+#include common/include/unit_common_header.aih
+
+ if (!player->Advancements[$GREKIM_ADV_WEAPONS]) { 
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING; 
+}
+
+if (unit->Energy >= 30 && unit->Ammo >= 10){
+	if (player->$LCrystals >= $PLASMABOMB_LC && player->$QPlasma >= $PLASMABOMB_QP) { 
+			PERFORM SET_ADDITIONAL_PARAMS unit->ObjectiveParameters;  //store the location
+			PERFORM $ACTION_ATTACK;                                //create plasma bomb
+	}
+	else {
+			$SAY_RESOURCES
+			PERFORM $ACTION_ERROR1;
+	}
+}
+PERFORM SET_OBJECTIVE 0;

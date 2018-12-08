@@ -1,0 +1,188 @@
+
+// NOTE: ACHRONAL FIELDS 0-100 are assumed to be reserved by built-in Achron-specific usage
+
+PERFORM GET_ENABLED_PLAYERS; 
+int enabled = perf_ret;
+
+//update each player's relative above their timeline
+#include include/commonStatsAndPlayerUpdates.rsi
+
+//int nonPlayer = 0;
+
+#include include/nonPlayer.rsi 
+
+//Achronal field 0 is used to store final winning time
+//bits 0-27 af1[0,28] are used to store winning time
+//bits 28,29 af[28,2] are not used
+//bits 30,31 af1[30,2] are used for end game scenario. 1 = notify players of end game time,  2 = game ended
+PERFORM GET_ACHRONAL_FIELD 0;
+int af1 = perf_ret; 
+
+//Achronal field 1 is used to store connected and surrendered players
+//bits 0-14 af2[0,15] are used to store originally connected players for disconnect notification
+//bits 15-30 af2[15,15] are used to mark surrendered and lost players for surrendered notification
+//bit 30,31 af2[30,2] are not used
+PERFORM GET_ACHRONAL_FIELD 1; 
+int af2 = perf_ret;  
+
+//Achronal fields 2-16 (inclusive) store each of the 15 players' defeated time (absolute value)
+//used by TotalDefeat monitor to warn player of Defeat 
+
+//Achronal fields 17-46 (inclusive) store each of the 15 player's virtual health and active units 
+//used by surrender heuristic to surrender AI players
+
+//Achronal field 47 stores the timestamp of when all the 15 players health and units have been calculated
+//when this field is set, the surrender heuristic is run on the following tick
+
+//Achronal field 48 stores pre-game lobby configurations ( setup in checkConnected.rsi )
+//Achronal fields 50-79 store the last time of present each player was warned of chronoport departures and arrivals
+
+//Achronal field 80 stores the flags for screen blackout for Achron-Assassination mode
+//Achronal field 81-95 stores the earliest death time of Achrons for Achron-Assassination mode 
+
+//notify players if someone disconnects
+#include include/checkConnected.rsi
+
+//Determine who the AI players are
+#include include/checkAiPlayer.rsi
+
+//AI removal
+#include include/aiKiller.rsi
+
+//bits 30,31 af1[30,2] are used for end game scenario. 1 = notify players of end game time,  2 = game ended
+//so this is run 5 ticks after game starts and while the game hasn't been marked as ended
+if (current >= 5  && af1[30,2]!=2) { 
+   
+    //check to see if the game is over and notify winners
+	#include include/displayEndGameTime.rsi
+	
+	//check to see if players should be alerted of chronoports
+	#include include/chronoportAlerts.rsi
+	
+	//if playing Assassin mode, check if players' achrons are dead
+	#include include/assassinCheck.rsi
+	
+	//check if comm hubs are being captured or released
+	#include include/capturableCommHub.rsi
+	
+	//check one player every tick, but randomize it such that they're not all done at once
+	// multiplying by a prime number and that mixes it up nicely and taking the modulus
+	// of the maximum number of players (15) does the trick in this case
+	int p = (((current / 2) * 11) % 15);
+
+	int LOSER = 0;
+    //int p = 0; for (p=0;p<=15;p=p+1) { //uncomment this if we want to check all players everytime
+	if ((( enabled >> p) & 1) == 1 ) {  //only check enabled players, ie: check the 4 players in a 4-player scenario
+		if (((active >> p) & 1) == 1) { //active players who are currently still alive
+			
+			int class = 0;		
+			int playerNum = p; 
+			#include include/calculatePlayerHealth.rsi
+			
+			if ( playerHealth == 0 && (~(nonPlayer>>p))&1) {  //show the loser their losing time
+				
+				int TIME_OF_DEFEAT = 0;
+				
+				//the Scenario Monitor's AP is used to record which player it marked as defeated
+				//bit 0-15 represent each player. When the AP bit is set, that means this player has been marked as defeated
+				int ap = unit->AdditionalParameters;
+				
+				//only store the defeat if this scenario monitor has not already marked this loss
+				if (((ap>>p)&1)==0) { 
+
+					//achronal fields 2-16 (inclusive) store player's earliest defeat times 
+					PERFORM GET_ACHRONAL_FIELD (p+2);
+					//no loss time stored for this player or this loss time is same or earlier than what's already stored
+					if (perf_ret==0 || current <= perf_ret[0,28]) { 
+
+						TIME_OF_DEFEAT = current; //store this current (absolute) time as the time of defeat
+						
+						//most significant bit is used as a flag to mark whether the player was already notified of this defeat
+						//player was already notified, possibly by another timewave for this time
+						if ( perf_ret[31] ) { TIME_OF_DEFEAT[31]=1; } 
+						
+						//however if this time (current) is less than stored, don't set this bit to re-notify the player
+						if (current<perf_ret[0,28]) {
+							TIME_OF_DEFEAT[31]=0;
+							player = p;
+							say_to_var "DefeatedTextSound"; //replay the defeated warning sound
+							say "";
+						}
+						
+						target = p + 2;
+						PERFORM SET_ACHRONAL_FIELD TIME_OF_DEFEAT; //store the current time as this player's loss time
+					}	
+					
+					ap = ap | (1 << p); //update the scenario monitor with this player's defeated AP bit
+					PERFORM SET_ADDITIONAL_PARAMS ap;
+								
+				}
+				
+				#include include/playerLost.rsi
+				
+				//player is not officially defeated yet, and hasn't been warned, so warn them of defeat
+				if (!LOSER && TIME_OF_DEFEAT > 0 && !TIME_OF_DEFEAT[31]) { 
+					TIME_OF_DEFEAT[31] = 1;   //store bit that player has been warned
+					target = p + 2;
+					PERFORM SET_ACHRONAL_FIELD TIME_OF_DEFEAT;
+					
+					int totalSecs = TIME_OF_DEFEAT[0,28] / $TPS;
+					$CALCULATE_MIN_SEC_HOUR
+
+					player = p;
+					say_to_var "DefeatedText"; 
+					say "WARNING: You were defeated at ";
+					$SAY_CALCULATED_TIME
+					
+				}
+			} else {
+				//player is alive, so make sure that if he has a defeated time stored, it's not at this time
+				PERFORM GET_ACHRONAL_FIELD (p+2);
+				if (current==perf_ret[0,28]) { //player is alive at this time
+					target = p + 2;
+					PERFORM SET_ACHRONAL_FIELD 0; //clear out this defeated time
+					player = p;
+					say_to_var "DefeatedText"; //clear the defeated text message from their screen
+					say "";
+				}
+			
+			}
+		}
+		else { //Surrendered or disconnected?
+			if ((af2 >> (15 + p) & 1) == 0) {
+				PERFORM PLAYER_LOST (1 << p); //player p lost
+				LOSER = 1;			
+				af2 = af2 | ( 1 << (p + 15));
+				target = 1; PERFORM SET_ACHRONAL_FIELD af2; //update the af2 bit for the surrendered player
+				int x =0;
+				for (x=0;x<=15;x=x+1) { //notify other players of this player's surrender
+					if ( ( enabled >> x) & 1 == 1 ) {  
+						player = x;
+						say_to_var "";
+						say "UPDATE:   Player ", p+1, " has surrendered";
+					}
+				}
+			}
+			
+			af1[0,28] = present;              //store the time as  present, since win isn't via defeat
+		}
+	}
+    //}
+	
+	//run heuristic for computer players to check if they should surrender because they have no chance of winning, i.e.:
+	// < 20% of strength, taking into account resources, ability to produce and non-turret, attack-capable units
+	#include include/surrenderHeuristic.rsi
+	
+  if (LOSER==1) { //a player just lost
+		int end_game = 0;
+		#include include/standardVictory.rsi
+		// print "End Game? ", end_game, "\n";
+	  if ( end_game == 1) { //1 team remains, they are the winner
+			af1[30,2] = 1;
+      target = 0; PERFORM SET_ACHRONAL_FIELD af1;  //end scenario in displayendgametime, give SM chance to say_to_var endgame time before exiting
+			//PERFORM END_SCENARIO;
+			//do NOT perform EXIT_ENGINE, so players can continue chatting
+    }
+  }
+    
+}

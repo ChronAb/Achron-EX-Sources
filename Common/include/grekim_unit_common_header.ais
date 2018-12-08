@@ -1,0 +1,285 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+// grekim_unit_common_header.ais  - common grekim header - NOT a standalone script
+// used by unit_common_header.ais
+
+int setAdditionalParameters = 0;
+
+if (myObjective==0) {
+	if (AP_PLAYER) { //player bit should not be set if idle
+		ap[$PLAYER_BIT] = 0;
+		AP_PLAYER = 0;
+		setAdditionalParameters = 1;
+	}
+}  
+else {
+	skip = 8192;    //increase the chance of checking for commander for autohierarchy
+}
+
+myStatus = unit->Status;  //store status for reuse
+
+if (myStatus[$CAP_BIT_1]) {  //just teleported capbit is set (capbit 1)       
+	PERFORM $ACTION_TELEPORTED unit; //clear the teleported capbit1
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	ap = 0;
+	setAdditionalParameters = 1;
+}
+
+
+if (myObjective==$OBJECTIVE_CHRONOPORTED) {
+	if (ap[$STOREDUNIT]>0) {
+		myCommander = ap[$STOREDUNIT];
+		ap[$STOREDUNIT] = 0;
+		setAdditionalParameters = 1;
+		PERFORM $ACTION_CHANGE_COMMANDER myCommander; 
+	}
+}
+
+
+int command = 0;
+if (myCommander->IsAlive != 1) {
+	command = 0; 
+	if (myCommander != 0) {          
+		PERFORM $ACTION_CHANGE_COMMANDER 0;  //set self as commander
+		myCommander = unit;
+	}
+	
+	if (unit->Action==$EVENT_CREATED) { //was just created
+		object creator = unit->Parent;
+		int crank = creator.Rank;
+		//idling, creator is progenerating unit, means this one was just created
+		if (myObjective==0 && (crank==$GREKIM_PROGENERATION_RANK || 
+							   crank==$GREKIM_POD_PROGENERATION_RANK)) 
+		{ 
+		
+			int rally = creator->ObjectiveParameters;
+			if (rally>0 && rally!=$INVALID_POSITION) { //progenerating unit has rally point set	
+				if (rally[$Zpos] == 31) {  //rally point is set to a unit
+					myCommander = rally[0,16];
+					if (myCommander>0 && myCommander.Rank == $ARCTICUS_RANK) {
+						PERFORM $ACTION_CHANGE_COMMANDER myCommander;						
+					} else {
+						myCommander = creator->Commander;
+						if (myCommander>0 && myCommander.Rank == $ARCTICUS_RANK) {
+							PERFORM $ACTION_CHANGE_COMMANDER myCommander;						
+						}
+					}
+					PERFORM NOTHING;
+				} 				
+				
+				//othrewise, attack-move to the rally position
+				ap              = 0;
+				ap[$ATTACK_BIT] = 1;
+				ap[6,3]         = $OBJECTIVE_ATTACKING;
+				if (rally[$Zpos]==0 && unit.Rank>=$AIR_RANK) { //airunit and rally is on a ground tile
+					PERFORM GET_MAP_NEXT_Z_POSITION_UP rally;
+					rally = perf_ret;
+				}
+				PERFORM SET_PARAM rally;
+				PERFORM SET_ADDITIONAL_PARAMS ap;
+				PERFORM SET_OBJECTIVE $OBJECTIVE_ATTACKING;
+				myCommander = creator->Commander;
+				if (myCommander>0 && myCommander.Rank == $ARCTICUS_RANK) {
+					PERFORM $ACTION_CHANGE_COMMANDER myCommander;						
+				}
+				PERFORM NOTHING;
+								
+			}
+			else {
+				//conect to creator's commander arcticus if one exists
+				myCommander = creator->Commander;
+				if (myCommander>0 && myCommander.Rank == $ARCTICUS_RANK) {
+					PERFORM $ACTION_CHANGE_COMMANDER myCommander;						
+				}
+			
+			
+			
+				//run the rotate action but don't actually rotate to a different angle to
+				//'detach' from progenotor by running a non-0 tick action so that unit->Action
+				//will no longer be EVENT_CREATED
+				PERFORM $ACTION_ROTATE unit->Rotation;
+			}
+		}
+		
+	}
+		
+} 
+else {
+	int mcclass = myCommander->Class;
+	if (mcclass==$ARCTICUS_CLASS ) {  //arcticus is commander - leave it
+		command = 1;
+		myArcticus = myCommander;
+	}
+	else if (mcclass==$ARCTICUS_MOVE_CLASS ) {  //a moving arcticus is commander - leave it
+		command = 0; 
+	}
+	else { //someone else is commander, set self  
+		if (myCommander != 0) {     
+			PERFORM $ACTION_CHANGE_COMMANDER 0;  //set self as commander
+			myCommander = unit;
+		}	
+	}
+}
+
+
+if ($IS_BREAKTSS_UNIT && myObjective == $BREAKTSS_UNIT_OBJ) { }
+else {
+if (command) {
+
+	//if a commander exists, run this section 
+	bap = myCommander->AdditionalParameters; // Base's AP
+	object ordinate = bap[$STOREDUNIT];       //base's unit to-look-at
+
+    if (bap[$ARCTICUS_LINK] && (myCommander != ordinate)) {    //LINK BIT: set new base as commander 
+        if (ordinate->IsAlive==1) {
+         //   ap[$STOREDUNIT] = ordinate; //store boss into AP
+            PERFORM SET_ADDITIONAL_PARAMS ap; 
+            $print "Relinking to ", ordinate, "\n"; //link to new arcticus
+            PERFORM $ACTION_CHANGE_COMMANDER ordinate;  //if current bases commands so
+            PERFORM NOTHING;
+        }
+    }
+
+    if (ordinate->IsAlive != 1) { //Ordinate unit died, set ordinate to own base
+        ordinate = myCommander;
+    }
+    
+    
+    OrdinateOp = ordinate->ObjectiveParameters;
+    
+	
+	//FOLLOW COMMANDER ARCTICUS'S ORDERS if Hierarchy Control enabled from lobby
+		//Hierarchy Control coopts function of CLEAR_QUEUE_AFTER_CHRONOPORT
+		$INIT_GLOBAL_CHRONAL_PROPERTIES
+    if ( bap[$ARCTICUS_COMMAND] && $CLEAR_QUEUE_AFTER_CHRONOPORT ) { 
+		int OP = unit->ObjectiveParameters;
+        //move or attack dispatch
+		if ( (bap[$ARCTICUS_ATTACK] || bap[$ARCTICUS_MOVE]) && (OP != OrdinateOp) ) { 
+			int newobjective = 0;
+            if (bap[$ARCTICUS_ATTACK]) { //attack
+                ap[$ATTACK_BIT] = 1;
+                newobjective = $OBJECTIVE_ATTACKING;
+            }
+            else {
+                if (bap[$ARCTICUS_MOVE]) { //move
+                    temp1 = unit.Length;
+                    if (OrdinateOp <_> unit <= (temp1 * temp1 + 16) ) { //already there
+                        ap = 0;
+                        newobjective = -1;
+                        setAdditionalParameters = 1;
+                    }
+                    if (OP != OrdinateOp && myObjective != $OBJECTIVE_MOVE_DISPATCH) {
+                        ap[$MOVE_BIT] = 1;
+                        newobjective = $OBJECTIVE_UNIT_MOVE;
+                    }
+                }
+            }
+            
+            if (newobjective != -1) {  //if not already there, do the action: Move or Attack      
+				ap[$STOREDUNIT] = 0; 
+                PERFORM SET_PARAM OrdinateOp; //$print "base OP: ", OrdinateOp, "\n";
+                if (bap[$ARCTICUS_ATTACK]) { //attack
+                    if (bap[$ARCTICUS_MOVE]) {  //attacking a specific unit
+						ap[$UNIT_BIT] = 1; 
+						newobjective = $OBJECTIVE_ATTACKING_UNIT;
+					} 
+                    else { ap[$UNIT_BIT] = 0; } //attacking an area
+                }
+                if (bap[$ARCTICUS_COMMAND]) { ap[$PLAYER_BIT] = 0; } //arcticus override bit
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+                PERFORM SET_ADDITIONAL_PARAMS ap;
+                PERFORM SET_OBJECTIVE newobjective;
+				//if unit was defending, clear its queue so it stops
+				if (myObjective==$OBJECTIVE_UNIT_DEFEND) { PERFORM CLEAR_QUEUE; }
+                PERFORM NOTHING;
+            }
+        }
+		//stop dispatch
+		if (bap[$ARCTICUS_STOP] && ap[$OBJECTIVE]!=$OBJECTIVE_STOP) {
+			int moves = 0; //if unit is not attacking or moving, the value in the AP is not revelant, so set this to 0
+			if (myObjective == $OBJECTIVE_ATTACKING || myObjective == $OBJECTIVE_ATTACKING_UNIT ||
+				myObjective == $OBJECTIVE_UNIT_MOVE || myObjective == $OBJECTIVE_UNIT_DEFEND) {
+				moves = ap[$MOVE_COUNTER];  //move counter will be non-zero if recent order was issued	
+			}			
+
+			if( !(AP_PLAYER  && moves > 0)) {	
+				#include common/stop.ais
+				PERFORM NOTHING;
+			}
+		}
+    }
+
+		if ( bap[$ARCTICUS_FOLLOW] && $CLEAR_QUEUE_AFTER_CHRONOPORT ) { //FOLLOW BIT is set - follow group loader
+					myCommander = ordinate; 
+			if (myCommander!=unit) {
+				//check captain's bits. follow captain's objectives
+				cap = myCommander->AdditionalParameters;
+				commanderObjective = myCommander->Objective;
+				commanderOP = OrdinateOp; //myCommander->ObjectiveParameters;
+				
+				//look at commander's objective and objective parameters if it just issued a new order
+				//and the unit is current not following a new player issued order
+				int moves = 0; //if unit is not attacking or moving, the value in the AP is not revelant, so set this to 0
+				if (myObjective == $OBJECTIVE_ATTACKING || myObjective == $OBJECTIVE_ATTACKING_UNIT ||
+					myObjective == $OBJECTIVE_UNIT_MOVE || myObjective == $OBJECTIVE_UNIT_DEFEND) {
+					moves = ap[$MOVE_COUNTER];  //move counter will be non-zero if recent order was issued	
+				}				
+				int capMoves = cap[$MOVE_COUNTER]; //captain's move counter, will be non-zero if recent order was issued
+				
+				//if the commander is stopped, but this unit is not and 
+				//the unit is not following a  recent player-issued order, stop this unit
+				if (cap[$OBJECTIVE]==$OBJECTIVE_STOP && ap[$OBJECTIVE]!=$OBJECTIVE_STOP && !(AP_PLAYER  && moves > 0)) {					
+					#include common/stop.ais
+					PERFORM NOTHING;
+				}
+				
+				//if player just issued a move, attack or stop order then ignore commander
+				if ( (AP_PLAYER && moves > 0) || ap[$OBJECTIVE]==$OBJECTIVE_STOP  || ap[$OBJECTIVE]==$OBJECTIVE_SLINGSHOT_WAIT) { }
+				else { //otherwise follow commander if it just issued an order
+					if (( commanderObjective == $OBJECTIVE_ATTACKING || commanderObjective == $OBJECTIVE_ATTACKING_UNIT ||
+						commanderObjective == $OBJECTIVE_UNIT_MOVE || commanderObjective == $OBJECTIVE_UNIT_DEFEND) && 
+						capMoves > 0 &&  (myObjective < 8 || myObjective==$OBJECTIVE_ATTACKING_UNIT) ) {
+						//$print "Got new commander objective\n";
+						#include common/include/unit_commander_objective.ais  
+					}
+				}
+			}
+
+		}
+		
+
+	if (setAdditionalParameters) { PERFORM SET_ADDITIONAL_PARAMS ap; }
+}
+else { //no arcticus!
+	if ($AUTO_HEIRARCHY && !$AUTOPILOT) { 
+        if (AP_PLAYER==1 || ap[$OBJECTIVE] == $OBJECTIVE_CLEAR_COMMANDER) { skip = -1; }    
+		PERFORM RAND; //return 0-32k     
+		if (perf_ret <= skip) { // about once every 5 seconds (assuming 24tics/sec) if idle
+			temp2 = unit.Rank - 20;  //allow for leeway of 20
+			int queryAP = 0;
+			if (temp2 >= $AIR_RANK) {
+			//air unit of higher or same rank but not subordinate
+				target = QUERY UNIT [unit] MAX [query.Rank] WHERE [  (temp1=query.Rank)>=temp2 && temp1>=$AIR_RANK && (query->Commander)->IsAlive==1 &&
+					(queryAP = query->AdditionalParameters)[$PLAYER_BIT]!=1 && queryAP[$OBJECTIVE]!=$OBJECTIVE_CLEAR_COMMANDER &&  //not requesting to be left out of command
+					!(query->Status & ($FROZEN_TSS_COMMJAM)) &&   //not commjammed or tss'ed
+					query->Owner == player ];  //look only for your own units		
+			} else { 
+			//look for ground unit of higher or same rank but not subordinate
+				target = QUERY UNIT [unit] MAX [query.Rank] WHERE [ (temp1=query.Rank)>=temp2 && temp1 < $AIR_RANK && temp1 >= $BUILDINGS_RANK && 
+					(query->Commander)->IsAlive==1 &&
+					(queryAP = query->AdditionalParameters)[$PLAYER_BIT]!=1 && queryAP[$OBJECTIVE]!=$OBJECTIVE_CLEAR_COMMANDER &&  //not requesting to be left out of command
+					!(query->Status & ($FROZEN_TSS_COMMJAM)) &&   //not commjammed or tss'ed
+					query->Owner == player ];  //look only for your own units					   			   
+			}
+			if (target>0) {
+				target = target->Commander;
+				PERFORM $ACTION_CHANGE_COMMANDER target;
+				myCommander = target;
+			}
+		}
+	}
+	
+}
+}
+
+

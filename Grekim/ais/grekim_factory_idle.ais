@@ -1,0 +1,220 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+//base class progen units idle mode, look for other progenitors to set the cap bits
+//allowing themselves to produce correct units
+//store the two best 'mates' into AdditionalParameters, most sig 16 bits and least sig 16 bits.
+//and check if those mates are still valid every other tick
+//then, twice per second, check to see if there are other progen units nearby that are 'better', 
+//eg, prioritize mates that already have another mate next to them to complete a triad
+
+//Also performs Smart Production functions
+
+PERFORM GET_CUR_TIME;
+int curtime = perf_ret;
+int apidle = unit->AdditionalParameters3;
+int uclass = unit->Class;
+int aclass= 0;
+query_vis_distance = -1;
+
+
+/*Smart Production:
+	All units complete auto-production within a 90 tick (5s) window, occuring every
+	sixty seconds. Timing in the window is based on unit number so resources can be
+	re-evaluated in between.
+*/
+int period = 1620; //base class auto-production period is 90 s
+int offset = 0;
+
+/*if(apidle >= 4){//Special extra conditions for pod class auto-production
+	period = 2160; //pod class period is 120 s (2 minutes)
+}*/
+if(uclass == $OCTO_FACTORY_CLASS){
+	offset = 540; //Octo-progen pod auto-production is offset by 30 s
+}
+if(uclass == $PHARO_FACTORY_CLASS){
+	offset = 1080; //Pharo-progen pod auto-production is offset by 60 s
+}
+
+if(curtime%period==unit%90+offset){//Is this tick my turn?
+	if (apidle!=0 && unit->Armour==0 && player->$QPlasma>=$QP_SMART_THRESHOLD
+		&& player->$Power > $POWER_SMART_THRESHOLD) {//are the common smart-production conditions met?
+		
+		int oprogen = apidle + 37;
+		if(apidle <= 3){//if making base class -> good to go
+			PERFORM SET_OBJECTIVE oprogen;//try to make the unit
+			PERFORM NOTHING;
+		}
+		
+		else{
+		
+			if(player->$LCrystals>=$LC_SMART_THRESHOLD){//Pods
+				PERFORM SET_OBJECTIVE oprogen;//try to make the unit
+				PERFORM NOTHING;
+			}
+			
+		}
+	}
+}
+
+
+//OBJECTIVE NUMBER:
+//If orders are queued and objective != 0 then change to 0
+//Otherwise, every 6 ticks:
+//if idle objective number does not match AP3 value from last unit produced
+//then change to match
+if(unit->NumQueuedObjectives > 0){
+	if(unit->Objective != 0) {	PERFORM SET_OBJECTIVE 0; }
+}
+else{
+	if (curtime%6==0) {
+		int oidle = 0;
+		if(apidle >= 1) oidle = apidle + 21;
+		if( unit->Objective != oidle) {	PERFORM SET_OBJECTIVE oidle; }
+	}
+}
+
+
+if (curtime%87==0) {
+	PERFORM CLEAR_LAST_ATTACKED_DIRECTION;
+}
+
+object commander = unit->Commander;
+if ( commander>0 && commander.Rank != $ARCTICUS_RANK) {
+    PERFORM $ACTION_CHANGE_COMMANDER 0; 
+}
+
+//if (unit->Objective!=0) { 	PERFORM SET_OBJECTIVE 0; }
+
+
+//**Check for Mates**
+//Look for other progenitors to set the cap bits
+//Allows correct production options to appear in UI
+
+//**First check that your previous mates are still alive
+if (curtime[0] == 0) { //run this every other tick (if no Vanguard Tech)
+	int AP = unit->AdditionalParameters;
+	int status = unit->Status;
+	int update = 2; //update state variable: 
+		//0 - no further updating needed;
+		//1 - continue updating; 
+		//2 - A needs updating
+	int updateB = 1;
+	
+	if (player->Advancements[$GREKIM_ADV_VANGUARD]){
+		update = 0;
+		if (!status[$CAP_BIT_2] || !status[$CAP_BIT_3]){
+			PERFORM $ACTION_A;
+			PERFORM $ACTION_B;
+			PERFORM $ACTION_C;
+		}
+	}
+	
+	//Check on mate A
+	if (update > 0){
+		object A = AP[0,16];
+		int alive = A->IsAlive;
+		if (alive==1) aclass = A->Class;
+		
+		if (status[$CAP_BIT_2] && alive==1){
+			if (aclass==$ARCTICUS_CLASS && A<_>unit <= 3600) update = 0;
+			else if ( (aclass==$OCTO_FACTORY_CLASS || aclass==$SEPI_FACTORY_CLASS || aclass==$PHARO_FACTORY_CLASS) && A<_>unit <= unit.SightHRange2 ) {
+				update = 1;
+			}
+		} 
+		
+		if (update == 2){
+			PERFORM $ACTION_CLEAR_A; 
+			AP[0,16] = 0;
+			aclass = 0;
+		}
+	
+	//Check on mate B
+	if (update > 0){
+		object B = AP[$STOREDUNIT];
+		alive = B->IsAlive;
+		if (alive==1) aclass = B->Class;
+		
+		if (status[$CAP_BIT_3] && alive==1){
+			if ( (aclass==$OCTO_FACTORY_CLASS || aclass==$SEPI_FACTORY_CLASS || aclass==$PHARO_FACTORY_CLASS) && B<_>unit <= unit.SightHRange2 ) {
+				update = update - 1; updateB = 0;
+			}
+		} 
+		
+		if (updateB == 1){
+			PERFORM $ACTION_CLEAR_B; 
+			AP[$STOREDUNIT] = 0;
+		}
+		
+		//check that A and B are still in range of each other
+		if (update == 0 && status[$CAP_BIT_4] && A<_>B > unit.SightHRange2){
+			PERFORM $ACTION_CLEAR_C;
+		}
+	}}
+	
+	if (update > 0) { PERFORM SET_ADDITIONAL_PARAMS AP; }
+}
+
+//**Look for new mates
+if (curtime % 9 != 0 || player->Advancements[$GREKIM_ADV_VANGUARD]) { PERFORM NOTHING; }
+//only run this last part every 2/sec
+
+int ap = unit->AdditionalParameters;
+int myStatus = unit->Status;
+object mateA = 0;
+
+
+//First, see if you can find an Arcticus in range
+if(aclass==$ARCTICUS_CLASS) PERFORM NOTHING;
+if(aclass!=$ARCTICUS_CLASS){
+	query_vis_distance = 60; 
+	mateA = QUERY UNIT [unit] MAX [query->Energy] WHERE [query->Class == $ARCTICUS_CLASS && query->HP != 0 && query->IsAlly==1];
+	query_vis_distance = -1;
+	if (mateA->IsAlive==1){
+		ap[0,16] = mateA;
+		ap[$STOREDUNIT] = mateA;
+		PERFORM $ACTION_CLOAK;
+		PERFORM SET_ADDITIONAL_PARAMS ap;
+		PERFORM NOTHING;
+	} 
+}
+
+
+int b = $SEPI_FACTORY_CLASS;
+int a = $PHARO_FACTORY_CLASS;
+if (uclass==$SEPI_FACTORY_CLASS) {
+    b = $OCTO_FACTORY_CLASS;
+    a = $PHARO_FACTORY_CLASS;
+} 
+if (uclass==$PHARO_FACTORY_CLASS) {
+    b = $OCTO_FACTORY_CLASS;
+    a = $SEPI_FACTORY_CLASS; 
+}
+
+int apupdate = 0;
+//prioritize mates that already have a third triad buddy connected to them (capbits 2 and 3 set)
+int qs = 0;
+mateA = QUERY UNIT [unit] MAX [(qs=query->Status)[$CAP_BIT_2] + qs[$CAP_BIT_3] ] WHERE [ query->Class==a  && query->Energy > 1 && query->Owner==player ];
+if (mateA->IsAlive==1 && mateA<_>unit <= unit.SightHRange2 && ap[0,16]!=mateA) {
+	ap[0,16] = mateA;
+	PERFORM $ACTION_A;
+	apupdate = 1;
+} 
+
+object mateB = QUERY UNIT [unit] MAX [(qs=query->Status)[$CAP_BIT_2] + qs[$CAP_BIT_3] ]  WHERE [ query->Class==b && query->Energy > 1  && query->Owner==player ];
+if (mateB->IsAlive==1 && mateB<_>unit <= unit.SightHRange2 && ap[$STOREDUNIT]!=mateB) {
+	ap[$STOREDUNIT] = mateB;
+	PERFORM $ACTION_B;
+	apupdate = 1;
+
+}
+
+mateA = ap[0,16];
+mateB = ap[$STOREDUNIT];
+if (mateA>0 && mateB>0 && mateA<_>mateB <= unit.SightHRange2) {
+	PERFORM $ACTION_C;
+}
+
+if (apupdate) { PERFORM SET_ADDITIONAL_PARAMS ap; }
+

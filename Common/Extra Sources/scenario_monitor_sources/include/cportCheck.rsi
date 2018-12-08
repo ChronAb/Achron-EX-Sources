@@ -1,0 +1,38 @@
+// --- Searches the current time for any and all chronoport actions
+//      CREATES:
+//          NewCportA =     =1 if true for arrival
+//          NewCportD =     =1 if true for departure
+// 
+// Code created by IphStich.  All copyrights reserved.
+
+
+// - 0) initialise variables
+int NewCportA=0; int NewCportD=0;
+//if (current%30==29) { // execute every 6 ticks, CPU concerns
+//object tu = unit; PERFORM GET_XPORT_TIMEOUT; int timeout=perf_ret;
+
+// - 1) Check for new chronoport arrivals
+//unit=tu+0;int LastCport=unit->AdditionalParameters;
+if (current%30==29){ // if: last chronoport arrival has finished animating
+    // query: count: chronoport arrivals
+    /*unit=tu;*/int cported = $GET_UNIT_COUNT [query->Action==63 && query->IsAlive==1];
+    if (cported>0) {
+        //player=0;say "AAA";
+        //unit=tu+0;PERFORM SET_ADDITIONAL_PARAMS current; // update record for last arrival
+        NewCportA=1; // return value
+    }
+}
+
+// - 2) Check for new chronoport departures
+//unit=tu+2;LastCport=tu->AdditionalParameters;player=0;
+if (current%24==0) { // if: last chronoport departure has finished animating
+    // query: count: chronoport departures
+    /*unit=tu;*/int cported = $GET_UNIT_COUNT [query->Action==60];
+    if (cported>0) {
+        //player=0;say "___D  ", current;
+        //unit=tu+2;PERFORM SET_ADDITIONAL_PARAMS current; // update record for last departure
+        NewCportD=1; // return value
+    }
+}
+//unit=tu;
+//}

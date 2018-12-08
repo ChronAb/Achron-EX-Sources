@@ -1,0 +1,29 @@
+/*******************************************************
+* Code to define and populate the generic nonPlayer mask
+*
+* Defines: NONPLAYER_AF 120: Achronal Field for storing non-player bitmask
+*
+* Global vars defined: nonPlayer: Players who are not bound by the standard loss condition
+*******************************************************/
+
+//Generic non-player bitmask. Currently only used for observers.
+#define NONPLAYER_AF 120;
+PERFORM GET_ACHRONAL_FIELD $NONPLAYER_AF;
+int nonPlayer = perf_ret;
+
+if(current == present && present == 1){
+	int x = 0;
+	for (x = 0; x<15; x = x + 1){
+		if ((enabled>>x)&1){			
+			//Make sure all players that would lose at game start are automatically considered non-players.
+			//This will help avoid module execution ordering bugs
+			int playerNum = x;
+			int class = 0;
+			#include include/calculatePlayerHealth.rsi
+			if (playerHealth == 0) nonPlayer = nonPlayer | (1<<x);
+		}
+	}
+	
+	target = $NONPLAYER_AF;
+	PERFORM SET_ACHRONAL_FIELD nonPlayer;
+}	

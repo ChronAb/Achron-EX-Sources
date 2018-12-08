@@ -1,0 +1,33 @@
+// --- Removes the discontinuity at current
+//      USES:
+//          //$MaxFields      the end of the discontinuity list
+//      INPUT:
+//          //FIndex          the index of the discontinuity found at at current
+// 
+// Code created by IphStich.  All copyrights reserved.
+
+// - 0) Initialise
+{int FIndex=$MaxFields+1;
+
+// - 1) Search
+while (1) {
+    PERFORM GET_ACHRONAL_FIELD (FIndex+1); // get
+    if (perf_ret==0||FIndex>$MaxCP) {break;} // if: end
+    if (perf_ret==current) { // if: match
+        int ti=FIndex;
+        
+        // - Shift all
+        while (ti<=$MaxCP) {
+            PERFORM GET_ACHRONAL_FIELD (ti+2);
+            target=ti;PERFORM SET_ACHRONAL_FIELD (perf_ret);
+            PERFORM GET_ACHRONAL_FIELD (ti+3);
+            target=ti+1;PERFORM SET_ACHRONAL_FIELD (perf_ret);
+            if (perf_ret<=0) {ti=$MaxCP;}
+            ti=ti+2;
+        }
+    }
+}
+//$ListTest2
+}
+
+//$ListTest2

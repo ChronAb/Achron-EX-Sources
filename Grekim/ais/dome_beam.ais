@@ -1,0 +1,77 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+
+
+target = unit->ObjectiveParameters;
+
+int dist = |/(target<_>unit);
+int vd = |/(target<^>unit); //vertical distance
+
+int ucharge = unit->Ammo;
+
+if (ucharge==100 && unit->Status[$CAP_BIT_5]) { //charged beam, ready to fire
+
+	if ( target->IsAlive==1 && !(target->IsStasis) && dist < 100 && vd <= 31 ) {
+		target_is_position = 1;
+		PERFORM GET_CLOSEST_TARGET_POSITION_WITHIN_RANGE $ACTION_FIRE_BEAM;
+		int position =  perf_ret; 
+		target = position;
+		PERFORM $ACTION_FIRE_BEAM position;
+		//PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	} else {
+		$SAY_SHOOT
+		if (target->IsAlive!=1) { $SAY_TO_TARGET }
+		else if (dist >= 100 || vd>31 ) $SAY_TOOFAR
+		else if (target->IsStasis) $SAY_TSSED
+		else $SAY_LOS
+		PERFORM $ACTION_ERROR1;
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	}
+	
+}
+
+
+
+if (ucharge == 100 && target->IsAlive==1 && !(target->IsStasis) && dist < 100 && vd <= 31 ) {
+
+	int failure = 0;
+
+
+	PERFORM GET_CLOSEST_TARGET_POSITION_WITHIN_RANGE $ACTION_FIRE_BEAM;
+	int position =  perf_ret; 
+	if (position!=-1 && position!=$INVALID_POSITION) { 
+		target = unit; //this way the charge-beam animation is always pointing up from the dome
+		PERFORM $ACTION_PREP_BEAM;
+		if (perf_ret < 1)  {
+			$SAY_FIRE
+			failure = 1;
+		}
+	}
+	else {
+		$SAY_LOS
+		failure = 1;
+	}
+	
+	if (failure) {
+		PERFORM SET_OBJECTIVE 0;
+	}
+    
+    PERFORM NOTHING;
+ }
+ else {
+    if (ucharge < 100){
+			//$SAY_CHARGE
+			PERFORM NOTHING;
+		}
+		$SAY_SHOOT
+		if (target->IsAlive!=1) { $SAY_TO_TARGET }
+    else if (dist >= 100 || vd>31 ) $SAY_TOOFAR
+    else if (target->IsStasis) $SAY_TSSED
+		else $SAY_LOS
+		PERFORM $ACTION_ERROR1;
+    PERFORM SET_OBJECTIVE 0;
+}

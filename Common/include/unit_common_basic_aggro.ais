@@ -1,0 +1,157 @@
+// Assume Copyright (C) 2002-2011 Hazardous Software Inc.
+
+//Dallas Joder, 2014
+//Achron EX, **Unit Common Common Aggro Script**
+//Called in unit_common_idle_aggro.ais, and unit_attacking.ais
+
+
+//***TIME TO LOOK FOR ENEMIES TO ATTACK***
+
+PERFORM RAND;
+int temp_r = perf_ret;
+//if ( temp_r < 8192 ) {//25% chance to run each tick, eases CPU load and adds "more natural" reaction variance to simulation
+
+//set aggro ranges and optimal damage
+int qmaxHP = 0; //cache query.MaxHP.  if it's 0, the target is invulnerable
+int vis_h_range = unit.SightHRange;
+int query_range =  vis_h_range + 6; //default aggro radius = vision + 6
+#include common/include/unit_common_weapon_query_range.ais
+query_vis_distance = query_range;
+
+//set the ground or air and special type weights
+//Attack priority scores are negatively weighted against units of the Wreckage team (Owner==14)
+//Attack priority scores are positively weighted against healers and Achrons
+//air_weight and ground_weight positively weight scores in proportion to DPS
+
+//float wreck_weight = 0.0;
+//float medic_weight = 0.0;
+//float achron_weight = 0.0;
+float air_weight = 0.0;
+float ground_weight = 0.0;
+#include common/include/unit_common_weights.ais
+
+#define IS_HEALER ( query.Rank==$SOP_RANK || query->Class==$MFB_CLASS || query->Class==$BLACKBIRD_CLASS || query.Rank==$FOUNDATION_RANK || query.Rank==$REAPH_RANK)
+#define IS_COMBATANT (query.Rank>=$TURRET_RANK || query.Rank==$FOUNDATION_RANK || query.Rank==$REAPH_RANK)
+#define OPT_DMG ( mndmg * (1-(query->ZPosition <| 1)) + AA_mndmg * (query->ZPosition <| 1) )
+#define BASIC_WEIGHTS ( (1+wreck_weight*(query->Owner==14)) / (1+medic_weight*$IS_HEALER) /(1+achron_weight*(query.Rank==$ACHRON_RANK)) )**2
+#define ADV_WEIGHTS $BASIC_WEIGHTS * ( 1 + air_weight * ( 1 - (query->ZPosition <| 1) ) + ground_weight * (query->ZPosition <| 1 ) )**2
+
+
+//1. PERFORM SPECIAL LONGER RANGE SCANS FOR DEDICATED AG AND AA
+if ( spec_AA_range > 0 ) {
+	query_vis_distance = spec_AA_range;
+	closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG)**2 * $BASIC_WEIGHTS ] 
+			WHERE [!(query->IsAlly) && $IS_COMBATANT && query->ZPosition > 0 && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0];
+	query_vis_distance = query_range;
+}
+else if ( spec_AG_range > 0 ) {
+	query_vis_distance = spec_AG_range;
+	closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG)**2 * $BASIC_WEIGHTS ] 
+			WHERE [!(query->IsAlly) && $IS_COMBATANT && query->ZPosition == 0 && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0];
+	query_vis_distance = query_range;
+}
+
+
+
+//2. GENERAL SCAN FOR NORMAL COMBAT UNITS
+if (closestenemy < 1) {
+	
+	if ($IS_GROUND_ONLY_UNIT) {
+		//ground only units don't need weights
+		closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG)**2 * $BASIC_WEIGHTS ]
+				WHERE [!(query->IsAlly) && $IS_COMBATANT && query->ZPosition == 0 && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0];
+	}
+	else {
+		closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG)**2 * $ADV_WEIGHTS ]
+				WHERE [!(query->IsAlly) && $IS_COMBATANT && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0 ];    //don't look for buildings 			
+	}
+	
+	//2.1 Special melee scan: find nearest unit, irrespective hp 
+	if ($IS_MELEE) {
+		if (closestenemy->IsAlive==1 && closestenemy->HP!=0) { //an optimal closest+weakest enemy is nearby, now find any enemy that's even closer
+			object closest = QUERY UNIT [unit] MIN [ unit <_> query ] 
+					WHERE [!(query->IsAlly) && query->Owner!=14 && $IS_COMBATANT && query!=closestenemy && query->ZPosition==0 && query.MaxHP > 0];  
+			if (closest->IsAlive==1 && closestenemy->HP!=0) { //if there is a closer enemy, see how much closer it is than the weaker enemy
+				int dist_closest = closest<_>unit;
+				int dist_weakest = closestenemy<_>unit;
+
+				if (( dist_weakest - dist_closest ) > 3 ) {
+					closestenemy = closest; //store closest unit instead
+				}
+			} 
+		}
+	}
+
+	
+	//3. IF NO ATTACK-CAPABLE ENEMY FOUND, SEE IF BEING SHOT AT.
+			//if so move towards shooter; otherwise look for passive enemies (buildings) to attack
+	if (closestenemy < 1) {
+		int attackedVertical = unit->LastAttackedVDirection;
+		//first check if someone else is shooting you and move towards them if they are
+		if (attackedVertical && ( attackedVertical == $LAST_ATTACKED_V_DIRECTION_SAME || !$IS_GROUND_ONLY_UNIT )) {
+			//was attacked by something, check if there's a vecgir building nearby - they can attack but aren't turrets
+			closestenemy = 0;
+			int qc = 0;
+			closestenemy = QUERY UNIT [unit] MIN [ unit<_>query ] WHERE [!(query->IsAlly) && 
+						((qc=query->Class)>=$ACC_CLASS && qc<=$DEPOT_CLASS ) && query->IsStasis!=1 && query.MaxHP>0];   
+			if (closestenemy>0) {
+				if (closestenemy->IsAlive!=1 || closestenemy->HP==0) {
+					closestenemy = 0;
+				}
+			}
+			
+			if (closestenemy==0) {	
+				int lahd = unit->LastAttackedHDirection;
+				int direction = rottorad(lahd) + 3.1415926;	
+				int y = Y + 4.0 * sin(direction);
+				int x = X - 4.0 * cos(direction);
+				int todir=0; todir[$Xpos] = x;    todir[$Ypos] = y;    			
+				todir[$Zpos] = unitPosition[$Zpos];
+				
+				PERFORM CLEAR_LAST_ATTACKED_DIRECTION;	
+				query_vis_distance = -1; //reset query vis range		
+				dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ query <=> todir] WHERE [1]; //move towards shooter
+				dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+				if (dir && dir != $QUERY_EXHAUSTED) {
+					PERFORM $ACTION_MOVE dir;
+					ap[$STUCK_IDLE_ATTACK_APPROACH_BIT] = 0;
+					$SET_AP
+					PERFORM SET_ADDITIONAL_PARAMS2 0;
+					PERFORM NOTHING;
+				}
+				query_vis_distance = query_range;
+			}
+		}//*done with under-fire response 
+
+		
+	//4 NO ENEMY COMBATANTS TO ENGAGE, LOOK FOR TARGETS OF OPPERTUNITY
+			//look for any enemy, whatever it is
+			//Targets of oppertunity are prioritized by only distance * sqrt HP
+			
+		//4.0 SNIPERS MAY LOOK FOR TARGETS OF OPPERTUNITY BEYOND THEIR NORMAL RANGE
+		if ( opt_AG_range > 0 && ( closestenemy < 1 || temp_r < 8192 ) ) {//25% chance to overwrite previous target
+			query_vis_distance = opt_AG_range;
+			closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG)**2 * $BASIC_WEIGHTS ] 
+					WHERE [!(query->IsAlly) && $IS_COMBATANT && query->ZPosition == 0 && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0];
+			query_vis_distance = query_range;
+		}
+		if ( opt_AA_range > 0 && closestenemy < 1 ) {
+			query_vis_distance = opt_AA_range;
+			closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG)**2 * $BASIC_WEIGHTS ] 
+					WHERE [!(query->IsAlly) && $IS_COMBATANT && query->ZPosition > 0 && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0];
+			query_vis_distance = query_range;
+		}
+
+		//4.1 LOOK IN NORMAL RADIUS
+		if ( closestenemy < 1 ){
+			if ( $IS_GROUND_ONLY_UNIT) {
+				closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG) * $BASIC_WEIGHTS ]
+							 WHERE [!(query->IsAlly) && query->ZPosition==0 && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0];   
+			} else {
+				closestenemy = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP - $OPT_DMG) * $ADV_WEIGHTS ]
+							WHERE [!(query->IsAlly)  && query->IsStasis!=1 && (qmaxHP=query.MaxHP)>0];   
+			}
+		}
+			
+	}
+}

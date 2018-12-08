@@ -1,0 +1,25 @@
+				int totalSecs = current / $TPS;
+				$CALCULATE_MIN_SEC_HOUR
+
+				player = p;
+				say_to_var "endgameTime"; 
+				say "AT: ";
+				$SAY_CALCULATED_TIME
+				
+				PERFORM PLAYER_LOST (1 << p); //player p lost
+				LOSER = 1;
+				
+				af2 = af2 | ( 1 << (p + 15));
+				target = 1; PERFORM SET_ACHRONAL_FIELD  af2; //update the af2 bit for the lost player
+					
+				af1[0,28] = current; //store the final lost/won time 
+				
+	 			//loop through the possible 15 players and alert them of player p's loss
+				int x=0;
+				for (x=0;x<=15;x=x+1) {
+					if ( ( enabled >> x) & 1 == 1 ) {		
+						//direct which player should be viewing the say message
+						player = x;
+						say "UPDATE:   Player ", p+1, " has been eliminated"; //display the message to each player
+					}
+				}

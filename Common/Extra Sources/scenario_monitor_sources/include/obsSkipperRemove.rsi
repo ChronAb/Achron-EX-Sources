@@ -1,0 +1,25 @@
+// --- Removes the discontinuity at current
+//      USES:
+//          $MaxFields      the end of the discontinuity list
+//      INPUT:
+//          FIndex          the index of the discontinuity found at at current
+// 
+// Code created by IphStich.  All copyrights reserved.
+
+
+
+#include include/obsSkipperCheck.rsi
+//$ListTest
+//say " [",FIndex-($ListStart),"]";
+// - 1) Remove and shift the discontinuities
+while (1) {
+    PERFORM GET_ACHRONAL_FIELD (FIndex+1); int next=perf_ret; // read next entry
+    if (next==0 || FIndex+1>$MaxFields) {target=FIndex;PERFORM SET_ACHRONAL_FIELD 0;break;} // if: next entry is blank || next index is beyond list: end process
+    target=FIndex; PERFORM SET_ACHRONAL_FIELD next; // replace current entry with next entry
+    FIndex=FIndex+1;
+}
+//$ListTest
+
+if (current%30==29 && !(NewCportA)) {//player=0; say " { ", NewCportA, " }";
+    #include include/obsSkipperCPRemove.rsi
+}

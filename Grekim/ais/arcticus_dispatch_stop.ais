@@ -1,0 +1,17 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//arcticus_dispatch_stop.ais - script for arcticus base to override player issued commands and STOP units
+
+#include common/include/unit_common_header.aih
+
+int ap = 0;  
+ap[$ARCTICUS_STOP] = 1;
+ap[$ARCTICUS_COMMAND] = 1;
+ap[$ARCTICUS_PLAYER_DISPATCHED] = 1;
+
+ap[$STOREDUNIT] = unit; //store itself in upper 16 bits
+PERFORM GET_CUR_TIME;
+ap[11,5] = perf_ret[0,5]; //store first 5 bits of timestamp into bits 11-15 of AP
+if (perf_ret[0,5] == 0) { ap[11,5] = 31; } //never store 0 
+PERFORM SET_ADDITIONAL_PARAMS ap;
+PERFORM SET_OBJECTIVE 0;

@@ -1,0 +1,97 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.ais
+
+//Heal Self (Octopod and Sepipod)
+if (uclass == $OCTOPOD_CLASS || uclass == $SEPIPOD_CLASS){
+   PERFORM $ACTION_SELF_REPAIR;
+   PERFORM SET_OBJECTIVE 0;
+   PERFORM NOTHING;
+}
+
+
+//Heal target (SOPs and Ghosts)
+target = unit->ObjectiveParameters;
+
+if (target.Type != $TYPE_BIOLOGICAL || target->Action==2 || target->Action==50 ) {
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+    PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_OBJECTIVE 0;
+    PERFORM NOTHING;
+}
+
+if (unit->Energy == 0 && uclass!=$GHOST_CLASS) {
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+temp1 = target->HP;
+
+if (temp1 <= (target.MaxHP-5) && target->IsAlly==1  && temp1 > 0 && !(target->IsStasis) && !(target->IsStop)) { //don't fix if unit ain't broke
+    PERFORM RAND;
+    if (perf_ret < $LAD_CLEAR) {
+        PERFORM CLEAR_LAST_ATTACKED_DIRECTION; 
+    }
+	
+	if (ap[$UNIT_BIT]) {
+		ap[$UNIT_BIT] = 0;
+		setAdditionalParameters = 1;
+	}
+	if (ap[$MOVE_BIT]) {
+		ap[$MOVE_BIT] = 0;
+		setAdditionalParameters = 1;
+	}
+	if (ap[$ATTACK_BIT]) {
+		ap[$ATTACK_BIT] = 0;
+		setAdditionalParameters = 1;
+	}
+
+   if (unit <_> target < 36 && target<^>unit < 900) {
+		if (uclass==$SOP_RAISED_CLASS || uclass==$HOLLOWAY_RAISED_CLASS) {
+			PERFORM $ACTION_LOWER_WEAPON;
+			$SET_AP
+			PERFORM NOTHING;
+		}
+		
+       PERFORM $ACTION_HEAL target;
+       $SET_AP
+       PERFORM NOTHING;
+   }
+   else {
+		int dir = 0;
+		int counter = unit->AdditionalParameters2; //move counter to move in the same direction
+		if (counter>0) {           //more than 0 means already moving in a direction
+			counter = counter - 1; //decrease the counter
+			PERFORM SET_ADDITIONAL_PARAMS2 counter;
+			int rot = unit->Rotation; //get the unit's current rotation
+			$DIR_FROM_ROT             //set the dir to move to based on that unit's rotation
+		}
+		else {  //no move counter stored, so query where to move to next
+			
+			ignore_collision_with_unit = target;
+			dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ target <_> query ] WHERE [1];    
+			if (dir[0,8] >= 16) { counter = 0; } //moving up or down, so don't store counter
+			else {
+				counter = dir[16,8]; 			  //the counter is stored in the 3rd byte of dir
+				if (counter > 7) { counter = 7; } //cap it at 7 since AdditionalParameters2 only has 3 bits
+			}
+			PERFORM SET_ADDITIONAL_PARAMS2 counter;
+		}
+
+		dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+		if (dir && dir != $QUERY_EXHAUSTED) {
+			PERFORM $ACTION_MOVE dir; 
+			if ( perf_ret!=1) { 
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+			}
+			$SET_AP
+			PERFORM NOTHING;
+		}   
+    }
+}
+
+PERFORM SET_ADDITIONAL_PARAMS2 0;
+PERFORM SET_ADDITIONAL_PARAMS 0;
+PERFORM SET_OBJECTIVE 0;

@@ -1,0 +1,301 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+/* NOTES:
+*Values of AdditionalParameters2 are used to coordinate the multi-tick progen process
+*AP2=0 -> Step 1: Check whether progen conditions are met														(tick 1)
+*AP2=4 -> Step 2: Conditions met, perform first energy deduction 										(tick 1)
+*AP2=3 -> Step 3: Perform second energy deduction 																	(tick 1)
+*AP2=2 -> Step 4: Produce the unit 																									(tick 1)
+*AP2=1 -> Final Step: Unit produced, now transfer hierarchy and movement orders 		(tick 2+)
+*/
+
+
+//int uclass = unit->Class;
+int urank = unit.Rank;
+int ammo = unit->Ammo;
+int objective = unit->Objective;
+int oidle = objective - 16;
+int apidle = objective - 37;
+int insuf = 0;
+
+PERFORM GET_CUR_TIME;
+int current = perf_ret[0,14];
+query_vis_distance = -1;
+
+if( (urank==$ARCTICUS_RANK || urank==$ACHRON_RANK) && unit->AdditionalParameters2==0 ){
+//Step 0: Articii and Achrons have special rules and can skip to the final step (AP2=1)
+
+	if (urank==$ARCTICUS_RANK){
+		if (player->$LCrystals < $LC || player->$QPlasma < $QP) {
+			$SAY_RESOURCES
+			insuf =1;
+		} else {
+			if (unit->Energy < 60) {
+				$SAY_ENERGY
+				insuf =1;
+			}
+		}
+	}
+	else if (urank==$ACHRON_RANK) {
+		if (unit->Ammo < 1) insuf =1;
+		else if (PROGEN_CLASS == $OCTOPOD_CLASS && unit->Ammo < 3) insuf =1;
+	}
+	
+	if(insuf){
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM SET_ADDITIONAL_PARAMS3 0;
+		PERFORM NOTHING;
+	}
+
+	if(PROGEN_CLASS == $OCTO_CLASS) PERFORM $ACTION_PROGEN_SAME_O;
+	else if(PROGEN_CLASS == $SEPI_CLASS) PERFORM $ACTION_PROGEN_SAME_S;
+	else if(PROGEN_CLASS == $PHARO_CLASS) PERFORM $ACTION_PROGEN_SAME_P;
+	else if(PROGEN_CLASS == $OCTOLIGO_CLASS) PERFORM $ACTION_PROGEN_UP_O;
+	else if(PROGEN_CLASS == $SEPILIGO_CLASS) PERFORM $ACTION_PROGEN_UP_S;
+	else if(PROGEN_CLASS == $PHAROLIGO_CLASS) PERFORM $ACTION_PROGEN_UP_P;
+	else if(PROGEN_CLASS == $OCTOPOD_CLASS) PERFORM $ACTION_PROGEN_UP_O;
+	PERFORM NOTHING;
+}
+
+
+if(unit->AdditionalParameters2==0){
+//Step 1: Check whether progen conditions are met
+
+	/*
+	PERFORM RAND;
+	// 1/4 chance to run each tick (de-syncs production to avoid mistakes) 	
+	if (perf_ret > 8192 )  {
+		PERFORM NOTHING;
+	}*/
+	
+	object mate = 0;
+	object mate2 =0;
+	int menergy1 = 0;//vanguard tech energy modifiers
+	int menergy2 = 0;
+
+	if( !(unit->Status[$CAP_BIT_1]) && (PROGEN_CLASS == $SEPIPOD_CLASS || PROGEN_CLASS == $PHAROPOD_CLASS || PROGEN_CLASS == $SEPILIGO_CLASS || PROGEN_CLASS == $PHAROLIGO_CLASS || PROGEN_CLASS == $OCTOLIGO_CLASS) ){
+			say "This unit doesn't progenerate";
+			PERFORM SET_OBJECTIVE 0;
+			PERFORM SET_ADDITIONAL_PARAMS3 0;
+			PERFORM NOTHING;
+	}
+
+	if (player->$LCrystals < $LC || player->$QPlasma < $QP) {
+		$SAY_RESOURCES
+		insuf =1;
+	}
+
+//***Find your mates
+	if (!insuf) {
+		//**First check if there is an Arcticus to mate with 
+		query_vis_distance = 60; 
+		mate2 = QUERY UNIT [unit] MAX [query->Energy] WHERE [query->Class == $ARCTICUS_CLASS && query->HP != 0 && query->IsAlly==1];
+		query_vis_distance = -1;
+		
+		if( mate2 >= 1 ) {
+			//say "Found an Arcticus mate";
+			mate = unit;
+			if (unit->Energy < ENERGY) {
+				$SAY_ENERGY
+				insuf =1;
+			}
+		} //else say "No Arcticus mate";
+	}
+
+	if (!insuf && mate2 < 1) {
+		//**If no Arcticus, what should the mates be?
+		int mclass = $SEPI_FACTORY_CLASS;
+		int m2class = $PHARO_FACTORY_CLASS;
+		//base class triad
+		if (uclass <= $PHARO_FACTORY_CLASS) {
+			if(PROGEN_CLASS == $SEPI_CLASS || PROGEN_CLASS == $SEPIPOD_CLASS){
+				mclass = $OCTO_FACTORY_CLASS;
+			}
+			if(PROGEN_CLASS == $PHARO_CLASS || PROGEN_CLASS == $PHAROPOD_CLASS){
+				m2class = $OCTO_FACTORY_CLASS;
+			}
+		}
+		//pod class triad
+		else {
+			mclass = $SEPIPPOD_FACTORY_CLASS;
+			m2class = $PHAROPOD_FACTORY_CLASS;
+			if(PROGEN_CLASS == $SEPIPOD_CLASS || PROGEN_CLASS == $SEPILIGO_CLASS){
+				mclass = $OCTOPOD_FACTORY_CLASS;
+			}
+			if(PROGEN_CLASS == $PHAROPOD_CLASS || PROGEN_CLASS == $PHAROLIGO_CLASS){
+				m2class = $OCTOPOD_FACTORY_CLASS;
+			}
+		}
+		
+		//**Look for the mates
+		//query_vis_distance = 10; 
+		mate = QUERY UNIT [unit] MAX [query->Energy] WHERE [query->Class == mclass && query->Energy >= ENERGY && query->HP != 0 && query->IsAlly==1];
+		mate2 = QUERY UNIT [unit] MAX [query->Energy] WHERE [query->Class == m2class && query->Energy >= ENERGY && query->HP != 0 && query->IsAlly==1];
+		//query_vis_distance = -1;
+		//say "; mate ", mate, ", mate2 ", mate2;
+		
+		//Should I be one of the mates?
+		int MYENERGY = unit->Energy;
+		int MYHP = unit->HP;
+		int replace = 0;
+		if(mate < 1){replace = 1;}
+		else{ if(MYENERGY >= mate->Energy) replace = 1; }
+		/*This roundabout implementation is because there is a weird bug where
+		the script breaks if it tries to look at the Monitor's energy, 
+		but only for players > 0 (WTF!!!)*/
+		if(replace==1 && MYHP > 0){
+			if(uclass == mclass && MYENERGY >= ENERGY){
+				mate = unit;
+				menergy1 = 1;
+			}
+			else{
+				if(player->Advancements[$GREKIM_ADV_VANGUARD] && MYENERGY >= (2*ENERGY)){
+					mate = unit;
+					menergy1 = 2;
+				}
+			}
+		}
+		
+		replace = 0;
+		if(mate2 < 1){replace = 1;}
+		else{ if((MYENERGY-ENERGY*menergy1) >= mate2->Energy) replace = 1; }
+		
+		if(replace==1 && MYHP > 0){
+			if(uclass == m2class && (MYENERGY-ENERGY*menergy1) >= ENERGY){
+				mate2 = unit;
+				menergy2 = 1;
+			}
+			else{
+				if(player->Advancements[$GREKIM_ADV_VANGUARD] && (MYENERGY-ENERGY*menergy1) >= (2*ENERGY)){
+					mate2 = unit;
+					menergy2 = 2;
+				}
+			}
+		}
+	}
+
+		
+	//***Finish checking for problems
+	if (!insuf){
+		if (mate->IsAlive == 1 && mate2->IsAlive == 1) {
+			target = PROGEN_CLASS;
+			PERFORM CAN_PUT_CLASS; //check if there's room for another unit
+			if(perf_ret){
+				PERFORM SET_ADDITIONAL_PARAMS2 4; //all conditions met: proceed with progen
+			}
+			else { //no room
+				$SAY_OBSTACLE
+				insuf =1;
+			}
+		}
+		else { //no mate available
+				$SAY_NO_PROGEN
+				insuf =1;
+		}
+	}
+	
+	//***If any deficiencies, set AP3 and return to apropriate idle
+	if( insuf ){
+		if (unit->Objective!=$OBJECTIVE_PROGEN_OCTO_RP){
+			PERFORM SET_ADDITIONAL_PARAMS3 apidle;
+		}
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM SET_OBJECTIVE oidle; //for auto-production
+		PERFORM $ACTION_ERROR1;
+		PERFORM NOTHING;
+	}
+
+
+	if(unit->AdditionalParameters2==4){//Step 2: Perform first energy deductions
+		target = mate;
+		PERFORM $ACTION_PROGEN_ENERGY target;
+		if(menergy1==2) PERFORM $ACTION_PROGEN_ENERGY target;
+		PERFORM SET_ADDITIONAL_PARAMS2 3;
+	}
+	else{say "; failed at step 2";}
+
+	if(unit->AdditionalParameters2==3){//Step 3: Perform second energy deduction
+		if (mate2->Class != $ARCTICUS_CLASS){
+			target = mate2;
+			PERFORM $ACTION_PROGEN_ENERGY target;
+			if(menergy2==2) PERFORM $ACTION_PROGEN_ENERGY target;
+		}
+		PERFORM SET_ADDITIONAL_PARAMS2 2;
+	}
+	else{say "; failed at step 3";}
+
+
+	if(unit->AdditionalParameters2==2){ //Step 4: Produce the unit 
+		if(PROGEN_CLASS == $OCTO_CLASS) PERFORM $ACTION_PROGEN_SAME_O;
+		else if(PROGEN_CLASS == $SEPI_CLASS) PERFORM $ACTION_PROGEN_SAME_S;
+		else if(PROGEN_CLASS == $PHARO_CLASS) PERFORM $ACTION_PROGEN_SAME_P;
+		
+		else if(PROGEN_CLASS == $OCTOLIGO_CLASS) PERFORM $ACTION_PROGEN_UP_O;
+		else if(PROGEN_CLASS == $SEPILIGO_CLASS) PERFORM $ACTION_PROGEN_UP_S;
+		else if(PROGEN_CLASS == $PHAROLIGO_CLASS) PERFORM $ACTION_PROGEN_UP_P;
+		else if(uclass >= $OCTOPOD_FACTORY_CLASS){
+			if(PROGEN_CLASS == $OCTOPOD_CLASS) PERFORM $ACTION_PROGEN_SAME_O;
+			else if(PROGEN_CLASS == $SEPIPOD_CLASS) PERFORM $ACTION_PROGEN_SAME_S;
+			else if(PROGEN_CLASS == $PHAROPOD_CLASS) PERFORM $ACTION_PROGEN_SAME_P;
+		}
+		else{
+			if(PROGEN_CLASS == $OCTOPOD_CLASS) PERFORM $ACTION_PROGEN_UP_O;
+			else if(PROGEN_CLASS == $SEPIPOD_CLASS) PERFORM $ACTION_PROGEN_UP_S;
+			else if(PROGEN_CLASS == $PHAROPOD_CLASS) PERFORM $ACTION_PROGEN_UP_P;
+		}
+		//(sets AdditionalParameters2 = 1)
+		PERFORM NOTHING;
+	}
+	else{say "; failed at step 4";}
+}
+
+if(unit->AdditionalParameters2==1){ //Step 5: Transfer orders
+	target = unit->ActionParameters;
+	
+	if (target->IsAlive==1) {
+		if (unit->Objective==$OBJECTIVE_PROGEN_OCTO_RP){		
+			if (target->Class==$OCTO_CLASS) {
+				PERFORM SET_OTHER_OBJECTIVE $OBJECTIVE_MORPH_DISPATCH; // script is octo_rp.ais
+				PERFORM SET_OTHER_OBJECTIVE_PARAMS (unit->ObjectiveParameters)[0,24]; //ground location
+				say "Dispatching RP";
+				
+				PERFORM SET_PARAM $INVALID_POSITION; //Clear rally so crates don't get obstructed
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+			}
+		}
+		else{
+			PERFORM SET_OTHER_OBJECTIVE $OBJECTIVE_OFFSPRING_DISPATCH;
+			PERFORM SET_OTHER_OBJECTIVE_PARAMS (unit->ObjectiveParameters);
+			say "Dispatching to rally point";
+			
+			//leave new rally so auto-produced units know where to go
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+		}
+	}
+	else{//I guess it got killed or blocked 
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		say "Dispatch failed";
+	}
+}
+else{say "; failed at step 5";}
+
+if (unit->AdditionalParameters2==0) {//Task complete, now go to idle
+	if (urank==$ARCTICUS_RANK || urank==$ACHRON_RANK){
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+	}
+	
+	if (unit->Objective!=$OBJECTIVE_PROGEN_OCTO_RP){
+		PERFORM SET_ADDITIONAL_PARAMS3 apidle;
+		PERFORM SET_OBJECTIVE oidle; //for auto-production
+		PERFORM NOTHING;
+	}
+	
+	apidle = unit->AdditionalParameters3;
+	oidle = (apidle + 21)*(apidle > 0);
+	PERFORM SET_OBJECTIVE oidle;
+	PERFORM NOTHING;
+}
+else{say "; failed at end";}
+
+

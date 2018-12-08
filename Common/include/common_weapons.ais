@@ -1,0 +1,63 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+
+//check if best weapon choice is being used
+//most units use the following:
+//weapon0 - vs ground
+//weapon1 - vs air
+
+int weaponAction = $ACTION_ATTACK; //default return value to be the first (ground) weapon
+temp1 = 0;  //default to ground weapon
+
+if ($IS_WEAPON_LOWERED) {
+	PERFORM $ACTION_RAISE_WEAPON;
+	PERFORM NOTHING;
+}
+
+//Zayin Pulsers  and Octos can't attack air units
+if ($IS_GROUND_ONLY_UNIT) {  
+	if (position[$Zpos]!=0) {
+		if (myObjective!=0 && myObjective!=$OBJECTIVE_UNIT_DEFEND) { //not idling and not patrolling, so return to idle
+			PERFORM SET_ADDITIONAL_PARAMS 0;  
+			PERFORM SET_ADDITIONAL_PARAMS2 0; 
+			PERFORM SET_OBJECTIVE 0;  
+			PERFORM NOTHING;			
+		}
+		position = -1;  //invalidate the position being targeted, so that it cannot be fired at
+	}
+} 
+else //all other units use separate weapons except these, that use one weapon for both types of targets
+	if (
+		//uclass != $MARINE_RAISED_CLASS &&
+		uclass != $CRUISER_CLASS &&
+		uclass != $BLACKBIRD_CLASS &&
+		uclass != $VIR_SHIN_RAISED_CLASS && 
+		uclass != $DJELT_RAISED_CLASS && 
+		uclass != $KILDEN_RAISED_CLASS && 
+		uclass != $DAMATH_RAISED_CLASS && 
+		uclass != $PULSER_S_CLASS && 
+		uclass != $HALCYON_S_CLASS &&
+		uclass != $WINTERS_RAISED_CLASS 
+		) {
+
+	int I = 0;
+	//store 1 into I if the position we're attacking is ground
+	if ((targetIsOnGround && position[$Zpos] == 0) || position == -1) { 
+		I = 1; 
+	} 
+	else { 
+		I = 0; 
+		weaponAction = $ACTION_ATTACK_W1;
+		temp1 = 1;
+	} 
+		
+}
+
+
+
+
+
+
+
+
+

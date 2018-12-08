@@ -1,0 +1,1592 @@
+//common unit header specific for the Achron Rescript code base
+
+#define ENABLE_PRINTING 1
+
+//ticks per second - default game speed
+#define TPS 18
+
+// makes code readable in seconds, e.g., if(current == 25$seconds)  instead of  if(current == 25 * $TPS)
+#define seconds *$TPS
+
+//prints should be coded as:  $print "value of foo is: ", foo, "\n";
+#define print if($ENABLE_PRINTING) print
+
+//****************************************************************************/
+//common Script-based variables//
+//****************************************************************************/
+
+//general player resources, example usage: if ( player->$LCrystals > 500 )
+#define LCrystals Resource2
+#define QPlasma Resource4
+#define Power Resource1
+#define ReserveSoldiers Resource3
+
+//to DISABLE autopilot, edit the PLAYER's ScenarioConstraints in the Level Editor
+//set the 1-bit to ON (value = 2). Reference "specs-AIS.txt" for ScenaioConstraint bit usage
+#define PASSIVE_AI (player.ScenarioConstraints)[1]
+#define AUTOPILOT (player->IsComputerPlayer && !$PASSIVE_AI) 
+
+//used by repair/heal units units
+#define TYPE_MECHANICAL 1
+#define TYPE_BIOLOGICAL 2
+
+//unit property as defined in the XML (vertical movement allowed)
+#define IS_AIR_UNIT (unit.Flags)[0]
+
+
+#define IS_GREKIM (uclass >= 1000 && uclass <= 1999 )
+#define IS_HUMAN (uclass >= 1 && uclass <= 999)
+#define IS_VECGIR (uclass >= 2000 && uclass <= 2999)
+#define IS_HUMAN_BUILDING (uclass >= 90 && uclass < 200)
+#define IS_GREKIM_BUILDING (uclass >= 1050 && uclass < 1100)
+#define IS_VECGIR_BUILDING (uclass >= 2070 && uclass < 2200)
+
+#define IS_MELEE (uclass == $OCTO_CLASS || uclass == 1200)
+#define IS_ANTI_AIR (uclass==$MECH_CLASS || uclass==$SEPI_CLASS || uclass==$VIR_TETH_CLASS || uclass==$VIR_TETH_RAISED_CLASS || uclass==$PULSER_T_CLASS || uclass==$OCTOLIGO_CLASS)
+#define IS_GROUND_ONLY_UNIT (uclass == $OCTO_CLASS || uclass == $PHARO_CLASS || uclass == $OCTOPOD_CLASS || uclass == $OCTOLIGO_ANGRY_CLASS || uclass==$VIR_ZAYIN_CLASS || uclass==$VIR_ZAYIN_RAISED_CLASS || uclass == $PULSER_Z_CLASS || uclass==$SOP_CLASS || uclass==$SOP_RAISED_CLASS || uclass == $ATHC_CLASS || uclass == $ATHC_X_CLASS || uclass == $MAR_CLASS || uclass == $MAR2_CLASS)
+#define IS_BREAKTSS_UNIT (uclass==4040)
+//#define IS_BREAKTSS_UNIT (uclass==$LANCER_CLASS || uclass == $PULSER_S_CLASS || uclass == $SEPIPOD_CLASS)
+#define IS_RECOVER_UNIT (uclass == 4040)
+//#define IS_RECOVER_UNIT (uclass == $TERCHER_T_CLASS || uclass == $FRIGATE_CLASS || uclass == $PHAROPOD_CLASS)
+#define IS_CARRIER_UNIT (uclass == $CARRIER_CLASS || uclass == $INCEPTER_CLASS || uclass == $GARGANTUAN_CLASS || uclass == $TYR_CARRIER_CLASS)
+#define IS_CARRIER_TANK (uclass == $TANK_CLASS || uclass == $TANK2_CLASS || uclass == $MAR2_CLASS)
+#define IS_REPAIR_UNIT (uclass == $MFB_CLASS || uclass==$BLACKBIRD_CLASS || uclass==$GHOST_CLASS)
+//uclass == $SOP_CLASS || uclass == $SOP_RAISED_CLASS || 
+#define IS_CLOAKABLE_UNIT (uclass==$BLACKBIRD_CLASS || uclass == $PHAROPOD_CLASS || uclass==$TERCHER_Z_CLASS)
+#define IS_WEAPON_RAISED (uclass==$MARINE_RAISED_CLASS || uclass==$SOP_RAISED_CLASS || uclass==$HOLLOWAY_RAISED_CLASS || uclass==$WINTERS_RAISED_CLASS || uclass==$VIR_ZAYIN_RAISED_CLASS || uclass==$VIR_TETH_RAISED_CLASS || uclass==$VIR_SHIN_RAISED_CLASS || uclass==$KILDEN_RAISED_CLASS || uclass==$DJELT_RAISED_CLASS || uclass==$DAMATH_RAISED_CLASS)
+#define IS_WEAPON_LOWERED (uclass==$MARINE_CLASS || uclass==$SOP_CLASS || uclass==$HOLLOWAY_CLASS || uclass==$WINTERS_CLASS || uclass==$VIR_ZAYIN_CLASS || uclass==$VIR_TETH_CLASS || uclass==$VIR_SHIN_CLASS || uclass==$KILDEN_CLASS || uclass==$DJELT_CLASS || uclass==$DAMATH_CLASS)
+#define IS_HALCYON (uclass>=$HALCYON_Z_CLASS && uclass<=$HALCYON_S_CLASS)
+#define IS_OPEN_RP (uclass==$HUMAN_RP_CLASS || uclass==$GREKIM_RP_CLASS || uclass==$VECGIR_RP_CLASS)
+#define IS_BANKING_FLYER ((uclass==$TORNADE_CLASS  || uclass==$LANCER_CLASS || uclass==$FRIGATE_CLASS || uclass==$CRUISER_CLASS || uclass==$BLACKBIRD_CLASS || uclass==$TERCHER_T_CLASS || uclass == $TERCHER_S_CLASS || uclass==$PULSER_S_CLASS))
+//#define IS_BANKING_FLYER ((uclass==$TORNADE_CLASS  || uclass==$LANCER_CLASS || uclass==$FRIGATE_CLASS || uclass==$CRUISER_CLASS || uclass==$BLACKBIRD_CLASS || uclass==$SEPILIGO_CLASS || uclass==$TERCHER_T_CLASS || uclass == $TERCHER_S_CLASS || uclass==$PULSER_S_CLASS))
+#define IS_FAST_UNIT ((uclass>=$LANCER_CLASS && uclass <= $BLACKBIRD_CLASS) || uclass==$PULSER_S_CLASS || uclass==$TERCHER_T_CLASS ||\
+		uclass==$TERCHER_S_CLASS || uclass==$HALCYON_S_CLASS || uclass==$INCEPTER_CLASS || uclass==$CARRIER_CLASS || uclass==$TYR_CARRIER_CLASS ||\
+        uclass==$MECH_CLASS || uclass==$DAMAGED_MECH_CLASS || uclass==$OCTOLIGO_CLASS ||\
+		uclass==$TODARO_CLASS || uclass==$PHAROLIGO_CLASS || uclass==$SEPIPOD_CLASS || uclass==$PHAROPOD_CLASS || uclass==$SEPILIGO_CLASS || uclass==$GARGANTUAN_CLASS)		
+		//fast units move more than 1 square per step; speeds are specified below
+#define IS_RP_OPEN (uclass==$HUMAN_RP_CLASS || uclass==$GREKIM_RP_CLASS || uclass==$VECGIR_RP_CLASS || uclass==$CIV_RP_CLASS)
+#define IS_RP_CLOSED (uclass==$HUMAN_RP_OFF_CLASS || uclass==$GREKIM_RP_OFF_CLASS || uclass==$VECGIR_RP_OFF_CLASS || uclass==$CIV_RP_OFF_CLASS)
+#define IS_BENIGN (uclass == $OBSERVATION_NODE_CLASS || uclass == $L_FAC_CLASS || uclass == $Q_FAC_CLASS)
+#define IS_IMMORTAL (uclass == $OBSERVATION_NODE_CLASS || uclass == $L_FAC_CLASS || uclass == $Q_FAC_CLASS)
+
+
+//****************************************************************************/
+//common objectives, defined in the XML 
+//****************************************************************************/
+#define RESUMABLE_OBJECTIVE 22
+
+//dispatch objectives
+#define OBJECTIVE_IDLE 0
+#define OBJECTIVE_MOVE_DISPATCH 1
+#define OBJECTIVE_ATTACKPOS_DISPATCH 2
+#define OBJECTIVE_DEFEND_DISPATCH 3
+#define OBJECTIVE_ATTACKUNIT_DISPATCH 4
+//actual objectives
+#define OBJECTIVE_UNIT_MOVE 5 
+#define OBJECTIVE_ATTACKING 6
+#define OBJECTIVE_ATTACKING_UNIT 54
+#define OBJECTIVE_UNIT_DEFEND 7
+#define OBJECTIVE_CHANGE_COMMANDER 8
+#define OBJECTIVE_CLEAR_COMMANDER 9
+#define OBJECTIVE_PRIORITY 10
+#define OBJECTIVE_MORPH_DOME 10
+#define OBJECTIVE_MORPH_DISPATCH 12
+#define OBJECTIVE_MORPH_REAPH 11
+#define OBJECTIVE_BUILD_FOUNDATION 11
+#define OBJECTIVE_BUILD 11
+#define OBJECTIVE_MERGE 11
+#define OBJECTIVE_DROP_NUKE 11 
+#define OBJECTIVE_PICKUP 11
+#define OBJECTIVE_NUKE 12      
+#define OBJECTIVE_RELEASEALL 12
+#define OBJECTIVE_CLEAR_NANITE 12
+#define OBJECTIVE_MORPH_ARCTICUS 12
+#define OBJECTIVE_RP_MORPH 12
+#define OBJECTIVE_HITCH 13
+#define OBJECTIVE_AUTOMERGE 13
+#define OBJECTIVE_PROGEN_CANCEL_ALL 13
+#define OBJECTIVE_OFFSPRING_DISPATCH 13
+#define OBJECTIVE_RELOAD 14 
+#define OBJECTIVE_CANCEL 14
+#define REPAIR_UNIT_OBJ 14
+#define RECOVER_UNIT_OBJ 15
+#define BREAKTSS_UNIT_OBJ 15
+#define OBJECTIVE_REPEAT_ORDER 15
+#define OBJECTIVE_STOP 16
+#define OBJECTIVE_SET_IDLE 16
+#define OBJECTIVE_RELEASEUNIT 17
+#define OBJECTIVE_MORPH_COMM 20
+#define OBJECTIVE_SELF_UPGRADE 19
+#define OBJECTIVE_CLOAK 17
+#define OBJECTIVE_UNCLOAK 20
+#define OBJECTIVE_STOPFREEZE 20  
+#define OBJECTIVE_JAM 20  
+#define OBJECTIVE_INFECT 20  
+#define OBJECTIVE_REPEL 20
+#define OBJECTIVE_SKIPTO 21
+#define OBJECTIVE_OCTO_PROGEN_IDLE 22
+#define OBJECTIVE_BUILD_RP  22
+#define OBJECTIVE_BUILD_SLINGSHOT 22  
+#define OBJECTIVE_BUILD_IMPORTER 23
+#define OBJECTIVE_BUILD_TELEPORTER  23
+#define OBJECTIVE_BUILD_FACTORY 24
+#define OBJECTIVE_BUILD_ARMORY  25
+#define OBJECTIVE_BUILD_TURRET  26
+#define OBJECTIVE_BUILD_COMMC  26
+#define OBJECTIVE_BUILD_MACROFAB  27
+#define OBJECTIVE_BUILD_CHRONOPORTER  28
+//#define OBJECTIVE_BUILD_TURRET  24
+//#define OBJECTIVE_BUILD_MACROFAB  25
+#define OBJECTIVE_BUILD_CARRIER 31
+#define OBJECTIVE_COMMAND_CARRY 34
+#define OBJECTIVE_PICKMEUP 33
+#define OBJECTIVE_SPLIT 40
+#define OBJECTIVE_DISPATCH_OCTO_RP 36
+#define OBJECTIVE_MORPH_SPYRE 31
+#define OBJECTIVE_PROGENERATE_LOCATION 37
+#define OBJECTIVE_PROGENERATE 35
+#define OBJECTIVE_PROGEN_OCTO 38
+#define OBJECTIVE_PROGEN_SEPI 39
+#define OBJECTIVE_PROGEN_PHARO 40
+#define OBJECTIVE_PROGEN_OCTO2 41
+#define OBJECTIVE_PROGEN_SEPI2 42
+#define OBJECTIVE_PROGEN_PHARO2 43
+#define OBJECTIVE_PROGEN_OCTO_RP 52
+#define OBJECTIVE_PILOT_VEHICLE 39
+#define OBJECTIVE_PILOT_PULSER 40
+#define OBJECTIVE_PILOT_TERCHER 41
+#define OBJECTIVE_PILOT_HALCYON 42 
+#define OBJECTIVE_DEPOT_REPAIR 44
+#define OBJECTIVE_SKIP 47
+#define OBJECTIVE_TELEPORT 47
+#define OBJECTIVE_CHRONOPORT 48 
+#define OBJECTIVE_CHRONOPORTED 49
+#define OBJECTIVE_IMPRISON 52
+#define OBJECTIVE_SLINGSHOT 51
+#define OBJECTIVE_SLINGSHOT_WAIT 55
+#define OBJECTIVE_BOMB_EXPLODE 2
+#define OBJECTIVE_SELECT_CESO 50
+#define OBJECTIVE_SELECT_GREKIM 51
+#define OBJECTIVE_SELECT_VECGIR 52
+#define OBJECTIVE_SELECT_RANDOM 53
+
+//BUILDING's OBJECTIVES
+#define OBJ_BLDG_PROCESS 1
+#define OBJ_BLDG_PICK_CRATE 2
+#define OBJ_BLDG_STOP_PROCESS 3
+#define OBJ_BLDG_SMARTIDLE 5
+#define OBJ_BLDG_AUTOHIERARCHY 4
+#define OBJ_BLDG_FOUNDATION_DOWN 1
+#define OBJ_BLDG_FOUNDATION_UP 2
+#define OBJ_BLDG_FOUNDATION_DOWN_LEFT 3
+#define OBJ_BLDG_FOUNDATION_DOWN_RIGHT 4
+#define OBJ_BLDG_FOUNDATION_UP_LEFT 5
+#define OBJ_BLDG_FOUNDATION_UP_RIGHT 6
+#define OBJ_BLDG_MARINE 2
+#define OBJ_BLDG_SOP 3
+#define OBJ_BLDG_MECH 2
+#define OBJ_BLDG_ATHC 3
+#define OBJ_BLDG_LANCER 4
+#define OBJ_BLDG_TORNADE 5
+#define OBJ_BLDG_TANK 6
+#define OBJ_BLDG_FRIGATE 2
+#define OBJ_BLDG_MFB 3
+#define OBJ_BLDG_BLACKBIRD 4
+#define OBJ_BLDG_MAR 6
+#define OBJ_BLDG_HC 7
+#define OBJ_BLDG_AUTOMOVE 7
+#define OBJ_BLDG_ATTACK 8
+#define OBJ_BLDG_STARTMOVE 9
+#define OBJ_BLDG_MOVE 10
+#define OBJ_BLDG_PLANT 11
+#define OBJ_BLDG_PLANT_DISPATCH 12
+#define OBJ_BLDG_BUILD 12
+#define OBJ_BLDG_CANCEL 13
+#define OBJ_BLDG_CONVERT_QP 13
+#define OBJ_BLDG_CLEAR_NANITE 14
+#define OBJ_BLDG_GATE_RECHARGE 14
+#define OBJ_BLDG_DEPLOY 15
+#define OBJ_BLDG_PREDEPLOY 16
+#define OBJ_BLDG_CONTINUE_DEPLOYBIT 0
+#define OBJ_BLDG_DEPLOYBIT 1
+#define OBJ_BLDG_INTERRUPTBIT 2
+#define OBJ_BLDG_TSS 16
+#define OBJ_BLDG_BREAKTSS 17
+#define OBJ_BLDG_CONGREGATE 18
+#define OBJ_BLDG_CLEAR_CONGREGATE 19
+#define OBJ_BLDG_LAUNCH 20
+#define OBJ_BLDG_BOMB 21
+#define OBJ_BLDG_DEFEND 20
+#define OBJ_BLDG_EQUIP 20
+#define OBJ_BLDG_REPAIR 21
+#define OBJ_BLDG_CANCEL_REPEL 21
+#define OBJ_BLDG_ATTACK_POS 21
+#define OBJ_BLDG_CHANGE 22
+#define OBJ_BLDG_ACTIVE 23
+#define OBJ_ARCTICUS_OCTO 3
+#define OBJ_ARCTICUS_SEPI 4
+#define OBJ_ARCTICUS_PHARO 5
+#define OBJ_ARCTICUS_ATTACK_UNIT 1
+#define OBJ_ARCTICUS_MOVE 23
+#define OBJ_ARCTICUS_ATTACK 22
+#define OBJ_ARCTICUS_STOP 24
+#define OBJ_ARCTICUS_LINK 21
+#define OBJ_BLDG_UPGRADE1 24
+#define OBJ_BLDG_UPGRADE2 26
+#define OBJ_BLDG_UPGRADE3 28
+#define OBJ_BLDG_UPGRADE4 30
+#define OBJ_BLDG_UPGRADE5 32
+#define OBJ_BLDG_UPGRADE6 52
+#define OBJ_BLDG_ZPULSER 30
+#define OBJ_BLDG_TPULSER 31
+#define OBJ_BLDG_SPULSER 32
+#define OBJ_BLDG_ZTERCHER 33
+#define OBJ_BLDG_TTERCHER 34
+#define OBJ_BLDG_STERCHER 35
+#define OBJ_BLDG_ZHALCYON 36
+#define OBJ_BLDG_THALCYON 37
+#define OBJ_BLDG_SHALCYON 38
+#define OBJ_BLDG_ZVIR 46
+#define OBJ_BLDG_TVIR 47
+#define OBJ_BLDG_SVIR 48
+#define OBJ_BLDG_FOUNDATION_DEPOT 27
+#define OBJ_BLDG_FOUNDATION_ANNEX 29
+#define OBJ_BLDG_FOUNDATION_SLIPGATE 57
+#define OBJ_BLDG_FOUNDATION_BASTION 58
+#define OBJ_BLDG_FOUNDATION_INCEPTER 36
+#define OBJ_BLDG_FOUNDATION_ACC 59
+#define OBJ_BLDG_CONSTRUCTION 50
+#define OBJ_BLDG_FAKESPIN 51
+#define OBJ_BLDG_SLIPGATEFAKE 52
+#define OBJ_BLDG_INDUSTRIAL_OFF 53
+
+
+//****************************************************************************/
+//common actions as defined in the XML for each unit. reference the XML
+//****************************************************************************/
+//UNITS//
+#define ACTION_MOVE 2
+#define ACTION_ATTACK 3
+#define ACTION_ATTACK_W1 4
+#define ACTION_ATTACK_W2 5
+#define ACTION_SEND 4
+#define ACTION_FINISH_PROGEN 5
+#define ACTION_CHANGE_COMMANDER 6
+#define ACTION_CLEAR_COMMANDER 7
+#define ACTION_CLEAR_CHRONOPORTED 7
+#define ACTION_BREAKTSS 8
+#define ACTION_CLEAR_NANITE 8
+#define ACTION_LAND 8
+#define ACTION_SET_IDLE 8
+#define ACTION_HEAL 9
+#define ACTION_REPAIR 9
+#define ACTION_RECOVER 10
+#define ACTION_SELF_REPAIR 13
+#define ACTION_RELOAD 10
+#define ACTION_JAM 10
+#define ACTION_STOP 10
+#define ACTION_PREP_FREEZE 41
+#define ACTION_INFECT 10
+#define ACTION_CHANGE 10
+#define ACTION_CHANGE_PROGEN 9
+#define ACTION_RELOAD_TSSED 11
+#define ACTION_CHANGE_OCTO 11
+#define ACTION_MAKE_REAPH 12
+#define ACTION_MAKE_RP_OCTO 12
+#define ACTION_MAKE_ARCTICUS 14
+#define ACTION_MORPH_DOME 14
+//#define ACTION_PROGEN_UP_OTHER 7
+//#define ACTION_PROGEN_SAME_OTHER 12
+#define ACTION_PROGEN_SAME_O 13
+#define ACTION_PROGEN_UP_O 14
+#define ACTION_PROGEN_SAME_S 15
+#define ACTION_PROGEN_UP_S 16
+#define ACTION_PROGEN_SAME_P 17
+#define ACTION_PROGEN_UP_P 18
+#define ACTION_PROGEN_ENERGY 19
+#define ACTION_PROGEN_AMMO 22
+//#define ACTION_PROGEN_SAME 13
+//#define ACTION_PROGEN_UP 14
+#define ACTION_SPLIT_DOWN 20
+#define ACTION_REPEL 11
+#define ACTION_POST_REPEL 12
+#define ACTION_SLIPGATE_REPEL 16
+#define ACTION_MERGE_WITH 11
+#define ACTION_MERGE 12
+#define ACTION_FORCE_AUTOMERGE 13
+#define ACTION_DROP_NUKE 10
+#define ACTION_MAKE_CARRIER 16
+#define ACTION_MAKE_SPYRE 16
+#define ACTION_MAKE_LFACTORY 9
+#define ACTION_MAKE_MACROFAB 10
+#define ACTION_MAKE_RP 11
+#define ACTION_MAKE_SSLINGSHOT 11
+#define ACTION_MAKE_IMPORTER 12
+#define ACTION_MAKE_TELEPORTER 12
+#define ACTION_MAKE_TURRET 13
+#define ACTION_MAKE_CHRONOPORTER 13
+#define ACTION_MAKE_ARMORY 14
+#define ACTION_MAKE_IMPORTER_MECH 17
+#define ACTION_MAKE_ARMORY_MECH 18
+//#define ACTION_MAKE_LFACTORY 13
+//#define ACTION_MAKE_MACROFAB 14
+//#define ACTION_MAKE_CHRONOPORTER 15
+#define ACTION_MAKE_FOUNDATION 21
+#define ACTION_PILOT_PULSER 12
+#define ACTION_PILOT_TERCHER 13
+#define ACTION_PILOT_HALCYON 14
+#define ACTION_SELF_UPGRADE 15
+#define ACTION_PULSER 16
+#define ACTION_TERCHER 17
+#define ACTION_HALCYON 18
+#define ACTION_PREP_CHRONOPORT 20
+#define ACTION_CAST 21
+#define ACTION_SKIP 21
+#define ACTION_TELEPORTED 22
+#define ACTION_ACT_PARAMETERS 23
+#define ACTION_POST_SKIP 24
+#define ACTION_ATTACK_EXTRA 24
+#define ACTION_POST_ATTACK_EXTRA 25
+#define ACTION_MAKE_COMMC 26
+#define ACTION_MORPH_COMM 26 
+#define ACTION_TAKE_UNIT 27
+#define ACTION_CHANGE_BACK 28
+//28 is forced ACTION_DEATH for vecgir vehicles
+#define ACTION_RELEASE_UNIT_AT 29
+#define ACTION_ERROR1 30
+#define ACTION_ERROR2 31
+#define ACTION_ERROR_CP 33
+#define ACTION_TPORT_FAILED 34
+#define ACTION_ROTATE 35
+#define ACTION_REGEN 36
+#define ACTION_A 37
+#define ACTION_B 38
+#define ACTION_C 39
+#define ACTION_CLEAR_A 24
+#define ACTION_CLEAR_B 25
+#define ACTION_CLEAR_C 26
+#define ACTION_SET_OBJECTIVE_IDLE 39
+#define ACTION_SET_OBJECTIVE_RELEASE 39
+#define ACTION_CLOAK 48
+#define ACTION_CLOAK_DRAIN 44
+#define ACTION_UNCLOAK 45
+#define ACTION_AUTO_UNCLOAK 46
+#define ACTION_DISCONNECT 47
+#define ACTION_RELEASE_UNIT 48
+#define ACTION_RELEASE_AIRUNIT 49
+#define ACTION_INTERRUPT 49
+#define ACTION_MOVE_SLOW 50
+#define ACTION_RAISE_WEAPON 54
+#define ACTION_LOWER_WEAPON 55
+
+#define ACTION_BANK_RIGHT 11
+#define ACTION_BANK_LEFT 14
+
+//BUILDINGS//
+#define ACTION_ATTACK_POS 2
+#define ACTION_MINE 2
+#define ACTION_MINE_QP 3
+#define ACTION_STARTMOVE 4
+#define ACTION_NEW 4
+#define ACTION_PLANT 5
+#define ACTION_AUTO_COMMAND_ON 8
+#define ACTION_AUTO_COMMAND_OFF 9
+#define ACTION_SET_TARGET 8
+#define ACTION_PREP_BEAM 8
+#define ACTION_CLAIM_CRATE 9
+#define ACTION_CLEAR_TBIT 19
+#define ACTION_FIRE_BEAM 14
+#define ACTION_PROPAGATE_ON 10
+#define ACTION_PROPAGATE_OFF 11
+#define ACTION_SET_BIT 10
+#define ACTION_SET_DEPOT_BIT 11
+#define ACTION_TORPEDO 12
+#define ACTION_CHRONOBOMB 11
+#define ACTION_TSS 11
+#define ACTION_TELEPORT 12
+#define ACTION_POSTTELEPORT 14
+#define ACTION_FAKE_TELEPORT 15
+#define ACTION_TIMEPORT 13
+#define ACTION_CHRONOPORT 14
+#define ACTION_BLDG_BREAKTSS 11
+#define ACTION_BLDG_HEAL 13
+#define ACTION_RP_PROCESS 13
+#define ACTION_BLDG_RECOVER 12
+#define ACTION_BLDG_CLEAR_NANITE 12
+#define ACTION_CHANGE_PHARO 17
+#define ACTION_SWITCH 14
+#define ACTION_RESEARCH_U1 15
+#define ACTION_RESEARCH_U2 16
+#define ACTION_RESEARCH_U3 17
+#define ACTION_RESEARCH_U4 18
+#define ACTION_RESEARCH_U5 19
+#define ACTION_RESEARCH_U6 25
+#define ACTION_Z_PULSER 15
+#define ACTION_T_PULSER 16
+#define ACTION_S_PULSER 17
+#define ACTION_Z_TERCHER 18
+#define ACTION_T_TERCHER 19
+#define ACTION_S_TERCHER 20
+#define ACTION_Z_HALCYON 21
+#define ACTION_T_HALCYON 22
+#define ACTION_S_HALCYON 23
+#define ACTION_SPINUP 20
+#define ACTION_SPINDOWN 21
+#define ACTION_SETACTIVE 22
+#define ACTION_CLEARACTIVE 23
+#define ACTION_MECH 25
+#define ACTION_ATHC 26
+#define ACTION_AMG 27
+#define ACTION_LANCER 28
+#define ACTION_FRIGATE 25
+#define ACTION_MFB 26
+#define ACTION_TORNADE 27
+#define ACTION_HEAVYC 28
+#define ACTION_TANK 29
+#define ACTION_BLACKBIRD 29
+#define ACTION_MARINE 27
+#define ACTION_SOP 28
+#define ACTION_ZAYIN 27
+#define ACTION_TETH 28
+#define ACTION_SHIN 29
+#define ACTION_CREATE_OCTO 24
+#define ACTION_CREATE_SEPIA 25
+#define ACTION_CREATE_PHARAO 26
+#define ACTION_ACC 50
+#define ACTION_BASTION 45
+#define ACTION_ANNEX 44
+#define ACTION_SLIPGATE 52
+#define ACTION_DEPOT 49
+#define ACTION_CONVERT_QP 25
+#define ACTION_REL_ZAYIN 34
+#define ACTION_REL_TETH 35
+#define ACTION_REL_SHIN 36
+#define ACTION_REL_MAR 37
+#define ACTION_REL_SOP 38
+#define ACTION_REL_MECH 33
+#define ACTION_REL_ATHC 34
+#define ACTION_REL_TANK 35
+#define ACTION_REL_LANC 36
+#define ACTION_REL_TORNADE 37
+#define ACTION_REL_AMG 34
+#define ACTION_REL_MFB 35
+#define ACTION_REL_FRIGATE 36
+#define ACTION_REL_HC 37
+#define ACTION_REL_DOCK 38
+#define ACTION_RELEASE_1 39
+#define ACTION_RELEASE_2 41
+#define ACTION_RELEASE_3 42
+#define ACTION_RELEASE_4 44
+#define ACTION_RELEASE_5 45
+#define ACTION_MOVE_UP 48
+#define ACTION_MOVE_DOWN 49
+#define ACTION_ACTIVEGATE 54
+#define ACTION_SUMMON_TROOPS 40
+#define ACTION_DEFEND 41
+#define ACTION_NO_DEFEND 42
+//#define ACTION_CLEAR_LAD 43 //forced action on all buildings
+#define ACTION_OUTPUT 47
+#define ACTION_SIPHON_TSS 48
+#define ACTION_SET_COMMANDER_TO 51
+#define ACTION_SET_SIPHON 52
+
+//species-chooser specific actions
+#define ACTION_HUMAN0 7
+#define ACTION_GREKIM0 8
+#define ACTION_VECGIR0 9
+#define ACTION_HUMAN1 11
+#define ACTION_HUMAN2 12
+#define ACTION_HUMAN3 13
+#define ACTION_HUMAN4 14
+#define ACTION_HUMAN5 15
+#define ACTION_GREKIM1 16
+#define ACTION_GREKIM2 18
+#define ACTION_GREKIM3 20
+#define ACTION_GREKIM4 22
+#define ACTION_GREKIM5 23
+#define ACTION_VECGIR1 24
+#define ACTION_VECGIR2 26
+#define ACTION_VECGIR3 28
+
+/*
+//SCENARIO MONITOR actions
+//NOTE: Must be performed on a valid target.  Player-specific actions affect the owner of the specified target unit
+//example:
+//  target = $GET_UNIT [ ... your query criteria goes here ... ];
+//  if (target->IsAlive==1) { PERFORM $ACTION_REPAIR; PERFORM $ACTION_REPAIR;} //run twice to give target back 500 HP
+*/
+
+//sets the target's HP to 0, effectively killing the target
+#define ACTION_KILL_UNIT 3
+// //breaks the target's TSS
+// #define ACTION_BREAKTSS 8
+// //gives the target 250 HP, 250 energy and 250 ammo
+// #define ACTION_REPAIR 9
+// //clears target's nanites, commjam and freezestop
+// #define ACTION_RECOVER 10
+// //gives target a TSS
+// #define ACTION_TSS 11
+// //insta-teleports target to a location
+// #define ACTION_TELEPORT 12
+
+//set player->GlobalFlags 4th bit to 1, used in Achron for Assassin-mode multiplayer
+#define SET_PLAYER_FLAG_BIT_4 20
+//gives the player (owner) of the target 100 LC
+#define ACTION_GIVE_LC 23
+//gives the player (owner) of the target 100 QP
+#define ACTION_GIVE_QP 24
+//the scenario monitor can carry units specified by target
+//#define ACTION_TAKE_UNIT 27
+#define ACTION_CLEAR_CAP_BIT_1 41
+#define ACTION_CLEAR_CAP_BIT_2 42
+#define ACTION_CLEAR_CAP_BIT_3 43
+#define ACTION_CLEAR_CAP_BIT_4 44
+#define ACTION_CLEAR_CAP_BIT_5 45
+//target = carrier, parameter = unit
+#define ACTION_TRANSFER_CARRIED 52
+
+
+
+//****************************************************************************/
+// global constants and AdditionalParameters bit offsets
+// reference "specs-AIS.txt" for exact bit usage
+//****************************************************************************/
+#define CAP_BIT_5 8
+#define CAP_BIT_4 7
+#define CAP_BIT_3 6
+#define CAP_BIT_2 5
+#define CAP_BIT_1 4
+#define FROZEN_BIT 3
+#define TSS_BIT 2
+#define COMMJAM_BIT 1
+#define CLOAK_BIT 0
+#define FROZEN_TSS_COMMJAM 14
+#define FROZEN_COMMJAM 10
+#define FROZEN_BIT_Q 8
+#define TSS_BIT_Q 4
+#define COMMJAM_BIT_Q 2
+#define CLOAK_BIT_Q 1
+#define PLAYER_BIT 0
+#define PLAY_B 1
+#define TIME_BIT 1
+#define MOVE_BIT 2
+#define ATTACK_BIT 3
+#define DISTANCE_BIT 4
+#define UNIT_BIT 5
+#define ARCTICUS_ATTACK 0
+#define ARCTICUS_MOVE 1
+#define ARCTICUS_STOP 2
+#define ARCTICUS_LINK 3
+#define ARCTICUS_FOLLOW 4
+#define ARCTICUS_COMMAND 5
+#define ARCTICUS_PLAYER_DISPATCHED 6
+#define ARCTICUS_SPEED_MATCH 7,4
+#define HOLDMOVE_BIT 12
+#define HOLDATTACK_BIT 13
+#define SUBORDINATE_STUCK_BIT 14
+#define RESET_COUNTER_BIT 15
+#define PRIORITY_BIT 14
+#define HOLD_COMMANDER_BIT 15
+#define RP_PATCH_BIT 15
+#define TEMPUNIT_BIT 16
+#define APPROACH_BIT 16
+#define RETURN_BIT 17
+#define EVERYOTHER_BIT 17
+#define STUCK_BIT 18
+#define MATCH_OTHER_BIT 19
+#define STUCK_IDLE_ATTACK_APPROACH_BIT 24
+#define HOLD_TARGET_BIT 28
+#define BLOCKED_BIT 0
+#define EXTRA_BIT 1
+#define ACTIVE_BIT 2
+#define NOTELEPORT_BIT 11
+#define SMART_CLEAR_BIT 12
+#define FOUNDATION_BIT 8
+#define FOUNDATION_FAIL_BIT 9
+#define VECGIR_ADV_POWER 0
+#define HUMAN_ADV_HEAVY 1
+#define HUMAN_ADV_BASIC 2
+#define HUMAN_ADV_EXTRAS 3
+#define HUMAN_ADV_GATE 4
+#define HUMAN_ADV_WEAPONS 5
+#define GREKIM_ADV_LOLIGO 7
+#define GREKIM_ADV_AUTODEFENCE 6
+#define GREKIM_ADV_EXTRAS 8
+#define GREKIM_ADV_GATE 9
+#define GREKIM_ADV_WEAPONS 10
+#define GREKIM_ADV_VANGUARD 15
+#define VECGIR_ADV_AUTODEFENCE 11
+#define VECGIR_ADV_HALCYON 12
+#define VECGIR_ADV_EXTRAS 13
+#define VECGIR_ADV_GATE 14
+#define VECGIR_ADV_WEAPONS 15
+#define CPORT_STORED_COMMANDER 13
+#define CPORT_NO_COMMANDER 14
+#define CPORT_RESTORED_COMMANDER 15
+#define LOOKUP_BOUNDARY 1600
+#define LAD_CLEAR 6144
+#define LARGE_VALUE 6000
+#define FARAWAY 999999
+#define BESTMOVE_GAVE_UP 31
+#define QUERY_EXHAUSTED 0x80000000
+#define INVALID_POSITION 0x1FFFFFFF
+#define MAX_RAND_VALUE 32768
+#define MAX_TPORT_RANGE 250
+#define MAX_INDUSTRIAL_RANGE 1000
+#define RP_PROCESS_DISTANCE 16
+#define DEPOT_CHECK 30
+#define DEPOT_CARRYING_CAPACITY 70
+#define Xpos 0,12
+#define Ypos 12,12
+#define Zpos 24,5
+#define OBJECTIVE 6,6
+#define MOVE_COUNTER 9,5
+#define HOLD_COUNTER 25,3
+#define HOLD_LAHD 29,3
+#define TIMESTAMP 16,7
+#define STOREDUNIT 16,16
+
+//smart-idle specific
+#define LOOKUP_BIT 7
+#define JOINME_BIT 6
+#define HEAL_BIT 10
+#define RECOVER_BIT 11
+#define TSSFLAG_BIT 12
+#define LOOKUP_UNIT 0,6
+
+#define FLAGS player->CustomField3
+#define CUSTOMFIELD_RECOVER (player->CustomField1)[16,16]
+#define CUSTOMFIELD_HEAL (player->CustomField1)[0,16]
+#define CUSTOMFIELD_LOOKUP (player->CustomField2)[16,16] 
+#define CUSTOMFIELD_TSS (player->CustomField2)[0,16]
+#define SMART_IDLE ((player->GlobalFlags)[1,2] == 3)
+#define COMM_CENTER_ALIVE (player->GlobalFlags)[2]
+#define AUTO_HEIRARCHY (player->GlobalFlags)[0] && (player->GlobalFlags)[2] 
+
+
+//pre-game setup values
+#define MP_CHRONOPORT_ALERTS 0
+#define GLOBAL_CHRONOPORT_WITH_COMMANDER_BIT 1
+#define GLOBAL_MORPH_DURING_RECHRONOPORT_BIT 2
+#define GLOBAL_CLEAR_QUEUE_AFTER_CHRONOPORT_BIT 3
+#define MP_ASSASSIN_MODE 4
+
+#define INIT_GLOBAL_CHRONAL_PROPERTIES PERFORM GET_CHRONAL_FIELD 0; int global_chronal_properties = perf_ret;
+//default to 0, set by scenario monitor from pre-game lobby
+#define CHRONOPORT_WITH_COMMANDER global_chronal_properties[$GLOBAL_CHRONOPORT_WITH_COMMANDER_BIT]
+//default to 0, set by scenario monitor from pre-game lobby
+#define MORPH_DURING_RECHRONOPORT global_chronal_properties[$GLOBAL_MORPH_DURING_RECHRONOPORT_BIT]
+//default to 0, set by scenario monitor from pre-game lobby
+#define CLEAR_QUEUE_AFTER_CHRONOPORT global_chronal_properties[$GLOBAL_CLEAR_QUEUE_AFTER_CHRONOPORT_BIT]
+
+//****************************************************************************/                
+//LOOKUP values for each unit, stored into $FLAGS[$LOOKUP_UNIT]
+//used by smart idle / autopilot to lookup units as hashed out in unit_lookup.ais
+//****************************************************************************/
+#define MARINE 1
+#define SOP 2
+#define MECH 4
+#define TANK 5
+#define HTANK 6
+#define MAR 7
+#define MAR2 8
+#define ATHC 10
+#define MFB 11
+#define MACROFAB 12
+#define ARMORY 13
+#define FACTORY 14
+#define COMMC 15
+#define IMPORTER 16
+#define CGATE 17
+#define SLINGS 18
+#define TGATE 19
+#define LANCER 21
+#define FRIGATE 22
+#define TORNADE 23
+#define HEAVYC 24
+#define BLACKBIRD 25
+#define OCTO 29
+#define SEPIA 30
+#define PHARAO 31
+#define OCTO2 32
+#define SEPIA2 33
+#define PHARAO2 34
+#define ARCTICUS 35
+#define REAPH 36
+#define DOME 37
+#define OCTO3 38
+#define SEPIA3 39
+#define PHARAO3 40
+#define VIR 44
+#define VIR2 45
+#define VIR3 46
+#define TERCHER 47
+#define TERCHER2 48
+#define TERCHER3 49
+#define PULSER 50
+#define PULSER2 51
+#define PULSER3 52
+#define HALCYON 53
+#define HALCYON2 54
+#define HALCYON3 55
+#define FOUNDATION 59
+#define SLIPGATE 60
+#define ANNEX 61
+#define BASTION 62
+#define DEPOT 63
+#define ANY_UNIT 27
+
+//******* CLASSES, accessed via unit->Class
+//human class (specific) values. 
+// e.g, a Turret has a different class than an Upgraded Turret
+#define MARINE_CLASS 1
+#define MARINE_RAISED_CLASS 2
+#define SOP_CLASS 5
+#define SOP_RAISED_CLASS 6
+#define HOLLOWAY_CLASS 7
+#define HOLLOWAY_RAISED_CLASS 8
+#define MECH_CLASS 10
+#define DAMAGED_MECH_CLASS 11
+#define WINTERS_CLASS 15
+#define WINTERS_RAISED_CLASS 16
+#define TANK_CLASS 20
+#define TANK2_CLASS 25
+#define MAR_CLASS 30
+#define MAR2_CLASS 35
+#define ATHC_CLASS 45
+#define ATHC_X_CLASS 46
+#define MFB_CLASS 60
+#define TYR_DISABLED_CLASS 61
+#define TYR_MFB_CLASS 62
+#define HUMAN_ACHRON_CLASS 64
+#define LANCER_CLASS 200
+#define FRIGATE_CLASS 205
+#define TORNADE_CLASS 210
+#define CARRIER_CLASS 215 
+#define CRUISER_CLASS 220
+#define BLACKBIRD_CLASS 225
+#define MACROFAB_CLASS 90
+#define ARMORY_CLASS 100
+#define COMM_C_OFF_CLASS 105
+#define COMM_C_CLASS 109
+#define TURRET_CLASS 115
+#define TURRETU_CLASS 116
+#define IMPORTER_CLASS 120
+#define CHRONOPORTER_CLASS 125
+#define SLINGSHOT_CLASS 130
+#define TELEPORTER_CLASS 135
+#define INDUSTRIAL_TELEPORTER_CLASS 137
+#define HUMAN_RP_CLASS 145
+#define HUMAN_RP_OFF_CLASS 146
+#define FACTORY_CLASS 150
+
+//grekim class 
+#define OCTO_CLASS 1000
+#define SEPI_CLASS 1005
+#define PHARO_CLASS 1010
+#define TODARO_CLASS 1014
+#define OCTOPOD_CLASS 1015
+#define SEPIPOD_CLASS 1020
+#define PHAROPOD_CLASS 1023
+#define OCTOLIGO_CLASS 1100
+#define OCTOLIGO_ANGRY_CLASS 1101
+#define SEPILIGO_CLASS 1105
+#define PHAROLIGO_CLASS 1110
+#define PRIMORDIAL_CLASS 1047
+#define PROGENITOR_CLASS 1048
+#define OCTO_FACTORY_CLASS 1002
+#define SEPI_FACTORY_CLASS 1007
+#define PHARO_FACTORY_CLASS 1012
+#define OCTOPOD_FACTORY_CLASS 1016
+#define SEPIPPOD_FACTORY_CLASS 1021
+#define PHAROPOD_FACTORY_CLASS 1026
+#define ARCTICUS_CLASS 1050
+#define ARCTICUS_MOVE_CLASS 1051
+#define GREKIM_RP_CLASS 1055
+#define GREKIM_RP_OFF_CLASS 1056
+#define REAPH_CLASS 1060
+#define REAPH_MOVE_CLASS 1061
+#define MOUND_OFF_CLASS 1063
+#define MOUND_CLASS 1064
+#define DOME_CLASS 1065
+#define DOME_MOVE_CLASS 1066
+#define DOME_BEAM_CLASS 1067
+#define SPYRE_CLASS 1070
+#define SPYRE_MOVE_CLASS 1071
+#define SCOUT_GUARDIAN_CLASS 1039
+#define SPIDER_PROBE_CLASS 1041
+#define GREKIM_ACHRON_CLASS 1044
+
+#define GHOST_CLASS 1028
+#define GARGANTUAN_CLASS 1030
+#define OCTOLIGO_GUARD_CLASS 1102
+#define ELDER_CLASS 1017
+#define GUARDIAN_ELDER_CLASS 1018
+#define GUARDIAN_CLASS 1019
+#define PLASMA_BOMB_CLASS 1115
+#define CHRONOBOMB_CLASS 1120
+#define CHRONOBOMB_ACTIVE_CLASS 1121
+
+//vecgir class 
+#define VIR_ZAYIN_CLASS 2000
+#define VIR_ZAYIN_RAISED_CLASS 2001
+#define VIR_TETH_CLASS 2005
+#define VIR_TETH_RAISED_CLASS 2006
+#define VIR_SHIN_CLASS 2010
+#define VIR_SHIN_RAISED_CLASS 2011
+#define TERCHER_Z_CLASS 2015
+#define TERCHER_T_CLASS 2020
+#define TERCHER_S_CLASS 2025
+#define PULSER_Z_CLASS 2030
+#define PULSER_T_CLASS 2035
+#define PULSER_S_CLASS 2040
+#define HALCYON_Z_CLASS 2045
+#define HALCYON_T_CLASS 2050
+#define HALCYON_S_CLASS 2055
+#define ANNEX_CLASS 2080
+#define INCEPTER_CLASS 2105
+#define TYR_CARRIER_CLASS 2106
+#define VECGIR_ACHRON_CLASS 2107 
+#define ACC_CLASS 2065
+#define FOUNDATION_CLASS 2070
+#define SLIPGATE_CLASS 2075
+#define BASTION_CLASS 2085
+#define DEPOT_CLASS 2090
+#define VECGIR_RP_CLASS 2095
+#define VECGIR_RP_OFF_CLASS 2096
+#define TORPEDO_CLASS 2100
+#define TORPEDO_BOMB_CLASS 2101
+#define COMM_H_CLASS 2114
+#define COMM_H_OFF_CLASS 2110
+#define DJELT_CLASS 2115
+#define DJELT_RAISED_CLASS 2116
+#define KILDEN_CLASS 2120
+#define KILDEN_RAISED_CLASS 2121
+#define DAMATH_CLASS 2125
+#define DAMATH_RAISED_CLASS 2126
+
+//GENERAL
+#define LC_CLASS 4000
+#define L_EMPT_CLASS 4002
+#define Q_CELL_CLASS 4004
+#define QP_CLASS 4005
+#define Q_EMPT_CLASS 4006
+#define QP_LARGE_CLASS 4007
+#define L_FAC_CLASS 4018
+#define Q_FAC_CLASS 4019
+#define UNITCREATOR_CLASS 4010
+#define UNITCREATOR_GREKIM_CLASS 4011
+#define UNITCREATOR_VECGIR_CLASS 4012
+#define OBSERVATION_NODE_CLASS 4014
+#define OBSERVATION_STATION_CLASS 4015
+#define GENERATOR_CLASS 4020
+#define VICTORY_CLASS 4020
+#define DROP_POINT_CLASS 4024
+#define WAYPOINT_CLASS 4030
+#define CIV_RP_AB_CLASS 4035
+#define CIV_RP_CLASS 4036
+#define CIV_RP_OFF_CLASS 4037
+#define RACE_CHOOSER_CLASS 4040
+
+//******* RANKS, accessed via unit.Rank
+//unit rank (generic) values: 
+//e.g., All turrets (Turrets, Bastions and Domes) are of rank $TURRET_RANK
+#define UNITCREATOR_RANK 1
+#define RACE_CHOOSER_RANK 2
+#define WAYPOINT_RANK 3
+#define RESOURCE_RANK 4
+#define EMPTIED_RANK 6
+#define RESOURCE_CELL_RANK 8
+#define OBSERVATION_STATION_RANK 5
+#define CIVILIAN_RANK 110
+#define ACHRON_RANK 111
+#define MARINE_RANK 120
+#define SOP_RANK 130
+#define MECH_RANK 145
+#define TANK_RANK 180
+#define TANK2_RANK 190
+#define MAR_RANK 170
+#define MAR2_RANK 195
+#define ATHC_RANK 150
+#define MFB_RANK 140
+#define LANCER_RANK 215
+#define FRIGATE_RANK 234
+#define TORNADE_RANK 250
+#define CRUISER_RANK 280
+#define BLACKBIRD_RANK 210
+#define Z_VIR_RANK 126
+#define T_VIR_RANK 128
+#define S_VIR_RANK 135
+#define Z_PULSER_RANK  155
+#define T_PULSER_RANK 160
+#define S_PULSER_RANK 225
+#define Z_TERCHER_RANK 175
+#define T_TERCHER_RANK 230
+#define S_TERCHER_RANK 240
+#define Z_HALCYON_RANK 185
+#define T_HALCYON_RANK 192
+#define S_HALCYON_RANK 270
+#define OCTO_RANK 122
+#define SEPI_RANK 124
+#define PHARO_RANK 132
+#define OCTOPOD_RANK 165
+#define SEPIPOD_RANK 220
+#define PHAROPOD_RANK 238
+#define OCTOLIGO_RANK 197
+#define SEPILIGO_RANK 245
+#define PHAROLIGO_RANK 260
+#define KEEPER_RANK 164
+//rank of units common to all three races
+#define CARRIER_RANK 290
+//air units are of unit.Rank >= $AIR_RANK , ground units are unit.Rank < $AIR_RANK
+#define AIR_RANK 200
+// buildings are unit.Rank <= $BUILDNGS_RANK, normal units are unit.Rank > $BUILDINGS_RANK
+#define BUILDINGS_RANK 100
+#define IMPORTER_RANK 20
+#define FOUNDATION_RANK 71
+#define SLINGSHOT_RANK 30
+#define TELEPORTER_RANK 35
+#define INDUSTRIAL_TELEPORTER_RANK 36
+#define SLIPGATE_RANK 39
+#define CHRONOPORTER_RANK 40
+#define SPYRE_RANK 55
+#define ACC_RANK 55
+#define REAPH_RANK 60
+#define FACTORY_RANK 70
+#define GREKIM_PROGENERATION_RANK 75
+#define ARMORY_RANK 77
+#define ANNEX_RANK 78
+#define DEPOT_RANK 80
+#define GREKIM_POD_PROGENERATION_RANK 95
+#define MACROFAB_RANK 87
+#define ARCTICUS_RANK 88
+//ranks of buildings common to all three races
+#define COMMC_RANK 50
+#define COMMC_OFF_RANK 51
+#define TURRET_RANK 90
+#define RP_RANK 10
+#define ACHRON_SHIELD_RANK 99
+#define ACHRON_VICTORY_RANK 98
+
+
+//******* SPEEDS - lower is faster (use less ticks to move)
+//used specifically for speed matching during hierarchy moves, rounded up to the nearest integer
+//human speeds
+#define MARINE_SPEED 8
+#define SOP_SPEED 8
+#define MECH_SPEED 6
+#define TANK_SPEED 4
+#define TANK2_SPEED 6
+#define MAR_SPEED 5
+#define MAR2_SPEED 7
+#define ATHC_SPEED 3
+#define MFB_SPEED 6
+#define LANCER_SPEED 2
+#define FRIGATE_SPEED 2
+#define TORNADE_SPEED 3
+//actual TORNADE_SPEED 2.5
+#define CRUISER_SPEED 3
+#define BLACKBIRD_SPEED 3
+#define CARRIER_SPEED 3
+#define WINTERS_SPEED 8
+#define HOLLOWAY_SPEED 8
+
+//vecgir speeds for speed matching
+#define ZAYIN_SPEED 10
+#define TETH_SPEED 10
+#define SHIN_SPEED 10
+#define PULSER_Z_SPEED 6
+#define PULSER_T_SPEED 6
+#define PULSER_S_SPEED 2
+#define TERCHER_Z_SPEED 4
+#define TERCHER_T_SPEED 2
+#define TERCHER_S_SPEED 3
+#define HALCYON_Z_SPEED 6
+#define HALCYON_T_SPEED 6
+#define HALCYON_S_SPEED 3
+#define INCEPTER_SPEED 3
+
+//grekim speeds 
+#define OCTO_SPEED 6
+#define SEPI_SPEED 6
+#define PHARO_SPEED 9
+#define OCTOPOD_SPEED 6
+//actuan SEPIPOD_SPEED 2
+#define SEPIPOD_SPEED 2
+//actual PHAROPOD_SPEED 2.5
+#define PHAROPOD_SPEED 3
+#define OCTOLIGO_SPEED 10
+//actual SEPILIGO_SPEED 1.5
+#define SEPILIGO_SPEED 2
+#define PHAROLIGO_SPEED 6
+#define GARGANTUAN_SPEED 1
+
+
+//******* SAY commands 
+#define SAY_HP say "Not enough HP";
+#define SAY_POWER say "Not enough Power";
+#define SAY_RESOURCES say "Not enough Resources";
+#define SAY_ENERGY say "Not enough Energy";
+#define SAY_CHARGE say "Not enough Charge";
+#define SAY_LC say "Not enough L-Crystals";
+#define SAY_QP say "Not enough Q-Plasma";
+#define SAY_NEARBY say "Use nearby foundation to expand";
+#define SAY_PAYLOAD say "No Payload";
+#define SAY_HIGH_ENOUGH say "Not high enough from ground";
+#define SAY_OBSTACLE say "Can't do it, something's in the way";
+#define SAY_FOUNDATION_OBSTACLE say "Foundation must be clear of obstacles and on flat terrain";
+#define SAY_HEIRARCHY_OFF say "Turning Auto-Heirarchy OFF";
+#define SAY_HEIRARCHY_ON say "Turning Auto-Heirarchy ON";
+#define SAY_IDLE_OFF say "Turning Smart Idle OFF";
+#define SAY_IDLE_ON say "Turning Smart Idle ON";
+#define SAY_GATE say "No available gate close to me";
+#define SAY_DEPOT say "No available Depot close to me";
+#define SAY_NO_CRUISER say "No Cruiser close to me";
+#define SAY_NO_ACC say " with a nearby ACC";
+#define SAY_TOOFAR say "Too far";
+#define SAY_ENOUGH say "Not enough ";
+#define SAY_ENOUGHR say "Resources";
+#define SAY_ENOUGHP say "Power";
+#define SAY_ENOUGHE say "Energy";
+#define SAY_SKIP say "Can't skip there. "; 
+#define SAY_FIRE say "Could not fire";
+#define SAY_LOS say "No direct line of sight to target"; 
+#define SAY_SHOOT say "Can't shoot: ";
+#define SAY_TSSED say "Target has a Temporal Soliton Shield"; 
+#define SAY_MERGE say "Can't Merge! ";
+#define SAY_CARRYING_SPLIT say "Can't Split down while carrying units";
+#define SAY_VERTICALLY say "Too far from unit vertically";
+#define SAY_ALLY_INWAY say "Ally unit in the way, tell ally to move it";
+#define SAY_OWN_INWAY say "Unit in the way, ordering it to move away";
+#define SAY_OVERLAY say "Can't make there: Can't overlay foundations";
+#define SAY_EDGE say "Can't make there: too close to edge";
+#define SAY_SOMETHING say "Can't make there: something is in the way";
+#define SAY_AREA say "Can't make there: can't see the entire area";
+#define SAY_HITCH say "No Tanks close enough to hitch on";
+#define SAY_MORPH say "Can't Morph Here ";
+#define SAY_BUILD say "Can't Build there ";
+#define SAY_JAMMED say "Can't do it: Comm Jammed";
+#define SAY_FULL say "Carrier is full"; 
+#define SAY_RECOVER say "Can't Recover: ";
+#define SAY_REPAIR say "Can't Repair: ";
+#define SAY_BREAKTSS say "Can't Break TSS: ";
+#define SAY_ENQUEUE say "Can't enqueue anymore: Won't fit.";
+#define SAY_RESERVES say "Not enough Troop Reserves";
+#define SAY_PROGEN_RESERVES say "Not enough progeneration energy";
+#define SAY_PRIORITY say "Priority issued, break formation!";
+#define SAY_ENEMY say "Enemy unit too close";
+#define SAY_CARRY say "Can't carry: Won't fit.";
+#define SAY_CARGO say "No Cargo";
+#define SAY_PUT say "Cannot put unit anywhere";
+#define SAY_RELEASE say "Can't Release there";
+#define SAY_HINDERED say "Hindered ally here!";   
+#define SAY_RESPOND_HEAL  say "Responding to Heal request";  
+#define SAY_RESPOND_RECOVER say "Responding to Recover request";
+#define SAY_RESPOND_BREAKTSS say "Responding to Break TSS request";
+#define SAY_SEE_TSSED say "I see a TSS'd enemy here"; 
+#define SAY_HITNRUN say "Attacked by an undetected enemy";
+#define SAY_NANITES say "Attacked own unit! (Nanites?) "; 
+#define SAY_TRAITOR say "Ally is attacking unit! (Traitor or Nanites?) ";
+#define SAY_DEPLOY_MARINE say "Deploying Marine"; 
+#define SAY_DEPLOY_SOP say "Deploying SpecialOp"; 
+#define SAY_DEPLOY_MECH say "Deploying Mech"; 
+#define SAY_DEPLOY_AMG say "Deploying MAR (Mobile Armored Railgun)"; 
+#define SAY_DEPLOY_ATHC say "Deploying ATHC (All-Terrain Hover Craft)"; 
+#define SAY_DEPLOY_LANCER say "Deploying Lancer"; 
+#define SAY_DEPLOY_FRIGATE say "Deploying Frigate"; 
+#define SAY_DEPLOY_TANK say "Deploying Tank AB400"; 
+#define SAY_DEPLOY_MFB say "Deploying MFB (Mobile Field Base)"; 
+#define SAY_DEPLOY_TORNADE say "Deploying Tornade"; 
+#define SAY_DEPLOY_HC say "Deploying Heavy Cruiser"; 
+#define SAY_DEPLOY_BLACKBIRD say "Deploying Blackbird"; 
+#define SAY_DEPLOY_ZAYIN say "Deploying Zayin Vir"; 
+#define SAY_DEPLOY_TETH say "Deploying Teth Vir"; 
+#define SAY_DEPLOY_SHIN say "Deploying Shin Vir"; 
+#define SAY_DEPLOY_FIT say "Can't Deploy. Won't fit or obstacles in the way";
+#define SAY_INTERRUPT say "Deployment Interrupted. Re-Deploying.";
+#define SAY_CONGREGATE say "Congregation location set";
+#define SAY_CONGREGATE_OFF say "Congregation location cleared";
+#define SAY_RESEARCH_WEAPONS say "Upgrading advanced weaponry";
+#define SAY_RESEARCH_WEAPONS_AIR say "Upgrading aerospace and advanced weaponry";
+#define SAY_RESEARCH_GATE say "Enabling Gate Technology";
+#define SAY_RESEARCH_EXTRAS say "Enabling Extra abilities";
+#define SAY_RESEARCH_MARINE say "Upgrading ground units' weaponry";
+#define SAY_RESEARCH_HMECH say "Enabling advanced structures and vehicles";
+#define SAY_RESEARCH_AUTODEFENSE say "Enabling auto-defense and advanced structures";
+#define SAY_RESEARCH_STRUCTURES say "Enabling advanced structures";
+#define SAY_RESEARCH_HALCYON say "Enabling Halcyon class vehicles";
+#define SAY_RESEARCH_LOLIGO say "Enabling Loligo class units";
+#define SAY_RESEARCH_CHRONOPORTING say "Enabling Chronoporting Technology";
+#define SAY_RESEARCH_POWER say "Upgrading Power Generation";
+#define SAY_UNDER_ATTACK say "I am under Attack";
+#define SAY_NO_PROGEN say "No progenitors close enough";
+#define SAY_NO_COMM_CENTER say "You do not have an active Comm Center";
+#define SAY_NO_COMM_HUB say "You do not have an active Comm Hub";
+#define SAY_NO_MOUND say "You do not have an active Mound";
+#define SAY_NOCPORT_READY say "Gate needs to finish recharging";
+#define SAY_NO_ENEMIES say "No enemy targets within range";
+#define SAY_CHRONOPORT say "Can't chronoport that far";
+#define SAY_NO_COMMAND_ARCTICUS say "Target has no commanding Arcticus";
+#define SAY_RECHRONOPORT say "Must wait ",rechronoportSeconds, " more seconds to recover from chronoport";
+#define SAY_FAILED_TPORT say "Self-Teleport failed due to bad terrain or obstacle";
+#define SAY_FAILED_LAND say "Can't land due to bad terrain or obstacle";
+#define SAY_TO_TARGET say "There is no target";
+#define SAY_NO_OCTO say "No subordinate Octo available";
+#define SAY_NO_SEPI say "No subordinate Sepi available";
+#define SAY_NO_PHARO say "No subordinate Pharo available";
+#define SAY_NOT_SUBORDINATE say "Not a direct subordinate";
+#define SAY_CONVERT_RESOURCES say "Converting Q-Plasma into L-Crystal";
+#define SAY_ATTACKED_ON_PATROL say "Attacked while patrolling";
+
+
+//******* COSTS, defined in the XML and checked by ACTION preconditions
+#define LC_SMART_THRESHOLD 0
+#define QP_SMART_THRESHOLD 800
+#define POWER_SMART_THRESHOLD 400
+
+#define SCAN_PULSE_LC 0
+#define SCAN_PULSE_QP 200
+
+//RS:  1 reserve = 50 qp
+//Health: 1 lc = 1 qp = 5 hp
+
+//Marine 50/120: RS:50 H:20
+#define MARINE_LC 50
+#define MARINE_QP 0
+#define MARINE_HP 100
+//SOP 100/200: RS:50 H:50
+#define SOP_LC 0
+#define SOP_QP 100
+#define SOP_HP 250
+//Mech 100/120: RS:0 H:20
+#define MECH_LC 0
+#define MECH_QP 200
+#define MECH_HP 100
+//ATHC 200/300: RS:50 H:50
+#define ATHC_LC 200
+#define ATHC_QP 0
+#define ATHC_HP 250
+//MAR 300/450: RS:50 H:150
+#define MAR_LC 300
+#define MAR_QP 0
+#define MAR_HP 500
+//Tank 400/550: RS:50 H:100
+#define TANK_LC 400
+#define TANK_QP 0
+#define TANK_HP 500
+//MFB 600/750: RS:50 H:100
+#define MFB_LC 0
+#define MFB_QP 600
+#define MFB_HP 500
+//Lancer 200/300: RS:50 H:50
+#define LANCER_LC 0
+#define LANCER_QP 200
+#define LANCER_HP 250
+//Frigate 300/420: RS:50 H:70
+#define FRIGATE_LC 0
+#define FRIGATE_QP 300
+#define FRIGATE_HP 350
+//Tornade 400/580: RS:50 H:130
+#define TORNADE_LC 0
+#define TORNADE_QP 400
+#define TORNADE_HP 650
+//Cruiser 600/800: RS:50 H:150
+#define CRUISER_LC 0
+#define CRUISER_QP 600
+#define CRUISER_HP 750
+//BBird 500/700: RS:50 H:150
+#define BLACKBIRD_LC 0
+#define BLACKBIRD_QP 500
+#define BLACKBIRD_HP 750
+
+#define CARRIER_LC 0
+#define CARRIER_QP 550
+
+#define RP_LC 0
+#define RP_QP 300
+#define COMMC_LC 0
+#define COMMC_QP 600
+#define ARMORY_LC 100
+#define ARMORY_QP 0
+#define IMPORTER_LC 0
+#define IMPORTER_QP 300
+#define FACTORY_LC 200
+#define FACTORY_QP 0
+#define MACROFAB_LC 0
+#define MACROFAB_QP 600
+#define TURRET_LC 0
+#define TURRET_QP 200
+#define SLINGSHOT_LC 0
+#define SLINGSHOT_QP 75
+#define TELEPORTER_LC 0 
+#define TELEPORTER_QP 200 
+#define CHRONOPORTER_LC 0
+#define CHRONOPORTER_QP 200
+
+#define ADV1_LC 0
+#define ADV1_QP 200
+#define ADV2_LC 0
+#define ADV2_QP 40
+#define ADV2_G_LC 0
+#define ADV2_G_QP 400
+#define ADV3_LC 0
+#define ADV3_QP 100
+#define ADV4_LC 0
+#define ADV4_QP 200
+#define ADV4_G_LC 0
+#define ADV4_G_QP 250
+#define ADV5_LC 0
+#define ADV5_QP 400
+#define ADV6_LC 0
+#define ADV6_QP 250
+
+#define NUKE_LC 150
+#define NUKE_QP 150
+#define CHRONOBOMB_LC 0
+#define CHRONOBOMB_QP 270
+#define PLASMABOMB_LC 0
+#define PLASMABOMB_QP 180
+#define TORPEDO_LC 200
+#define TORPEDO_QP 200
+
+#define TANK_UPGRADE_LC 200
+#define TANK_UPGRADE_QP 200
+#define TURRET_UPGRADE_LC 10
+#define TURRET_UPGRADE_QP 8
+#define DOME_UPGRADE_LC 0
+#define DOME_UPGRADE_QP 200
+
+#define ARCTICUS_OCTO_LC 0
+#define ARCTICUS_OCTO_QP 100
+#define ARCTICUS_SEPI_LC 0
+#define ARCTICUS_SEPI_QP 100
+#define ARCTICUS_PHARO_LC 0
+#define ARCTICUS_PHARO_QP 100
+
+#define OCTO_LC 0
+#define OCTO_QP 100
+#define SEPI_LC 0
+#define SEPI_QP 100
+#define PHARO_LC 0
+#define PHARO_QP 100
+#define TODARO_LC 0
+#define TODARO_QP 200
+#define OCTOPOD_LC 0
+#define OCTOPOD_QP 300
+#define SEPIPOD_LC 0
+#define SEPIPOD_QP 400
+#define PHAROPOD_LC 0
+#define PHAROPOD_QP 500
+#define OCTOLIGO_LC 0
+#define OCTOLIGO_QP 400
+#define SEPILIGO_LC 0
+#define SEPILIGO_QP 600
+#define PHAROLIGO_LC 0
+#define PHAROLIGO_QP 400
+#define GARGANTUAN_LC 0
+#define GARGANTUAN_QP 400
+
+#define GREKIM1_ENERGY 5
+#define GREKIM2_ENERGY 6
+#define GREKIM_SPAWN_R 225
+// range is 15 (= 225)
+#define GREKIM_ARCT_R 60
+
+#define GREKIM_RP_LC 0
+#define GREKIM_RP_QP 200
+#define GREKIM_RP_E 20
+#define REAPH_LC 0
+#define REAPH_QP 0
+#define REAPH_E 20
+#define MOUND_LC 0
+#define MOUND_QP 0
+#define MOUND_E 20
+#define SPYRE_LC 0
+#define SPYRE_QP 0
+#define ARCTICUS_LC 0
+#define ARCTICUS_QP 100
+#define DOME_LC 0
+#define DOME_QP 200
+#define DOME_E 10
+#define PRI_RP_LC 0
+#define PRI_RP_QP 300
+#define PRI_REAPH_LC 0
+#define PRI_REAPH_QP 50
+#define PRI_ARCTICUS_LC 0
+#define PRI_ARCTICUS_QP 200
+
+#define PULSER_POWER 1
+#define TERCHER_POWER 2
+#define HALCYON_POWER 3
+#define INCEPTER_POWER 12
+
+#define ZAYIN_VIR_LC 0
+#define ZAYIN_VIR_QP 50
+#define TETH_VIR_LC 0
+#define TETH_VIR_QP 50
+#define SHIN_VIR_LC 0
+#define SHIN_VIR_QP 50
+#define ZAYIN_PULSER_LC 0
+#define ZAYIN_PULSER_QP 250
+#define TETH_PULSER_LC 0
+#define TETH_PULSER_QP 250
+#define SHIN_PULSER_LC 0
+#define SHIN_PULSER_QP 300
+#define ZAYIN_TERCHER_LC 0
+#define ZAYIN_TERCHER_QP 400
+#define TETH_TERCHER_LC 0
+#define TETH_TERCHER_QP 500
+#define SHIN_TERCHER_LC 0
+#define SHIN_TERCHER_QP 600
+#define ZAYIN_HALCYON_LC 0
+#define ZAYIN_HALCYON_QP 800
+#define TETH_HALCYON_LC 0
+#define TETH_HALCYON_QP 800
+#define SHIN_HALCYON_LC 0
+#define SHIN_HALCYON_QP 900
+#define INCEPTER_LC 0
+#define INCEPTER_QP 1500
+
+#define VIR_FOUNDATION_BONUS 0
+#define FOUNDATION_LC 0
+#define FOUNDATION_QP 200
+#define ANNEX_LC 0
+#define ANNEX_QP 150
+#define DEPOT_LC 0
+#define DEPOT_QP 300
+#define ACC_LC 0
+#define ACC_QP 100
+#define BASTION_LC 0
+#define BASTION_QP 150
+#define SLIPGATE_LC 0
+#define SLIPGATE_QP 600
+#define COMM_HUB_LC 34
+#define COMM_HUB_QP 0
+
+#define SKIP_UPGRADE_LC 0
+#define SKIP_UPGRADE_QP 50
+
+#define MARINE_CPORT_QP 15
+#define SOP_CPORT_QP 22
+#define MECH_CPORT_QP 31
+#define TANK_CPORT_QP 59
+#define TANK2_CPORT_QP 70
+#define MAR_CPORT_QP 46
+#define MAR2_CPORT_QP 70
+#define ATHC_CPORT_QP 42
+#define MFB_CPORT_QP 63
+#define LANCER_CPORT_QP 44
+#define FRIGATE_CPORT_QP 63
+#define TORNADE_CPORT_QP 67
+#define CRUISER_CPORT_QP 83
+#define BLACKBIRD_CPORT_QP 69
+
+#define ZAYIN_CPORT_QP 30
+#define TETH_CPORT_QP 30
+#define SHIN_CPORT_QP 31
+#define PULSER_Z_CPORT_QP 42
+#define PULSER_T_CPORT_QP 50
+#define PULSER_S_CPORT_QP 60
+#define TERCHER_Z_CPORT_QP 63
+#define TERCHER_T_CPORT_QP 76
+#define TERCHER_S_CPORT_QP 78
+#define HALCYON_Z_CPORT_QP 87
+#define HALCYON_T_CPORT_QP 67
+#define HALCYON_S_CPORT_QP 92
+
+#define OCTO_CPORT_QP 0 
+// 40 p => 20 qp
+#define SEPI_CPORT_QP 0 
+// 60 p => 30 qp 
+#define PHARO_CPORT_QP 0 
+// 30 p => 15 qp
+#define OCTOPOD_CPORT_QP 0 
+// 150 p => 75 qp
+#define SEPIPOD_CPORT_QP 0 
+// 360 p => 180 qp
+#define PHAROPOD_CPORT_QP 0 
+// 160 p => 80 qp
+#define OCTOLIGO_CPORT_QP 0 
+// 300 p => 150 qp
+#define SEPILIGO_CPORT_QP 0 
+// 400 p => 200 qp
+#define PHAROLIGO_CPORT_QP 0 
+// 800 p => 400 qp
+
+#define SET_AP if (setAdditionalParameters) { PERFORM SET_ADDITIONAL_PARAMS ap; }
+
+//return unit's speed based on its class
+#define SPEED_BY_CLASS \
+        if (uclass < 300) { \
+            if (uclass < 45) { \
+				if (uclass<$TANK_CLASS) { \
+					if (uclass==$WINTERS_CLASS||uclass==$WINTERS_RAISED_CLASS||uclass==$HOLLOWAY_CLASS||uclass==$HOLLOWAY_RAISED_CLASS) { speed = $HOLLOWAY_SPEED; } \
+					else { speed = $MECH_SPEED; }  } \
+                else if (uclass==$TANK_CLASS) { speed = $TANK_SPEED; } \
+                else if (uclass==$TANK2_CLASS) { speed = $TANK2_SPEED; } \
+                else if (uclass==$MAR_CLASS) { speed = $MAR_SPEED; } \
+                else if (uclass==$MAR2_CLASS) { speed = $MAR2_SPEED; } \
+            } \
+            else { \
+                if (uclass==$ATHC_CLASS) { speed = $ATHC_SPEED; } \
+                else if (uclass>=$MFB_CLASS && uclass <=$TYR_MFB_CLASS) { speed = $MFB_SPEED; } \
+                else if (uclass==$LANCER_CLASS) { speed = $LANCER_SPEED; } \
+                else if (uclass==$FRIGATE_CLASS) { speed = $FRIGATE_SPEED; } \
+                else if (uclass==$TORNADE_CLASS) { speed = $TORNADE_SPEED; } \
+                else if (uclass==$CRUISER_CLASS) { speed = $CRUISER_SPEED; } \
+                else if (uclass==$BLACKBIRD_CLASS) { speed = $BLACKBIRD_SPEED; } \
+				else if (uclass==$CARRIER_CLASS) { speed = $CARRIER_SPEED; } \
+            } \
+        }  if (uclass > 2000 ) { \
+            if (uclass < 2030) { \
+                if (uclass<=$VIR_SHIN_RAISED_CLASS||uclass>=$DJELT_CLASS) { speed = $ZAYIN_SPEED; } \
+                else if (uclass==$TERCHER_Z_CLASS) { speed = $TERCHER_Z_SPEED; } \
+                else if (uclass==$TERCHER_T_CLASS) { speed = $TERCHER_T_SPEED; } \
+                else if (uclass==$TERCHER_S_CLASS) { speed = $TERCHER_S_SPEED; } \
+            } else { \
+                if (uclass==$PULSER_Z_CLASS) { speed = $PULSER_Z_SPEED; } \
+                else if (uclass==$PULSER_T_CLASS) { speed = $PULSER_T_SPEED; } \
+                else if (uclass==$PULSER_S_CLASS) { speed = $PULSER_S_SPEED; } \
+                else if (uclass==$HALCYON_Z_CLASS) { speed = $HALCYON_Z_SPEED; } \
+                else if (uclass==$HALCYON_T_CLASS) { speed = $HALCYON_T_SPEED; } \
+                else if (uclass==$HALCYON_S_CLASS) { speed = $HALCYON_S_SPEED; } \
+				else if (uclass==$INCEPTER_CLASS ||uclass==$TYR_CARRIER_CLASS) { speed = $INCEPTER_SPEED; } \
+				else if (uclass>=$DJELT_CLASS) { speed = $SHIN_SPEED; } \
+            } \
+        } else { \
+			if (uclass==$OCTO_CLASS) { speed = $OCTO_SPEED; } \
+			else if (uclass>=$OCTOPOD_CLASS && uclass <= ($OCTOPOD_CLASS+4)) { speed = $OCTOPOD_SPEED; } \
+			else if (uclass==$OCTOLIGO_CLASS) { speed = $OCTOLIGO_SPEED; } \
+			else if (uclass==$SEPI_CLASS) { speed = $SEPI_SPEED; } \
+			else if (uclass==$SEPIPOD_CLASS) { speed = $SEPIPOD_SPEED; } \
+			else if (uclass==$SEPILIGO_CLASS) { speed = $SEPILIGO_SPEED; } \
+			else if (uclass==$PHARO_CLASS) { speed = $PHARO_SPEED; } \
+			else if (uclass==$PHAROPOD_CLASS) { speed = $PHAROPOD_SPEED; } \
+			else if (uclass==$PHAROLIGO_CLASS) { speed = $PHAROLIGO_SPEED; } \
+			else if (uclass==$GARGANTUAN_CLASS) { speed = $GARGANTUAN_SPEED; } \
+		}  \
+	
+#define UPDATE_SPEED_FOR_FAST_UNITS if ( $IS_FAST_UNIT) { dir[8,8] = 1; counter = counter - 1; }
+#define MAX_COUNTER_VALUE counter = 7; if ( $IS_FAST_UNIT) { counter = 6; } 
+
+
+#define FOUNDATION_DIR_UP 1
+#define FOUNDATION_DIR_UP_RIGHT 2
+#define FOUNDATION_DIR_DOWN_RIGHT 3
+#define FOUNDATION_DIR_DOWN 4
+#define FOUNDATION_DIR_DOWN_LEFT 5
+#define FOUNDATION_DIR_UP_LEFT 6
+
+
+	
+//****** RESEQUENCE VALUES - ACTIONS, EVENTS and BIT values, (mostly for debugging)
+#define EVENT_CREATED 0
+#define EVENT_DESTROYED 1
+#define EVENT_CREATED_UNIT 57
+#define EVENT_NOTHING 58
+#define EVENT_ASSIGN_NEW_OBJECTIVE 59
+#define EVENT_TIME_TRAVEL_DEPART 60
+#define EVENT_UNCREATED 61
+#define EVENT_DIE 62
+#define EVENT_TIME_TRAVEL_ARRIVE 63
+
+//rotation values, starts with 0 as south, goes clockwise ( unit->Rotation )
+#define ROT_S	0
+#define ROT_SW	1
+#define ROT_W	2
+#define ROT_NW	3
+#define ROT_N	4
+#define ROT_NE	5
+#define ROT_E	6
+#define ROT_SE	7
+
+#define LAST_ATTACKED_V_DIRECTION_NONE 0
+#define LAST_ATTACKED_V_DIRECTION_BELOW 1
+#define LAST_ATTACKED_V_DIRECTION_SAME 2
+#define LAST_ATTACKED_V_DIRECTION_ABOVE 3
+
+//dir = QUERY BESTMOVE..., moving northeast is (1|4) = 5
+//dir[0,8] values are:
+#define TERRAIN_WEST	1
+#define TERRAIN_EAST	2
+#define TERRAIN_NORTH	4
+#define TERRAIN_SOUTH	8
+#define TERRAIN_UP		16
+#define TERRAIN_DOWN	32
+#define TERRAIN_ALL_PLANAR_DIRECTIONS 0xF
+#define TERRAIN_ALL_DIRECTIONS (TERRAIN_ALL_PLANAR_DIRECTIONS | TERRAIN_UP | TERRAIN_DOWN)
+#define TERRAIN_SOUTHWEST	(TERRAIN_SOUTH | TERRAIN_WEST)
+#define TERRAIN_NORTHWEST	(TERRAIN_NORTH | TERRAIN_WEST)
+#define TERRAIN_NORTHEAST	(TERRAIN_NORTH | TERRAIN_EAST)
+#define TERRAIN_SOUTHEAST	(TERRAIN_SOUTH | TERRAIN_EAST)
+
+#define MOVE_REVERSE 255
+
+#define DIR_UP_BIT 4
+#define DIR_DOWN_BIT 5
+
+/*
+
+//dir:
+546    
+1 2  
+98A  
+
+//rot:
+345
+2 6
+107
+
+*/
+#define DIR_FROM_ROT if (rot==0) dir = 8;\
+					else if (rot==1) dir = 9;\
+					else if (rot==2) dir = 1;\
+					else if (rot==3) dir = 5;\
+					else if (rot==4) dir = 4;\
+					else if (rot==5) dir = 6;\
+					else if (rot==6) dir = 2;\
+					else dir = 10;
+
+#define ROT_FROM_DIR if (dir==8) rot = 0;\
+					else if (dir==9) rot = 1;\
+					else if (dir==1) rot = 2;\
+					else if (dir==5) rot = 3;\
+					else if (dir==4) rot = 4;\
+					else if (dir==6) rot = 5;\
+					else if (dir==2) rot = 6;\
+					else rot = 7;
+					
+					
+//*** debug - useful prints
+
+#define PRINT_C3 $print "C3: "; for(I = 15; I >= 0; I = I -1) { $print (((player->CustomField3) >> I) & 1); } \
+                $print "\n            Ff-SR-HhL-uuuuuu\n-----\n";
+#define PRINT_MAP $print "AP: "; for(I = 31; I >= 0; I = I -1) { $print ((ap >> I) & 1); } \
+                $print "\n            ssssppppmmmmMSetrS-----oooUDAMTP\n"; 
+#define PRINT_AP $print "AP: "; for(I = 31; I >= 0; I = I -1) { $print ((ap >> I) & 1); } \
+                $print "\n            dddt^^^.cccccsrahpamooooooUDAMTP\n"; 
+#define PRINT_BAP $print "AP: "; for(I = 31; I >= 0; I = I -1) { $print ((ap >> I) & 1); } \
+                $print "\             nuuuuuuuuuuuuuuuuyyyyYxxxxXUooooo\n";
+#define PRINT_AAP $print "AP: "; for(I = 31; I >= 0; I = I -1) { $print ((ap >> I) & 1); } \
+                $print "\n            uuuuuuuuuuuuuuuu~~~~~----xoflsma\n";                 
+
+
+//PERFORM GET_CUR_TIME; print "cTIME: ", perf_ret, " ", unit->Objective, " ", unit->Action,"\n";
+//if(1) { int I = 0; int ap = unit->AdditionalParameters; $PRINT_AP }
+
+
+// return a single precision float given a 32 bit int
+// input: (int) int_val
+// output: (float) f_val 
+// fraction is calculated as: SUMMATION for i = 1..23 of (b23-i) * 2 ^-i	
+#define OUTPUT_FLOAT_VALUE	if(int_val) {\
+	int sign = int_val[31];\
+	int exponent = int_val[23,8];\
+	int mantissa = int_val[0,23];\
+	float fraction = 0;\
+	int i = 1;\
+	for(i = 1; i <= 23; i = i + 1) {\
+		if( (mantissa >> (23 - i)) & 1 ) { fraction = fraction + 2 ** (-i); }\
+	}\
+	f_val = (-1)**sign * (1 + fraction) *  2 ** (exponent - 127);\
+}

@@ -1,0 +1,41 @@
+// --- To be used in conjuction with obsSkipper.rsi
+//     Uses LastTick to insert a discontinuity record to the discontinuity list
+//      USES:
+//          $ListStart      used to mark the start of the usable list
+//          $MaxFields      used to mark the end of the usable list
+//      INPUT:
+//          LastTick =      the time to be recorded as a discontinuity
+//          FIndex          has to be initialised, primarily as a result of obsSkipperCheck.rsi
+// 
+// This code has been created by IphStich, who reserves all copyright.
+
+
+
+// - 0) initialise variables
+{FIndex=$ListStart; player=0;int NewTemp=LastTick;
+// - 1) find the appripriate index to insert
+while (1) {
+    PERFORM GET_ACHRONAL_FIELD FIndex;
+    if (perf_ret < LastTick) {break;} else {FIndex=FIndex+1;} // if: found index: end: else: continue
+    if (perf_ret == LastTick) {FIndex=-1;break;} // Check for duplicates
+    if (FIndex>$MaxFields) {FIndex=-1;break;} // Check for end-of-list
+}
+
+// player=0;
+//target=FIndex;PERFORM SET_ACHRONAL_FIELD LastTick;
+//$ListTest
+//say " : ",FIndex-$ListStart," : ";
+                                                                        //player=0; say "discontinuity report: ", FIndex, " = ", LastTick;
+// - 2) insert the new record and shift the rest of the list
+while (FIndex>0) {
+    int NewTemp2=NewTemp;
+    PERFORM GET_ACHRONAL_FIELD FIndex;
+    NewTemp=perf_ret;target=FIndex;
+    PERFORM SET_ACHRONAL_FIELD NewTemp2;
+    FIndex=FIndex+1;
+    //say " :",NewTemp2;
+    if (NewTemp==0 || FIndex>$MaxFields) {break;}
+}
+//$ListTest
+}
+//player=0;say "new: ",LastTick," ",present;

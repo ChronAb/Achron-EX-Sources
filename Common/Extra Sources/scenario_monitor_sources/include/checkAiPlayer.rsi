@@ -1,0 +1,25 @@
+/********************************************************
+* Determines who the AI players are separate from connected players
+*
+* Global vars used: none
+*
+* Fields:  AIPLAYER_AF 117: AI players
+*
+* Global vars defined: aiPlayer :    bits 0-14: Stores a bitmask of AI players
+*                                    bits 15-29: Stores a bitmask of AI players that will die
+*                                    bit 30 unused
+*                                    bit 31: Stores whether a single AI player has been used
+********************************************************/
+
+//Field definition for AI player bitmask
+#define AIPLAYER_AF 117
+PERFORM GET_ACHRONAL_FIELD $AIPLAYER_AF;
+int aiPlayer = perf_ret;
+
+if (current == present && present == 1){
+	int x = 0;
+	for (x = 0; x<15; x = x + 1){
+		player = x;
+		if (player->IsComputerPlayer == 1 && (enabled>>x)&1) aiPlayer = aiPlayer | (1<<x);
+	}
+}

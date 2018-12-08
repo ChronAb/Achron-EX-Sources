@@ -1,0 +1,24 @@
+// --- Checks for a discontinuity at current
+//      USES:
+//          $ListStart      the start of the discontinuity list
+//          $MaxFields      the end of the discontinuity list
+//          $CheckOffput    how the check should be offput (0 by default, but there for emergencies)
+//      CREATES:
+//          skip =          =1 if discontinuity is detected
+//          FIndex =        the index the the found discontinuity, primarily for obsSkipperRemove.rsi
+
+
+
+// - 0) initialise variables
+int skip=0; int FIndex=$ListStart;
+{
+// - 1) Check the discontinuity list
+while (1) {
+    PERFORM GET_ACHRONAL_FIELD FIndex; // read from list
+    //player=0;say " [",FIndex-($ListStart)," : ",perf_ret,"]";
+    if (perf_ret == (current + ($CheckOffput))) {skip=1;} // if: read item is discontinuity for current: return skip=1
+    if ((FIndex == $MaxFields) || (current >= perf_ret) || skip) {break;} // check for if the end of the list has been reached, or if the script has searched too far
+    FIndex=FIndex+1;
+}
+                                                //if (skip && waves[0]==1) {player=0;say "SKIP: ( ", FIndex, ")   ";}
+}

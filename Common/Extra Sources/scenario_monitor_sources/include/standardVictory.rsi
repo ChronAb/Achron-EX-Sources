@@ -1,0 +1,27 @@
+/**************************************
+* Basic Victory condition for general games
+*
+* Checks if all players remaining are mutually allied. If so, no one has any enemies left and the game is over
+*
+* Global vars used: nonPlayer
+* 					end_game
+**************************************/
+
+int checkPlayer = 0;
+
+PERFORM GET_ACTIVE_PLAYERS;
+active = perf_ret;
+
+for(checkPlayer = 0; checkPlayer < 15; checkPlayer = checkPlayer+1){
+	player = checkPlayer;
+	
+	//Only check for players who are still alive
+	if(((active&(~nonPlayer))>>checkPlayer)&1){
+		if ((((player->Allies)&(active&(~nonPlayer)))|(1<<checkPlayer)) == (active&(~nonPlayer))){
+			end_game = 1;
+		} else {
+			end_game = 0;
+			checkPlayer = 16; //same as 'break;'
+		}
+	}
+}

@@ -1,0 +1,84 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+#include common/include/unit_morph_rechronoport_check.ais
+
+//if (!player->Advancements[$GREKIM_ADV_AUTODEFENCE]) { PERFORM SET_OBJECTIVE 0; PERFORM NOTHING; }
+
+int op = unit->ObjectiveParameters;
+if (unit->Position == op) {
+	
+	if (player->$LCrystals < $DOME_LC|| player->$QPlasma < $DOME_QP 
+		|| unit->Energy < $DOME_E ) {
+		PERFORM SET_OBJECTIVE 0;    
+		$SAY_RESOURCES
+		PERFORM $ACTION_ERROR1;
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM NOTHING;
+	}
+	//buildings must be oriented south
+	if (unit->Rotation != $ROT_S ) {
+		PERFORM $ACTION_ROTATE $ROT_S;
+		if (perf_ret!=1) { //failed to rotate
+			$SAY_MORPH 
+			PERFORM SET_ADDITIONAL_PARAMS 0;
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+		}
+		PERFORM NOTHING;
+	}
+	
+    PERFORM SET_OBJECTIVE $OBJ_BLDG_CONSTRUCTION;   
+	target = $DOME_CLASS;
+	PERFORM CAN_CLASS_FIT_AT unit->Position;
+	if (perf_ret[$ROT_S]) {
+		PERFORM $ACTION_CHANGE_COMMANDER 0;
+		PERFORM $ACTION_MORPH_DOME $OCTO_CLASS;
+		if (perf_ret == 0) $SAY_MORPH
+	}
+	else { $SAY_MORPH }
+	PERFORM SET_ADDITIONAL_PARAMS 0;
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM NOTHING;
+}
+else {
+	int qp = 0;
+	int dir = 0;
+	int obstacle = 0;
+	//once within 3 spaces of destination, make sure to move to the exact position the player selected 
+	if (unit<_>op <= 9) {
+		target = $DOME_CLASS;
+		PERFORM CAN_CLASS_FIT_AT op;
+		if (!perf_ret[$ROT_S]) {
+			dir = 0;
+			obstacle = 1;
+		}
+		else {
+	
+			int opx = op[$Xpos];
+			int opy = op[$Ypos];
+			int _qy = 0;
+			int _qx = 0;		
+			//adjust for tOP left corner of the 2x2 grek unit
+			dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ 
+							((_qx=((qp=query->Position)[$Xpos])) - opx) * (_qx - opx) +
+								((_qy=qp[$Ypos]) - opy) * (_qy - opy) 		
+							] WHERE [1];
+		}
+	} else {
+		dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ query <_> op ] WHERE [1];
+	}
+	
+	if(dir==0 || dir==$QUERY_EXHAUSTED ) { 
+		//can't get to where we need to go, so give up!
+		if (obstacle) { $SAY_MORPH }
+		PERFORM SET_ADDITIONAL_PARAMS 0;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+	    PERFORM SET_OBJECTIVE 0;
+	} else {
+		PERFORM $ACTION_MOVE dir;
+    }
+
+}
+    

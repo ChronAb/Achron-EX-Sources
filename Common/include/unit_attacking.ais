@@ -1,0 +1,654 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+//unit_attacking.ais - the common attack POSITION script. not a standalone. 
+//must be included in the individual attack scripts for all 3 races
+
+
+//Script flow:
+// first check if attacking a unit, if so, change objective to attack-unit
+// as the unit moves towards the target it will check the AdditionalParameters' TEMPUNIT_BIT and EVERYOTHER_BIT
+// if either of those is set, it will look for enemies to attack using the "find-the-best enemy for me" heuristic
+// if an enemy unit is found, set the TEMPUNIT_BIT and attack the target
+// this way the next time this script is run, it'll look for enemies again, and probably find the same one again, or a better one
+// if no enemy unit is found, then continue moving towards the original destination
+// setting the EVEREYOTHER_BIT every other move, so that it looks for enemies 
+// every Other move since it's not really necessary to be that zealous, and it saves on CPU.
+//
+// If the unit cannot move towards the destination, it'll set its AP_STUCK bit and store a 4 bit timestamp
+// so that the unit will wait until that timestamp matches (waits 15 ticks) to check if it can move again.
+// as with regular move, the bestmove query returns a counter of up to 7 moves if the unit should move in a straight line 
+// to reduce the number of bestmove queries and to continue moving in that direction.
+
+
+//predefined STOP action - stop attacking and return to idle
+#define STOP PERFORM SET_ADDITIONAL_PARAMS ($PLAY_B); PERFORM SET_ADDITIONAL_PARAMS2 0; PERFORM SET_OBJECTIVE 0;  PERFORM CLEAR_LAST_ATTACKED_DIRECTION; PERFORM NOTHING;
+
+//don't teleport after commander if executing a recent player-issued order
+if (!AP_PLAYER || ap[$MOVE_COUNTER]==0) { 
+	#include common/include/unit_teleport_after_commander.ais
+}
+
+int FORCE_AUTOPILOT = 0;
+int op = unit->ObjectiveParameters;  
+int destinationParameter = op; //copy of original destination 
+object closestenemy=0;
+int targetIsOnGround = 1; //default the z parameter to 1, meaning target is on the ground
+
+//check to see if commander has priority and follow commander if needed
+#include common/include/unit_priority_override.ais
+
+int targetalive = 0; //default target as not alive
+
+//if attacking a unit, check to see if it's alive and change objective to attack_unit. If not, STOP attacking.
+if (AP_UNIT==1) { 
+    target = op; //unit is stored in OP
+	if (target->IsAlive!=1 || target->HP==0) {
+        PERFORM SET_PARAM 0;
+        $STOP;
+    }
+	PERFORM SET_OBJECTIVE $OBJECTIVE_ATTACKING_UNIT;
+	PERFORM NOTHING;
+} 
+else {  //attacking a location and not a unit
+    //PERFORM GET_TERRAIN_GROUND_HEIGHT_AT op;  //perf_ret is always 0
+	if (op[$Zpos]!=0) { targetIsOnGround = 0; } // store 0 when the z-parameter of the location is not on the ground
+    target = 0;
+}
+
+int unitPosition = unit->Position;
+X = unitPosition[$Xpos];
+Y = unitPosition[$Ypos];
+int Z = unitPosition[$Zpos];
+
+
+int airunit = 0;
+if ($IS_AIR_UNIT) {
+	airunit = 1;
+	//if unit is on the ground 
+	if (Z == 0)  {
+		PERFORM GET_MAP_NEXT_Z_POSITION_UP unitPosition;  //get the spot above the unit's position
+		temp1 = perf_ret; //store it into temp
+		
+		object backuptarget = target; //make a backup of the original target
+		target = uclass;
+		PERFORM CAN_CLASS_FIT_AT temp1; //check if the unit can fit at the spot directly above
+		 //only move up if it can fit there	with its current rotation
+		if ( perf_ret & ( 1 << (unit->Rotation) ) ) {
+			dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ temp1 <=> query ] WHERE [1];
+			dir[16,8]=0; //clear out the 3rd byte that stores the counter
+			if (dir && dir != $QUERY_EXHAUSTED) {
+				PERFORM $ACTION_MOVE dir;
+				$SET_AP
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+				PERFORM NOTHING;
+			}
+		}
+
+		target = backuptarget;
+	}
+}
+
+
+skip = 0;
+if (AP_MOVE) {                //when doing a priority attack area
+	int distUnitToOp = unit<_>op;
+	if (distUnitToOp > 901) { skip = 1; }      //only look for enemies when within 30 spaces of destination
+}
+
+
+if  (!skip  || !AP_PLAYER  )  { //if no target unit or following priority unit attack
+	int runCheck = 1;
+	if (ap[$STUCK_BIT]) {
+		PERFORM GET_CUR_TIME;
+		if (perf_ret % $TPS !=0) {
+			runCheck = 0; 
+		} 
+	}	
+	
+	if (runCheck || ap[$TEMPUNIT_BIT]) {
+		if ( !ap[$EVERYOTHER_BIT] || ap[$TEMPUNIT_BIT]  ) { //dont look for enemies every other time unless 'temporary unit' bit is set
+			//repair units prefer to heal over attack if not doing a priority attack
+			if ($IS_REPAIR_UNIT && !ap[$MOVE_BIT] )  { //this is not during priority since priority has both attack and move bits set
+				int energy = 5;  //default to station or MFB (60 or 225) 
+				int hpcost = 0;
+				int type1 = $TYPE_MECHANICAL;
+				int type2 = $TYPE_BIOLOGICAL;
+				int healDist = 144; //default for most units
+				if (uclass<=$HOLLOWAY_RAISED_CLASS) { //sop and Holloway
+					energy = 1;
+					hpcost = 0;
+					healDist = 36;
+					type1 = $TYPE_BIOLOGICAL; //sop heals Biological only
+				}
+				if (uclass==$BLACKBIRD_CLASS) { //Blackbird
+					type2 = $TYPE_MECHANICAL; //blackbird heals Mechanical only
+				}
+				
+				//only look for damaged allies if there's enough energy and hp to fix them
+				if (unit->Energy > energy && unit->HP > (hpcost*3)) { 
+					object buddy = 0;
+					
+					//Self preservation is top priority, so heal self if health is too low 
+					// (encourages healers to tank)
+					if(unit->HP < (0.6*unit.MaxHP)) buddy = unit;
+					
+					//unit's commander has priority over others, so fix commander if it's damaged
+					if (buddy==0 && myCommander!=0 && unit<_>myCommander <= healDist && !(myCommander->IsStasis) && myCommander->HP < (myCommander.MaxHP-hpcost-5) && ( myCommander.Type==type1 || myCommander.Type==type2)) { 
+						buddy = myCommander;
+					}
+					
+					//if commander doesn't need healing, look for other allies to fix
+					if (buddy==0) {
+						buddy =  QUERY UNIT [unit] MIN [ unit <_> query*(query->HP)**2 ] WHERE [ query->IsAlly==1 && (query->HP <= (query.MaxHP-hpcost-5)) && 
+							 !(query->IsStasis) && ( query.Type==type1 || query.Type==type2 )]; 
+					}
+						
+					//fix buddy if there is one that's close enough to be repaired						
+					if (buddy->IsAlive==1 && buddy<_>unit <= healDist && buddy->HP!=0) {
+						if (uclass==$SOP_RAISED_CLASS || uclass==$HOLLOWAY_RAISED_CLASS) {
+							PERFORM $ACTION_LOWER_WEAPON;
+							PERFORM NOTHING;
+						}
+						target = buddy;
+						PERFORM $ACTION_REPAIR target;
+						PERFORM NOTHING;
+					}
+				}
+			}
+			
+			
+			//***TIME TO LOOK FOR ENEMIES TO ATTACK***
+			#include common/include/unit_common_basic_aggro.ais
+			
+			
+			if (closestenemy->IsAlive==1 && closestenemy->HP!=0) { 
+				target = closestenemy; 
+				targetalive = 1;
+			}
+			ap[$EVERYOTHER_BIT] = 1;
+		}
+		else {
+			ap[$EVERYOTHER_BIT] = 0;
+			ap[$TEMPUNIT_BIT] = 0;
+		}
+		setAdditionalParameters = 1;
+		//^^^PERFORM SET_ADDITIONAL_PARAMS ap; 
+	}
+}
+
+
+
+if (targetalive) {   
+	if (target->IsStasis) {       //check if target is TSSd
+		if ($IS_BREAKTSS_UNIT) {
+			PERFORM SET_PARAM target; //set unit->ObjectiveParameters to the target
+			PERFORM SET_OBJECTIVE $BREAKTSS_UNIT_OBJ;  
+			$SET_AP
+			PERFORM SET_ADDITIONAL_PARAMS2 0;
+			PERFORM NOTHING;
+		}
+		else {  //attacking tss'd units does nothing, so set tss field
+			if ($SMART_IDLE) {
+				#include common/include/unit_tss_request.ais
+			}
+			
+
+			target = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP)**2 ] // attack closest non-TSSed enemy
+					 WHERE [!(query->IsAlly) && (query->IsStasis!=1) && query.Rank>=90 ];
+			if (target->IsAlive!=1 || target->HP==0) {
+				target  = QUERY UNIT [unit] MIN [ unit <_> query * (query->HP)**2 ] 
+							WHERE [!(query->IsAlly) && (query->IsStasis!=1) ]; 
+			}    
+			if (target->IsAlive!=1 || target->HP==0) { targetalive = 0; }
+	
+		}
+	}
+}
+else {
+    if (ap[$TEMPUNIT_BIT]) { 
+        ap[$TEMPUNIT_BIT] = 0; //target is dead so clear the 'temporary unit' bit
+        setAdditionalParameters = 1;
+		//^^^PERFORM SET_ADDITIONAL_PARAMS ap;
+    }
+}
+
+query_vis_distance = -1; //reset query vis range
+    
+int unstick = 0;
+int lad=0;
+
+if (targetalive) {   
+	targetIsOnGround = target->IsTerrainGround;    
+	//return the closest position on the target wrt the unit (same as ClosestAttackblePosition but doesn't take into account weapon range)
+	int position = target->Position; 
+
+	op = position; //store the target's position into the OP, used by bestmove later if target is far away
+	//check if best weapon choice is being used
+    #include common/include/common_weapons.ais  
+		
+	//check if close to target, ATTACK, else move 
+	PERFORM GET_CLOSEST_TARGET_POSITION_WITHIN_RANGE weaponAction;
+	position =  perf_ret; 
+	ap[$TEMPUNIT_BIT] = 1;  //'temporary unit' bit
+	setAdditionalParameters = 1;      
+	//closest attackable position is a valid position and target is not statised, not self 
+	if (position != $INVALID_POSITION && target != unit ) { 		
+
+		#include common/include/unit_fireweapon.ais
+		
+	}
+	
+	#include common/include/unit_unstuck.ais
+
+
+	//if target is within visibility range and within weapon range
+	int thu = target<_>unit;
+	int tvu = target<^>unit;
+    
+	int whr = 0;
+	PERFORM GET_MAX_ACTION_RANGE_RADIUS weaponAction;
+	whr = perf_ret;
+	
+	int wvr = 0;
+	PERFORM GET_MAX_ACTION_RANGE_HEIGHT weaponAction;
+	wvr = perf_ret;
+   
+   
+	if ( (thu <= unit.SightHRange2) && (tvu <= unit.SightVRange2) && 
+		 (thu <= whr*whr) && (tvu <= wvr*wvr) ) {
+		
+		if (thu > 11) { // distance to unit is more than 3 spaces  
+			//if air unit and targetIsOnGround is on the ground, store location off the ground
+			if ($IS_AIR_UNIT) {
+		
+				if (targetIsOnGround) { 
+					PERFORM GET_MAP_NEXT_Z_POSITION_UP op; //get the spot above the OP
+					if (perf_ret[$Zpos] >= unitPosition[$Zpos]) { op[$Zpos] = perf_ret[$Zpos]; }
+					else {
+						PERFORM GET_MAP_NEXT_Z_POSITION_UP perf_ret; //get the spot above the previous spot
+						op[$Zpos] = perf_ret[$Zpos]; 
+					}	
+					
+				} else {
+					PERFORM GET_TERRAIN_GROUND_HEIGHT_AT op;
+					if (perf_ret==op[$Zpos]) { 	
+						PERFORM GET_MAP_NEXT_Z_POSITION_UP op; //get the spot above the OP
+						op = perf_ret; 
+					}	
+				
+				}
+
+			}
+			
+			
+						
+			int counter = unit->AdditionalParameters2; //move counter to move in the same direction
+			if (counter>0) {           //more than 0 means already moving in a direction
+				counter = counter - 1; //decrease the counter
+				int rot = unit->Rotation; //get the unit's current rotation
+				$DIR_FROM_ROT             //set the dir to move to based on that unit's rotation
+			}
+			else {  //no move counter stored, so query where to move to next
+
+				ignore_collision_with_unit = target;
+				if (airunit) {
+					//since air units can move around freely, we trade a little intelligence for better performance 
+					dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ (op <=> query) * 2] WHERE [1]; 	
+				}
+				else {
+					dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ (op <_> query) * 1.2 ] WHERE [1];    
+				}
+				
+				if (dir[0,8] >= 16) { counter = 0; } //moving up or down, so don't store counter
+				else {
+					counter = dir[16,8]; 			  //the counter is stored in the 3rd byte of dir
+					//cap counter at 7 since AdditionalParameters2 only has 3 bits
+					//or 6 for fast units that can move 2 tiles in a move
+					if (counter > 7) { $MAX_COUNTER_VALUE; }
+				}
+				
+			}
+			dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+			
+			if (dir == $QUERY_EXHAUSTED || dir==0 ) {  //something is in the way OR can't move AND not at destination yet
+				PERFORM SET_ADDITIONAL_PARAMS2 counter;
+				#include common/include/unit_stuck.ais
+			}
+			
+			if (counter>1) {
+				$UPDATE_SPEED_FOR_FAST_UNITS
+			}
+			//store the updated counter
+			int ap2 = counter;
+			
+			PERFORM $ACTION_MOVE dir; 
+			if ( perf_ret!=1) { 
+				ap2 =  0;
+			}
+			PERFORM SET_ADDITIONAL_PARAMS2 ap2;
+			$SET_AP
+			PERFORM NOTHING;
+		}
+		else {  //within range, but still not visible = target is cloaked?
+			   //Can't see target! (cloaked/obstacle?) no LOS
+		}
+	  
+	} 
+
+
+	
+	//op is now this target's position, so recalculate the targetIsOnGround to figure out whether air units need to
+	//get off the ground
+	//PERFORM GET_TERRAIN_GROUND_HEIGHT_AT op; //perf_ret always returns 0
+	if (0==op[$Zpos]) { targetIsOnGround = 1; } // store 1 when the z-parameter of the location is on the ground
+	else { targetIsOnGround = 0; }
+}
+
+//if unit is stuck, see if it's time for it to get unstuck
+#include common/include/unit_unstuck.ais  
+
+//check if the wait conter is set
+int ap3 = unit->AdditionalParameters3;
+if (ap3 > 0) {
+	PERFORM GET_CUR_TIME;
+	if (ap3==perf_ret[0,3]) {
+		PERFORM SET_ADDITIONAL_PARAMS3 0;
+	}
+	else {
+		PERFORM NOTHING; //wait
+	}
+
+}
+
+
+//if air unit and targetIsOnGround is on the ground, store location off the ground
+if (targetIsOnGround && airunit) { 
+	PERFORM GET_MAP_NEXT_Z_POSITION_UP op; //get the spot above the OP
+	if (perf_ret[$Zpos] >= unitPosition[$Zpos]) { op[$Zpos] = perf_ret[$Zpos]; }
+	else {
+		PERFORM GET_MAP_NEXT_Z_POSITION_UP perf_ret; //get the spot above the previous spot
+		op[$Zpos] = perf_ret[$Zpos]; 
+	}
+}    
+
+//store current distance to the destination stored in op
+int distToOP = unit<_>destinationParameter;
+
+//match speed with slowest unit in hierarchy
+//match speeds if not grekim, not doing priority 
+int matchSpeedMoveAction = $ACTION_MOVE;
+if (!$IS_GREKIM && cap[$MOVE_BIT,2]!=3 && !(AP_MOVE && AP_ATTACK) ) {
+	#include common/include/unit_common_speed_match.ais
+}
+else if ($IS_GREKIM) { 
+	#include common/include/unit_grekim_speed_match.ais
+}
+
+
+//if distance to destination is closer than 12 tiles, so no longer ignore moving units when searching for the next
+//tile to move to - help prevents 'bouncy' units that can't settle down because they falsely think they can move
+if (myCommander==0 && distToOP <= 145) { ignore_moving_units_dist = $LARGE_VALUE; }
+else { 
+	ignore_moving_units_dist = 0; 
+}
+
+int ap4 = unit->AdditionalParameters4;
+if (ap4) {
+	ap4 = ap4 - 1;
+	PERFORM SET_ADDITIONAL_PARAMS4 ap4;
+	if (!ignore_moving_units_dist) {
+		ignore_moving_units_dist = unit.Length;
+	}
+}
+
+int BANK_TURNING = 0;
+
+//move towards target (or location)
+int counter = unit->AdditionalParameters2; //move counter to move in the same direction
+
+if (counter>0) {           //more than 0 means already moving in a direction
+	counter = counter - 1; //decrease the counter
+	int rot = unit->Rotation; //get the unit's current rotation
+	$DIR_FROM_ROT             //set the dir to move to based on that unit's rotation
+}
+else {  //no move counter stored, so query where to move to next
+	int rot = unit->Rotation;
+	$DIR_FROM_ROT;
+	int old_dir = dir;
+	int old_rot = rot;
+
+	//prevent landing on the ground if not reached destination yet, and destination is below the unit
+	if (airunit && distToOP > 100 && op[$Zpos] < unitPosition[$Zpos]) {
+		op[$Zpos] = unitPosition[$Zpos]; //overwrite with current height
+	}	
+
+	if (targetalive) { 
+		ignore_collision_with_unit = target;
+	}
+	
+	if (airunit) {
+		//since air units can move around freely, we trade a little intelligence for better performance 
+		dir = QUERY BESTMOVE [unit, matchSpeedMoveAction] MIN [ (op <=> query) * 2] WHERE [1]; 	
+	} 
+	else {
+		dir = QUERY BESTMOVE [unit, matchSpeedMoveAction] MIN [ (op <_> query) * 1.2 ] WHERE [1];    
+	}
+
+	if (dir[0,8] >= 16) { counter = 0; } //moving up or down, so don't store counter
+	else {
+		counter = dir[16,8]; 			  //the counter is stored in the 3rd byte of dir
+		//cap counter at 7 since AdditionalParameters2 only has 3 bits
+		//or 6 for fast units that can move 2 tiles in a move
+		if (counter > 7) { $MAX_COUNTER_VALUE } 
+	}
+	
+	//check to see if the unit is rotating
+	if(old_dir != dir[0,8]) { 
+		int new_dir = dir; //backup new value
+		dir = dir[0,8]; 
+		$ROT_FROM_DIR;
+		dir = new_dir; //restore value
+		
+		
+		
+		int diff = rot - old_rot;
+		if(diff > 0) {
+			if(diff <= 4) { 
+				BANK_TURNING = 1; //left
+			}
+			else {
+				BANK_TURNING = 2; //right
+			}
+		}
+		else if(diff < 0) {
+			if(diff >= -4) {
+				BANK_TURNING = 2; //right
+			}
+			else {
+				BANK_TURNING = 1; //left
+			}
+		}
+	}
+}
+
+
+dir[16,8] = 0; //clear out the 3rd byte that stores the counter
+
+//something is in the way OR can't move AND not at destination yet
+if (dir == $QUERY_EXHAUSTED || (dir==0 && distToOP > 5)) {  
+	if (counter>0) PERFORM SET_ADDITIONAL_PARAMS2 0;
+    if (!AP_PLAYER && !airunit ) {
+		//PERFORM GET_TERRAIN_GROUND_HEIGHT_AT destinationParameter; //perf_ret always returns 0
+		destinationParameter[$Zpos] = 0; //default the Z param to ground tile for non airunits who are following commanders
+    }
+
+	//acquire the unit at the destination
+	PERFORM GET_UNIT_AT destinationParameter;
+    object u = perf_ret;
+	//if there is an ally unit there 
+    if (u!=0 && u->IsAlly) {
+		//$print "can't get any closer\n";
+		//subordinates will declare themeselves as stuck subordinates instead of stopping
+		//because if their commander is still moving, going to idle will make the subordinate
+		//move again, resetting the stuck counter
+		if (myCommander>0) { 
+			#include common/include/unit_stuck_subordinate.ais
+		}
+		//top level commanders will just stop moving
+        $STOP
+    }
+	//no units there, so declare self as stuck, assuming the unstuck script did not set the unstick flag
+	if (!unstick) {
+		if (distToOP < 25) { $STOP } //less than 5 spaces away, just stop
+		#include common/include/unit_stuck.ais
+	}
+}
+
+PERFORM RAND;
+if (perf_ret < $LAD_CLEAR) {
+	PERFORM CLEAR_LAST_ATTACKED_DIRECTION; 
+}
+
+//^^^
+//$print "at ", unitPosition[$Xpos], " ", unitPosition[$Ypos],"    to: ", destinationParameter[$Xpos], " ", destinationParameter[$Ypos],"\n";
+
+// at the destination, stop moving
+if (dir == 0) { 
+    $STOP;
+}
+
+if (counter>1) {
+	$UPDATE_SPEED_FOR_FAST_UNITS
+}
+//store the updated move counter
+int ap2 = counter;
+
+
+//prevent landing on the ground if not reached destination yet
+if (airunit && dir[0,8]==$TERRAIN_DOWN && distToOP > 16 ) {
+	PERFORM GET_MAP_NEXT_Z_POSITION_DOWN unitPosition;
+	if (perf_ret[$Zpos]==0) {    //ground tile
+		dir[0,8] = $TERRAIN_UP; //don't allow moving down before reaching the destination
+	}
+}
+
+if(BANK_TURNING && $IS_BANKING_FLYER && distToOP > 4) {
+
+	dir[8,8] = 2; //2 extra tiles per move
+	if(BANK_TURNING == 1) { PERFORM $ACTION_BANK_RIGHT dir; } 
+	else { PERFORM $ACTION_BANK_LEFT dir; } 
+	
+	//if failed to bank-move because of obstacle or something, attempt to move normally
+	if(!perf_ret) {
+		if (matchSpeedMoveAction==$ACTION_MOVE) { PERFORM $ACTION_MOVE dir;}
+		else { PERFORM $ACTION_MOVE_SLOW dir; }
+	}
+}
+else {
+	//run the actual move action
+	if (matchSpeedMoveAction==$ACTION_MOVE) { PERFORM $ACTION_MOVE dir; }
+	else { PERFORM $ACTION_MOVE_SLOW dir; }
+}
+if ( perf_ret!=1) { 
+	PERFORM SET_ADDITIONAL_PARAMS2 0; //^^
+	//ap2 = 0;
+	
+	if (counter > 1) { //only wait if going straight
+		PERFORM GET_CUR_TIME;
+		int stord = perf_ret + 4;
+		if (stord[0,3] == 0) { stord = 1; }
+		PERFORM SET_ADDITIONAL_PARAMS3 stord[0,3];
+		PERFORM NOTHING;
+	}
+	else {
+		if (!ap4) { //set ap4 field, to not ignore moving units
+			PERFORM SET_ADDITIONAL_PARAMS4 3;
+			PERFORM NOTHING;
+		}
+	}
+	
+}
+PERFORM SET_ADDITIONAL_PARAMS2 ap2;
+
+//query is exhausted (something is in the way?), unit is not stuck, and already within 30 spaces
+if (dir[$BESTMOVE_GAVE_UP] && !ap[$STUCK_BIT] && distToOP <= 901) {
+	//store the new distance to the destination after the move 
+	int newdistToOP = unit<_>destinationParameter + 4;
+
+	//^^^$print "distToOP: ",distToOP, " new: ", newdistToOP, "\n";
+	//distance to OP is now further (unit is walking further away), so increase the exhaust counter
+	if (distToOP < newdistToOP) {
+		int exhaustCount = ap[28,4];
+		if (exhaustCount>=8) { //if exhaust counter is at 8, stop moving
+			//$print "Move query keeps exhausting, can't get any closer\n";
+			//subordinates will declare themeselves as stuck subordinates instead of stopping
+			//because if their commander is still moving, going to idle will make the subordinate
+			//move again, resetting the stuck counter
+			if (myCommander>0) {
+				#include common/include/unit_stuck_subordinate.ais
+			}
+			//top level commanders will just stop moving
+			$STOP;	
+			
+		} 
+		
+		
+		exhaustCount = exhaustCount + 1;
+		ap[28,4] = exhaustCount;
+		setAdditionalParameters = 1;
+	
+	}
+}
+
+//$print "u: ", closestenemy, " d: ", distToOP," ex: ",dir[$BESTMOVE_GAVE_UP],"\n";	
+
+PERFORM GET_UNIT_AT destinationParameter;
+//within visibility range because there is another unit at the destination
+if (perf_ret && perf_ret != unit) {
+	temp1 = unit.Length;
+//$print 	dir[$BESTMOVE_GAVE_UP] , " ", distToOP, " <= ", (temp1 * 10 + 60), "\n";
+	
+	if (distToOP <= (temp1 * 10 + 60)) {
+
+		if (uclass!=$OCTO_CLASS)  {  //octos will keep trying to get closer
+			//subordinates will declare themeselves as stuck subordinates instead of stopping
+			//because if their commander is still moving, going to idle will make the subordinate
+			//move again, resetting the stuck counter
+			if (myCommander>0) {
+				#include common/include/unit_stuck_subordinate.ais
+			}
+			//top level commanders will just stop moving
+			$STOP;
+		}
+	}
+	
+	//since unit is within visibility range, check the exhaust counter
+	if (!ap[$STUCK_BIT]) {
+		int exhaustCount = ap[28,4];
+		if (exhaustCount>=11) { //if exhaust counter is at 8, stop moving
+			//$print "Not going to try to get closer.\n";
+			//subordinates will declare themeselves as stuck subordinates instead of stopping
+			//because if their commander is still moving, going to idle will make the subordinate
+			//move again, resetting the stuck counter
+			if (myCommander>0) {
+				#include common/include/unit_stuck_subordinate.ais
+			}
+			//top level commanders will just stop moving
+			$STOP;	
+		} 	
+		
+		
+			exhaustCount = exhaustCount + 1;			
+			ap[28,4] = exhaustCount;
+			setAdditionalParameters = 1;
+		
+	}
+}
+
+if (ap[$EVERYOTHER_BIT]) { //run autopilot every other move
+	FORCE_AUTOPILOT = 2;
+	#include common/include/unit_autopilot.ais
+}
+
+$SET_AP
+    

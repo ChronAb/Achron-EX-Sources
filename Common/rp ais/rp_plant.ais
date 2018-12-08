@@ -1,0 +1,124 @@
+// Copyright (C) 2002-2011 Hazardous Software Inc.  See EULA for license information.
+
+#include common/include/unit_common_header.aih
+
+
+int uclass = unit->Class;
+int isOpen = $IS_RP_OPEN;
+
+//already planted RPs do nothing
+if (isOpen){
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM NOTHING;
+}
+
+//Vecgir RPs
+if (uclass==$VECGIR_RP_OFF_CLASS) {
+	PERFORM $ACTION_TELEPORTED; //clear cap bit just in case
+	PERFORM SET_ADDITIONAL_PARAMS2 0;
+	PERFORM SET_OBJECTIVE 0;
+	PERFORM $ACTION_PLANT;
+	PERFORM NOTHING;
+}
+
+
+int unitPosition = unit->Position;
+int xpos = unitPosition[$Xpos];
+int ypos = unitPosition[$Ypos];
+int zpos = unitPosition[$Zpos];
+int location = 0;
+PERFORM GET_TERRAIN_GROUND_HEIGHT_AT unitPosition;
+int groundHeight = perf_ret;
+if(zpos != groundHeight)  {
+	PERFORM GET_MAP_NEXT_Z_POSITION_DOWN unitPosition;
+	location = perf_ret;
+	
+	int x = location[$Xpos];
+	int y = location[$Ypos];
+	int length = unit.Length;
+	int mult = length;
+	int xoffset = length; 
+	int yoffset = 0;
+	target = uclass;
+	PERFORM CAN_CLASS_FIT_AT location; //see if the unit fits
+	int spotClear = perf_ret; 
+	int counter = 0;
+	while (!spotClear[$ROT_S]) { //the unit does not fit, so calculate new offset coords
+		counter = counter + 1;
+		if (counter == 24) { break; }
+		location[$Xpos] = x + xoffset;
+		location[$Ypos] = y + yoffset;
+
+		PERFORM CAN_CLASS_FIT_AT location;
+		spotClear = perf_ret;   
+		
+		if (xoffset > 0 && yoffset < 0) { yoffset = 0; mult=mult+length; xoffset = mult; } 
+		else {
+			if (xoffset <= 0 && yoffset < 0) { xoffset = xoffset + mult;  }
+			if (xoffset < 0 && yoffset >= 0) { yoffset = yoffset - mult;  }
+			if (xoffset >= 0 && yoffset > 0) { xoffset = xoffset - mult;  }
+			if (xoffset > 0 && yoffset == 0) { yoffset = yoffset + mult;  } 
+		}
+		if (xoffset == 0 && yoffset == 0) { xoffset = xoffset + mult; }
+	}  
+	
+	if (counter==24) {
+		$SAY_FAILED_LAND;
+		PERFORM $ACTION_ERROR2;
+		PERFORM SET_OBJECTIVE 0; 
+        PERFORM NOTHING; 
+	}
+	
+	    
+	int dir = 0;
+	if (counter==0) { //spot below is clear, can move vertically
+		dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ location <=> query ] WHERE [1];
+	} else { //only move horizontally
+		dir = QUERY BESTMOVE [unit, $ACTION_MOVE] MIN [ location <_> query ] WHERE [1];
+	}
+    
+	if (dir == 0 || dir == $QUERY_EXHAUSTED) {  //can't land, so do nothing
+		$SAY_FAILED_LAND;
+		PERFORM $ACTION_ERROR2;
+		PERFORM SET_ADDITIONAL_PARAMS2 0;
+		PERFORM SET_OBJECTIVE 0;
+		PERFORM NOTHING;
+    }
+    else {
+		//non-rp buildings must be oriented south
+		if (uclass!=$HUMAN_RP_OFF_CLASS && uclass!=$CIV_RP_OFF_CLASS && uclass!=$GREKIM_RP_OFF_CLASS && unit->Rotation != $ROT_S ) {
+			PERFORM $ACTION_ROTATE $ROT_S;
+			if (perf_ret!=1) { //failed to rotate
+				$SAY_FAILED_LAND;
+				PERFORM $ACTION_ERROR2;
+				PERFORM SET_ADDITIONAL_PARAMS2 0;
+				PERFORM SET_OBJECTIVE 0;
+				PERFORM NOTHING;
+			}
+		}
+	
+		//move faster vertically
+		if (dir[$DIR_UP_BIT]) { PERFORM $ACTION_MOVE_UP dir; }
+		else if (dir[$DIR_DOWN_BIT]) { PERFORM $ACTION_MOVE_DOWN dir; }
+		else {
+			PERFORM $ACTION_MOVE dir; 
+		}
+		PERFORM NOTHING;
+    }
+}
+
+//non-rp buildings must be oriented south
+if (uclass!=$HUMAN_RP_OFF_CLASS && uclass!=$CIV_RP_OFF_CLASS && uclass!=$GREKIM_RP_OFF_CLASS && unit->Rotation != $ROT_S ) {
+	target = uclass;
+	PERFORM CAN_CLASS_FIT_AT location; //see if the unit fits facing south
+	if (perf_ret[$ROT_S]) {
+		PERFORM $ACTION_ROTATE $ROT_S;
+		PERFORM NOTHING;
+	}
+}
+
+PERFORM SET_ADDITIONAL_PARAMS2 0;
+PERFORM SET_OBJECTIVE 0;
+PERFORM $ACTION_PLANT;
+
+//if (unit->Class!=146) { PERFORM $ACTION_PLANT; } //Closed RPs do not plant, but rather just go back to idle

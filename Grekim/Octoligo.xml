@@ -1905,31 +1905,6 @@ Can progenerate (req. Loligo tech)</Description>
           </ControlConditions>
         </ControlShortcut>
         <ControlShortcut>
-          <ControlNumber>7</ControlNumber>
-          <ControlObjectiveNumber>8</ControlObjectiveNumber>
-          <ParameterType>UNIT</ParameterType>
-          <Parameter>0</Parameter>
-          <KeyboardShortcut>$AchronKBChangeCommander</KeyboardShortcut>
-          <Flags>
-            <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
-            <EstTimeConstIsStart>0</EstTimeConstIsStart>
-            <ButtonDisabled>0</ButtonDisabled>
-            <UserControlsCustom>0</UserControlsCustom>
-            <ButtonInvisible>0</ButtonInvisible>
-            <SelectTarget>0</SelectTarget>
-          </Flags>
-          <EstTimeConst>0</EstTimeConst>
-          <EstTimeDist>0</EstTimeDist>
-          <Sound>Sound0</Sound>
-          <ControlConditions>
-            <ControlCondition>
-              <Resource>U_IS_CARRIED</Resource>
-              <Comparison>EQUAL</Comparison>
-              <Value>0</Value>
-            </ControlCondition>
-          </ControlConditions>
-        </ControlShortcut>
-        <ControlShortcut>
           <ControlNumber>8</ControlNumber>
           <ControlObjectiveNumber>11</ControlObjectiveNumber>
           <ParameterType>NO_PARAMETER</ParameterType>
@@ -1956,31 +1931,6 @@ Can progenerate (req. Loligo tech)</Description>
               <Resource>P_ADVANCEMENTS</Resource>
               <Comparison>BITMASK_NOT</Comparison>
               <Value>256</Value>
-            </ControlCondition>
-          </ControlConditions>
-        </ControlShortcut>
-        <ControlShortcut>
-          <ControlNumber>9</ControlNumber>
-          <ControlObjectiveNumber>10</ControlObjectiveNumber>
-          <ParameterType>NO_PARAMETER</ParameterType>
-          <Parameter>0</Parameter>
-          <KeyboardShortcut>$AchronKBLeadGroup</KeyboardShortcut>
-          <Flags>
-            <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
-            <EstTimeConstIsStart>0</EstTimeConstIsStart>
-            <ButtonDisabled>0</ButtonDisabled>
-            <UserControlsCustom>0</UserControlsCustom>
-            <ButtonInvisible>0</ButtonInvisible>
-            <SelectTarget>0</SelectTarget>
-          </Flags>
-          <EstTimeConst>0</EstTimeConst>
-          <EstTimeDist>0</EstTimeDist>
-          <Sound>Sound0</Sound>
-          <ControlConditions>
-            <ControlCondition>
-              <Resource>U_IS_CARRIED</Resource>
-              <Comparison>EQUAL</Comparison>
-              <Value>0</Value>
             </ControlCondition>
           </ControlConditions>
         </ControlShortcut>
@@ -2156,31 +2106,6 @@ Can progenerate (req. Loligo tech)</Description>
               <Resource>P_ADVANCEMENTS</Resource>
               <Comparison>BITMASK_NOT</Comparison>
               <Value>128</Value>
-            </ControlCondition>
-          </ControlConditions>
-        </ControlShortcut>
-        <ControlShortcut>
-          <ControlNumber>18</ControlNumber>
-          <ControlObjectiveNumber>9</ControlObjectiveNumber>
-          <ParameterType>NO_PARAMETER</ParameterType>
-          <Parameter>0</Parameter>
-          <KeyboardShortcut>$AchronKBRemoveFromHierarchy</KeyboardShortcut>
-          <Flags>
-            <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
-            <EstTimeConstIsStart>0</EstTimeConstIsStart>
-            <ButtonDisabled>0</ButtonDisabled>
-            <UserControlsCustom>0</UserControlsCustom>
-            <ButtonInvisible>0</ButtonInvisible>
-            <SelectTarget>0</SelectTarget>
-          </Flags>
-          <EstTimeConst>0</EstTimeConst>
-          <EstTimeDist>0</EstTimeDist>
-          <Sound>Sound0</Sound>
-          <ControlConditions>
-            <ControlCondition>
-              <Resource>U_IS_CARRIED</Resource>
-              <Comparison>EQUAL</Comparison>
-              <Value>0</Value>
             </ControlCondition>
           </ControlConditions>
         </ControlShortcut>

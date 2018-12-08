@@ -1977,7 +1977,7 @@ Upgrade Specials Tech for suicide attack</Description>
           <AIScriptCanRun>0</AIScriptCanRun>
           <SetParamZeroTicks>0</SetParamZeroTicks>
           <AllowActionWhenStopped>0</AllowActionWhenStopped>
-	  <Conditions/>
+          <Conditions/>
           <Steps>
             <Step>
               <PrimitiveAction>MOVE</PrimitiveAction>
@@ -1998,13 +1998,13 @@ Upgrade Specials Tech for suicide attack</Description>
           <AIScriptCanRun>0</AIScriptCanRun>
           <SetParamZeroTicks>0</SetParamZeroTicks>
           <AllowActionWhenStopped>0</AllowActionWhenStopped>
-	  <Conditions/>
+          <Conditions/>
           <Steps>
             <Step>
               <PrimitiveAction>ATTACK</PrimitiveAction>
               <Target>TARGET_UNIT</Target>
-	      <ValueEval>ONE</ValueEval>
-	      <Value>0</Value>
+              <ValueEval>ONE</ValueEval>
+              <Value>0</Value>
               <ActionStepModifier>Micro Stalking</ActionStepModifier>
             </Step>
           </Steps>
@@ -2026,8 +2026,8 @@ Upgrade Specials Tech for suicide attack</Description>
             <Step>
               <PrimitiveAction>ATTACK</PrimitiveAction>
               <Target>TARGET_UNIT</Target>
-	      <ValueEval>ONE</ValueEval>
-	      <Value>0</Value>
+              <ValueEval>ONE</ValueEval>
+              <Value>0</Value>
               <ActionStepModifier>Micro Stalking</ActionStepModifier>
             </Step>
           </Steps>
@@ -2060,8 +2060,8 @@ Upgrade Specials Tech for suicide attack</Description>
             <Step>
               <PrimitiveAction>ATTACK</PrimitiveAction>
               <Target>TARGET_UNIT</Target>
-	      <ValueEval>ONE</ValueEval>
-	      <Value>0</Value>
+              <ValueEval>ONE</ValueEval>
+              <Value>0</Value>
               <ActionStepModifier>Large Suicide</ActionStepModifier>
             </Step>
             <Step>
@@ -2082,7 +2082,7 @@ Upgrade Specials Tech for suicide attack</Description>
           <AIScriptCanRun>0</AIScriptCanRun>
           <SetParamZeroTicks>0</SetParamZeroTicks>
           <AllowActionWhenStopped>0</AllowActionWhenStopped>
-	  <Conditions/>
+          <Conditions/>
           <Steps>
             <Step>
               <PrimitiveAction>CHANGE_COMMANDER</PrimitiveAction>
@@ -2179,28 +2179,104 @@ Upgrade Specials Tech for suicide attack</Description>
           <Steps/>
         </Action>
         <Action>
-          <ActionNumber>33</ActionNumber>
-          <Identifier>ACTION_ERROR_CP</Identifier>
+          <ActionNumber>32</ActionNumber>
+          <Identifier>ACTION_AUTO_DIE</Identifier>
           <TimeTaken>1</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
+          <ForceObjectAction>1</ForceObjectAction>
+          <InterruptCurrentAction>1</InterruptCurrentAction>
           <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
           <FailOnInvalidTarget>0</FailOnInvalidTarget>
           <PreserveParameter>0</PreserveParameter>
           <AIScriptCanRun>0</AIScriptCanRun>
           <SetParamZeroTicks>0</SetParamZeroTicks>
           <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <Conditions/>
+          <Conditions>
+            <Condition>
+              <Resource>U_ENERGY</Resource>
+              <Comparison>EQUAL</Comparison>
+              <Value>0</Value>
+            </Condition>
+            <Condition>
+              <Resource>U_HP</Resource>
+              <Comparison>GREATER</Comparison>
+              <Value>0</Value>
+            </Condition>
+          </Conditions>
           <Steps>
             <Step>
-              <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
+              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
               <Target>SELF</Target>
-              <Type>STATUS_CAPABILITY_5</Type>
+              <Type>U_HP</Type>
+              <ValueEval>SET_TO_VALUE</ValueEval>
+              <Value>0</Value>
             </Step>
+          </Steps>
+        </Action>
+        <Action>
+          <ActionNumber>33</ActionNumber>
+          <Identifier>ACTION_AUTO_DRAIN</Identifier>
+          <TimeTaken>0</TimeTaken>
+          <ForceObjectAction>1</ForceObjectAction>
+          <InterruptCurrentAction>1</InterruptCurrentAction>
+          <MutexAction>0</MutexAction>
+          <FailOnInvalidTarget>0</FailOnInvalidTarget>
+          <PreserveParameter>0</PreserveParameter>
+          <AIScriptCanRun>0</AIScriptCanRun>
+          <SetParamZeroTicks>0</SetParamZeroTicks>
+          <AllowActionWhenStopped>0</AllowActionWhenStopped>
+          <Conditions>
+            <Condition>
+              <Resource>U_AGE</Resource>
+              <Comparison>MODULO_IS_ZERO</Comparison>
+              <Value>72</Value>
+            </Condition>
+            <Condition>
+              <Resource>U_HP</Resource>
+              <Comparison>GREATER</Comparison>
+              <Value>0</Value>
+            </Condition>
+          </Conditions>
+          <Steps>
             <Step>
-              <PrimitiveAction>CHANGE_COMMANDER</PrimitiveAction>
+              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
               <Target>SELF</Target>
+              <Type>U_ENERGY</Type>
+              <ValueEval>ONE</ValueEval>
+              <Value>10</Value>
+            </Step>
+          </Steps>
+        </Action>
+        <Action>
+          <ActionNumber>34</ActionNumber>
+          <Identifier>ACTION_DYING_DRAIN</Identifier>
+          <TimeTaken>0</TimeTaken>
+          <ForceObjectAction>1</ForceObjectAction>
+          <InterruptCurrentAction>1</InterruptCurrentAction>
+          <MutexAction>0</MutexAction>
+          <FailOnInvalidTarget>0</FailOnInvalidTarget>
+          <PreserveParameter>0</PreserveParameter>
+          <AIScriptCanRun>0</AIScriptCanRun>
+          <SetParamZeroTicks>0</SetParamZeroTicks>
+          <AllowActionWhenStopped>0</AllowActionWhenStopped>
+          <Conditions>
+            <Condition>
+              <Resource>U_AGE</Resource>
+              <Comparison>MODULO_IS_ZERO</Comparison>
+              <Value>18</Value>
+            </Condition>
+            <Condition>
+              <Resource>U_HP</Resource>
+              <Comparison>EQUAL</Comparison>
+              <Value>0</Value>
+            </Condition>
+          </Conditions>
+          <Steps>
+            <Step>
+              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
+              <Target>SELF</Target>
+              <Type>U_ENERGY</Type>
+              <ValueEval>ONE</ValueEval>
+              <Value>10</Value>
             </Step>
           </Steps>
         </Action>
@@ -2225,90 +2301,17 @@ Upgrade Specials Tech for suicide attack</Description>
           </Steps>
         </Action>
         <Action>
-          <ActionNumber>36</ActionNumber>
-          <Identifier>ACTION_AUTO_DIE</Identifier>
-          <TimeTaken>1</TimeTaken>
-          <ForceObjectAction>1</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>1</InterruptCurrentAction>
-          <MutexAction>1</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>U_AGE</Resource>
-              <Comparison>MODULO_IS_ZERO</Comparison>
-              <Value>1080</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>U_HP</Type>
-              <ValueEval>SET_TO_VALUE</ValueEval>
-              <Value>0</Value>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>37</ActionNumber>
-          <Identifier>ACTION_AUTO_DRAIN</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>1</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>1</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>U_AGE</Resource>
-              <Comparison>MODULO_IS_ZERO</Comparison>
-              <Value>54</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>U_ENERGY</Type>
-              <ValueEval>ONE</ValueEval>
-              <Value>5</Value>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
           <ActionNumber>39</ActionNumber>
           <Identifier>ACTION_SET_OBJECTIVE_RELEASE</Identifier>
           <TimeTaken>1</TimeTaken>
           <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
           <InterruptCurrentAction>0</InterruptCurrentAction>
           <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
           <FailOnInvalidTarget>1</FailOnInvalidTarget>
           <PreserveParameter>0</PreserveParameter>
           <AIScriptCanRun>0</AIScriptCanRun>
           <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
           <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
           <Conditions>
             <Condition>
               <Resource>T_ALLY</Resource>
@@ -2331,18 +2334,13 @@ Upgrade Specials Tech for suicide attack</Description>
           <Identifier>ACTION_DISCONNECT</Identifier>
           <TimeTaken>0</TimeTaken>
           <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
           <InterruptCurrentAction>0</InterruptCurrentAction>
           <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
           <FailOnInvalidTarget>0</FailOnInvalidTarget>
           <PreserveParameter>0</PreserveParameter>
           <AIScriptCanRun>0</AIScriptCanRun>
           <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
           <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
           <Conditions/>
           <Steps>
             <Step>
@@ -2356,19 +2354,20 @@ Upgrade Specials Tech for suicide attack</Description>
           <Identifier>ACTION_MOVE_SLOW</Identifier>
           <TimeTaken>4</TimeTaken>
           <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
           <InterruptCurrentAction>0</InterruptCurrentAction>
           <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
           <FailOnInvalidTarget>0</FailOnInvalidTarget>
           <PreserveParameter>0</PreserveParameter>
           <AIScriptCanRun>0</AIScriptCanRun>
           <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
           <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions/>
+          <Conditions>
+            <Condition>
+              <Resource>PARAMETER</Resource>
+              <Comparison>IS_VALID_DIRECTION</Comparison>
+              <Value>0</Value>
+            </Condition>
+          </Conditions>
           <Steps>
             <Step>
               <PrimitiveAction>MOVE</PrimitiveAction>
@@ -2381,22 +2380,22 @@ Upgrade Specials Tech for suicide attack</Description>
       <Objectives>
         <Objective>
           <ObjectiveNumber>0</ObjectiveNumber>
-          <Script>Script412</Script>
-          <Name>Idle/Defend</Name>
+          <Script>Script410</Script>
+          <Name/>
           <Details/>
         </Objective>
         <Objective>
           <ObjectiveNumber>1</ObjectiveNumber>
           <Script>Script21</Script>
           <Name>Move</Name>
-          <Details> \Move to specified location\ \Move Speed: 4.5, MaxInc: 60\Vision Radius: 22, Aggro Range: 18</Details>
+          <Details> \Move to specified location \Move Speed: 6, MaxInc: 60\Vision Range: 22, Aggro Radius: 18 \Invisible in Fog of War</Details>
           <ObjectiveControlShortcutNumber>4</ObjectiveControlShortcutNumber>
         </Objective>
         <Objective>
           <ObjectiveNumber>2</ObjectiveNumber>
           <Script>Script196</Script>
           <Name>Attack</Name>
-          <Details> \This unit has no weapons \but it will still try \to stare enemies down (R: 19)</Details>
+          <Details> \Suicide attack, requires Specials Tech \ \Gnd Damage: 50-70  R: 4  SR: 8</Details>
           <ObjectiveControlShortcutNumber>0</ObjectiveControlShortcutNumber>
           <ParameterType>POSITION</ParameterType>
         </Objective>
@@ -2417,7 +2416,7 @@ Upgrade Specials Tech for suicide attack</Description>
         </Objective>
         <Objective>
           <ObjectiveNumber>5</ObjectiveNumber>
-          <Script>Script23</Script>
+          <Script>Script22</Script>
           <Name>Moving</Name>
           <Details/>
           <ObjectiveControlShortcutNumber>4</ObjectiveControlShortcutNumber>
@@ -2441,14 +2440,14 @@ Upgrade Specials Tech for suicide attack</Description>
           <ObjectiveNumber>8</ObjectiveNumber>
           <Script>Script202</Script>
           <Name>Change Commander</Name>
-          <Details> \Set this unit's commander\ \Alt-Right-Click on unit to\select its current commander </Details>
-          <ObjectiveControlShortcutNumber>9</ObjectiveControlShortcutNumber>
+          <Details>Set an Arcticus as commander or set\target's Arcticus as own commander</Details>
+          <ObjectiveControlShortcutNumber>8</ObjectiveControlShortcutNumber>
         </Objective>
         <Objective>
           <ObjectiveNumber>9</ObjectiveNumber>
           <Script>Script204</Script>
-          <Name>Remove from Hierarchy</Name>
-          <Details> \Remove unit from hierarchy\to disconnect from commander\and all subordinates</Details>
+          <Name>Remove from Heirarchy</Name>
+          <Details>Remove from command hierarchy\ \Disconnect from commander</Details>
         </Objective>
         <Objective>
           <ObjectiveNumber>16</ObjectiveNumber>
@@ -2473,13 +2472,20 @@ Upgrade Specials Tech for suicide attack</Description>
           <Script>Script206</Script>
           <Name>Teleport</Name>
           <Details> \Teleport to a specified location\    Must be near a Teleporter</Details>
-          <ObjectiveControlShortcutNumber>10</ObjectiveControlShortcutNumber>
         </Objective>
         <Objective>
           <ObjectiveNumber>50</ObjectiveNumber>
           <Script>Script208</Script>
           <Name>Teleport</Name>
           <Details> \Teleport to a specified location\    Must be near a Teleporter\    Must not have a TSS</Details>
+        </Objective>
+        <Objective>
+          <ObjectiveNumber>54</ObjectiveNumber>
+          <Script>Script195</Script>
+          <Name>Attacking Unit</Name>
+          <Details/>
+          <ObjectiveControlShortcutNumber>0</ObjectiveControlShortcutNumber>
+          <ParameterType>UNIT</ParameterType>
         </Objective>
       </Objectives>
       <ControlShortcuts>
@@ -2740,610 +2746,6 @@ Upgrade Specials Tech for suicide attack</Description>
               <Value>4</Value>
             </ControlCondition>
           </ControlConditions>
-        </ControlShortcut>
-      </ControlShortcuts>
-    </ObjectClass>
-    <ObjectClass>
-      <ClassNumber>1045</ClassNumber>
-      <Name>Temporal Repeater</Name>
-      <Description>TEMPORAL REPEATER:&#13;
-&#13;
-Emergency temporal relay&#13;
-&#13;
-Maintains Achron continuity in the event&#13;
-  of primary transceiver destruction</Description>
-      <Model>./humans/echo.mdl</Model>
-      <Rank>99</Rank>
-      <Type>1</Type>
-      <PrioritySelectionRank>0</PrioritySelectionRank>
-      <MaxHealth>500</MaxHealth>
-      <MaxEnergy>125</MaxEnergy>
-      <MaxArmor>0</MaxArmor>
-      <MaxAmmo>0</MaxAmmo>
-      <SightRadius>0</SightRadius>
-      <ForwardMinSightRadius>0</ForwardMinSightRadius>
-      <ReverseMaxSightRadius>0</ReverseMaxSightRadius>
-      <ReverseMinSightRadius>0</ReverseMinSightRadius>
-      <ForwardSightAngleOfView>360</ForwardSightAngleOfView>
-      <SightHeight>0</SightHeight>
-      <DistanceIndicatorRadius>0</DistanceIndicatorRadius>
-      <AgilityMultiplier>1</AgilityMultiplier>
-      <CarryingCapacity>0</CarryingCapacity>
-      <MaxTerrainAngle>30</MaxTerrainAngle>
-      <TicksToTurn45Degrees>0.5</TicksToTurn45Degrees>
-      <HealthFieldName>Shielding</HealthFieldName>
-      <EnergyFieldName/>
-      <AmmoFieldName/>
-      <Flags>
-        <VerticalMovementAllowed>0</VerticalMovementAllowed>
-        <UnaffectedByTerrain>0</UnaffectedByTerrain>
-        <GainKillExperience>1</GainKillExperience>
-        <RemainUpright>0</RemainUpright>
-        <NonGroupSelection>1</NonGroupSelection>
-        <ShowVisibilityRange>0</ShowVisibilityRange>
-        <ShowThroughFogOfWar>0</ShowThroughFogOfWar>
-        <AlwaysShowVisibility>0</AlwaysShowVisibility>
-        <SeeThroughObjects>1</SeeThroughObjects>
-        <ActiveLocatorBeacon>0</ActiveLocatorBeacon>
-        <AlwaysHighlightUnit>0</AlwaysHighlightUnit>
-        <AlwaysSelectable>0</AlwaysSelectable>
-        <AlwaysShowDistanceIndicator>0</AlwaysShowDistanceIndicator>
-        <AppearAsNoOwnerUnlessVisible>0</AppearAsNoOwnerUnlessVisible>
-        <AlwaysAppearAsNoOwner>0</AlwaysAppearAsNoOwner>
-        <AlwaysHighlightUnitUnlessNoOwner>0</AlwaysHighlightUnitUnlessNoOwner>
-        <HideHealthField>0</HideHealthField>
-        <HideEnergyField>0</HideEnergyField>
-        <HideArmorField>0</HideArmorField>
-        <HideAmmoField>0</HideAmmoField>
-        <HideCapacityField>0</HideCapacityField>
-      </Flags>
-      <Cloaking>
-        <Gradar>0</Gradar>
-        <Detector>1</Detector>
-        <Visible>1</Visible>
-      </Cloaking>
-      <Sensing>
-        <Gradar>0</Gradar>
-        <Detector>0</Detector>
-        <Visible>1</Visible>
-      </Sensing>
-      <IdleAnimation>0</IdleAnimation>
-      <IdleSound>Sound0</IdleSound>
-      <IdleTime>24</IdleTime>
-      <StoppedActionSteps/>
-      <ChronoportedActionSteps/>
-      <ChronoportArrivedActionSteps>
-        <Step>
-          <PrimitiveAction>ACCUM_STATISTIC</PrimitiveAction>
-          <Target>SELF</Target>
-          <Type>CPortArrivals</Type>
-          <ValueEval>ONE</ValueEval>
-          <Value>1</Value>
-        </Step>
-      </ChronoportArrivedActionSteps>
-      <Actions>
-        <Action>
-          <ActionNumber>0</ActionNumber>
-          <Identifier>ACTION_CREATE</Identifier>
-          <TimeTaken>18</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <VertShaderEffect>XZ_PLANE_CLAMPED_VERT_SCALE</VertShaderEffect>
-          <FragShaderEffect>TELEPORT_BUILD</FragShaderEffect>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>1</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions/>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>U_ENERGY</Type>
-              <ValueEval>SET_TO_VALUE</ValueEval>
-              <Value>25</Value>
-            </Step>
-            <Step>
-              <PrimitiveAction>SET_STATUS</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>STATUS_CLOAKED</Type>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>1</ActionNumber>
-          <Identifier>ACTION_DESTROY</Identifier>
-          <TimeTaken>45</TimeTaken>
-          <ForceObjectAction>1</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound111</Sound>
-          <InterruptCurrentAction>1</InterruptCurrentAction>
-          <MutexAction>1</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>U_HP</Resource>
-              <Comparison>EQUAL</Comparison>
-              <Value>0</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>STATUS_STOP</Type>
-            </Step>
-            <Step>
-              <PrimitiveAction>ACCUM_STATISTIC</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>AchronDestroyed1</Type>
-              <ValueEval>ONE</ValueEval>
-              <Value>1</Value>
-            </Step>
-            <Step>
-              <PrimitiveAction>DIE</PrimitiveAction>
-              <Target>SELF</Target>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>6</ActionNumber>
-          <Identifier>ACTION_CHANGE_COMMANDER</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions/>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CHANGE_COMMANDER</PrimitiveAction>
-              <Target>SELF</Target>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>7</ActionNumber>
-          <Identifier>ACTION_CLEAR_COMMANDER</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions/>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CHANGE_COMMANDER</PrimitiveAction>
-              <Target>SELF</Target>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>14</ActionNumber>
-          <Identifier>ACTION_SWITCH</Identifier>
-          <TimeTaken>1</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>1</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>U_STATUS</Resource>
-              <Comparison>BITMASK</Comparison>
-              <Value>64</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>STATUS_CAPABILITY_3</Type>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>21</ActionNumber>
-          <Identifier>ACTION_SKIP</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>U_CAN_TELEPORT_TO</Resource>
-              <Comparison>NOT_EQUAL</Comparison>
-              <Value>0</Value>
-            </Condition>
-            <Condition>
-              <Resource>U_ENERGY</Resource>
-              <Comparison>GEQUAL</Comparison>
-              <Value>25</Value>
-            </Condition>
-            <Condition>
-              <Resource>PARAMETER</Resource>
-              <Comparison>CLOSER_THAN</Comparison>
-              <Value>30</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>TELEPORT</PrimitiveAction>
-              <Target>SELF</Target>
-            </Step>
-            <Step>
-              <PrimitiveAction>SET_STATUS</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>STATUS_CAPABILITY_2</Type>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>22</ActionNumber>
-          <Identifier>ACTION_TELEPORTED</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>1</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions/>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>STATUS_CAPABILITY_1</Type>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>24</ActionNumber>
-          <Identifier>ACTION_POST_SKIP</Identifier>
-          <TimeTaken>1</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound25</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>1</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>PARAMETER</Resource>
-              <Comparison>CLOSER_THAN</Comparison>
-              <Value>5</Value>
-            </Condition>
-            <Condition>
-              <Resource>U_STATUS</Resource>
-              <Comparison>BITMASK</Comparison>
-              <Value>32</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>TELEPORT</PrimitiveAction>
-              <Target>SELF</Target>
-            </Step>
-            <Step>
-              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>U_ENERGY</Type>
-              <ValueEval>ONE</ValueEval>
-              <Value>25</Value>
-            </Step>
-            <Step>
-              <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>STATUS_CAPABILITY_2</Type>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>30</ActionNumber>
-          <Identifier>ACTION_ERROR1</Identifier>
-          <TimeTaken>1</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound2</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions/>
-          <Steps/>
-        </Action>
-        <Action>
-          <ActionNumber>34</ActionNumber>
-          <Identifier>ACTION_TPORT_FAILED</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>0</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>0</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>U_STATUS</Resource>
-              <Comparison>BITMASK</Comparison>
-              <Value>32</Value>
-            </Condition>
-            <Condition>
-              <Resource>U_OBJECTIVE</Resource>
-              <Comparison>EQUAL</Comparison>
-              <Value>10</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>STATUS_CAPABILITY_2</Type>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>36</ActionNumber>
-          <Identifier>ACTION_REGEN</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>1</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>1</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>U_AGE</Resource>
-              <Comparison>MODULO_IS_ZERO</Comparison>
-              <Value>24</Value>
-            </Condition>
-            <Condition>
-              <Resource>U_ENERGY</Resource>
-              <Comparison>LESS</Comparison>
-              <Value>125</Value>
-            </Condition>
-            <Condition>
-              <Resource>P_POWER</Resource>
-              <Comparison>GEQUAL</Comparison>
-              <Value>0</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>U_ENERGY</Type>
-              <ValueEval>ONE</ValueEval>
-              <Value>-1</Value>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>43</ActionNumber>
-          <Identifier>ACTION_CLEAR_LAD</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>1</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>1</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>TIMESTEP</Resource>
-              <Comparison>MODULO_IS_ZERO</Comparison>
-              <Value>87</Value>
-            </Condition>
-            <Condition>
-              <Resource>U_LAST_ATTACKED_DIR</Resource>
-              <Comparison>NOT_EQUAL</Comparison>
-              <Value>0</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CLEAR_LAST_ATTACKED_DIR</PrimitiveAction>
-              <Target>SELF</Target>
-            </Step>
-          </Steps>
-        </Action>
-        <Action>
-          <ActionNumber>49</ActionNumber>
-          <Identifier>ACTION_NOPOWER</Identifier>
-          <TimeTaken>0</TimeTaken>
-          <ForceObjectAction>1</ForceObjectAction>
-          <Animation>0</Animation>
-          <Sound>Sound0</Sound>
-          <InterruptCurrentAction>1</InterruptCurrentAction>
-          <MutexAction>0</MutexAction>
-          <ShowProgress>0</ShowProgress>
-          <FailOnInvalidTarget>0</FailOnInvalidTarget>
-          <PreserveParameter>0</PreserveParameter>
-          <AIScriptCanRun>0</AIScriptCanRun>
-          <SetParamZeroTicks>0</SetParamZeroTicks>
-          <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-          <AllowActionWhenStopped>0</AllowActionWhenStopped>
-          <LobProjectilePath>0</LobProjectilePath>
-          <Conditions>
-            <Condition>
-              <Resource>P_POWER</Resource>
-              <Comparison>LESS</Comparison>
-              <Value>0</Value>
-            </Condition>
-            <Condition>
-              <Resource>U_AGE</Resource>
-              <Comparison>MODULO_IS_ZERO</Comparison>
-              <Value>48</Value>
-            </Condition>
-            <Condition>
-              <Resource>U_ENERGY</Resource>
-              <Comparison>GREATER</Comparison>
-              <Value>0</Value>
-            </Condition>
-          </Conditions>
-          <Steps>
-            <Step>
-              <PrimitiveAction>CONSUME_RESOURCE</PrimitiveAction>
-              <Target>SELF</Target>
-              <Type>U_ENERGY</Type>
-              <ValueEval>ONE</ValueEval>
-              <Value>2</Value>
-            </Step>
-          </Steps>
-        </Action>
-      </Actions>
-      <Objectives>
-        <Objective>
-          <ObjectiveNumber>10</ObjectiveNumber>
-          <Script>Script406</Script>
-          <Name>Teleport Self To</Name>
-          <Details/>
-        </Objective>
-        <Objective>
-          <ObjectiveNumber>11</ObjectiveNumber>
-          <Script>Script183</Script>
-          <Name>Stop</Name>
-          <Details> \Stop teleporting</Details>
-        </Objective>
-        <Objective>
-          <ObjectiveNumber>47</ObjectiveNumber>
-          <Script>Script371</Script>
-          <Name>Teleport Self To</Name>
-          <Details> \Teleport self to location</Details>
-          <Resource6>25</Resource6>
-          <ObjectiveControlShortcutNumber>1</ObjectiveControlShortcutNumber>
-        </Objective>
-      </Objectives>
-      <ControlShortcuts>
-        <ControlShortcut>
-          <ControlNumber>1</ControlNumber>
-          <ControlObjectiveNumber>47</ControlObjectiveNumber>
-          <ParameterType>POSITION_CLASS</ParameterType>
-          <Parameter>0</Parameter>
-          <KeyboardShortcut>$AchronKBTeleport</KeyboardShortcut>
-          <Flags>
-            <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
-            <EstTimeConstIsStart>0</EstTimeConstIsStart>
-            <ButtonDisabled>0</ButtonDisabled>
-            <UserControlsCustom>0</UserControlsCustom>
-            <ButtonInvisible>0</ButtonInvisible>
-            <SelectTarget>0</SelectTarget>
-          </Flags>
-          <EstTimeConst>0</EstTimeConst>
-          <EstTimeDist>0</EstTimeDist>
-          <Sound>Sound0</Sound>
-          <ControlConditions/>
-        </ControlShortcut>
-        <ControlShortcut>
-          <ControlNumber>2</ControlNumber>
-          <ControlObjectiveNumber>11</ControlObjectiveNumber>
-          <ParameterType>NO_PARAMETER</ParameterType>
-          <Parameter>0</Parameter>
-          <KeyboardShortcut>$AchronKBStop</KeyboardShortcut>
-          <Flags>
-            <ShortcutOnKeyRelease>0</ShortcutOnKeyRelease>
-            <EstTimeConstIsStart>0</EstTimeConstIsStart>
-            <ButtonDisabled>0</ButtonDisabled>
-            <UserControlsCustom>0</UserControlsCustom>
-            <ButtonInvisible>0</ButtonInvisible>
-            <SelectTarget>0</SelectTarget>
-          </Flags>
-          <EstTimeConst>0</EstTimeConst>
-          <EstTimeDist>0</EstTimeDist>
-          <Sound>Sound0</Sound>
-          <ControlConditions/>
         </ControlShortcut>
       </ControlShortcuts>
     </ObjectClass>

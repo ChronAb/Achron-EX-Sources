@@ -22,8 +22,10 @@ Therefore each source XML file can contain the 8 toplevel elements:
 The subelements from each source file will be combined into the single Achron.ocs.xml.
 '''
 
-from lxml import etree
 import sys
+import glob
+from lxml import etree
+
 from sort import sortTree
 
 parser = etree.XMLParser(remove_blank_text=True)
@@ -43,56 +45,54 @@ elementRoots = {}
 for child in achron:
     elementRoots[child.tag] = child
 
-# For now each source file must be listed here
-# Evenatually we can use glob */*.xml to find all the XML files,
-# but this explicit list makes development easier for now as not all files are safe XML yet.
-filenames = [
-    'Common/Common/All Scripts.xml',
-    'Common/Common/Sounds.xml',
-    'Common/Common/EffectsResources.xml',
-    'Common/Common/TimelineStatistics.xml',
-    'Common/Common/UnitLists.xml',
-    'Common/Common/ObjectClasses.xml',
-    'Common/Common/Capturables 1.xml',
-    'Common/Common/Capturables 2.xml',
-    'Common/Common/New Scripts.xml',
-    'Common/Common/New Weapons.xml',
-    #'Common/Common/Obs Hub.xml',
-    'Common/Common/Resources Crates.xml',
-    'Common/Common/Species Selection for AI.xml',
-    'Common/Common/Species Selection.xml',
-    #'Common/Common/Subversive.xml',
-    'Grekim/Achrons Grekim.xml',
-    'Grekim/Cuttle.xml',
-    'Grekim/Gargantuan.xml',
-    'Grekim/Ghost.xml',
-    'Grekim/Octoligo Weapons.xml',
-    'Grekim/Octoligo.xml',
-    'Grekim/Octopod.xml',
-    'Grekim/Octo.xml',
-    'Grekim/Pharoligo.xml',
-    'Grekim/Pharopod.xml',
-    'Grekim/Pharo.xml',
-    'Grekim/Sepiligo.xml',
-    'Grekim/Sepipod.xml',
-    'Grekim/Sepi.xml',
-    'Grekim/Corpses/Sepi wreck.xml',
-    'Human/ATHC.xml',
-    'Human/Beam Tank.xml',
-    'Human/Blackbird.xml',
-    'Human/Caltrop mine.xml',
-    'Human/Cruiser.xml',
-    'Human/Frigate.xml',
-    'Human/Heavy Tank.xml',
-    'Human/Lancer.xml',
-    'Human/Marine.xml',
-    'Human/MAR Tank.xml',
-    'Human/Mech.xml',
-    'Human/MFB.xml',
-    'Human/SOP.xml',
-    'Human/Super MAR.xml',
-    'Human/Tornade.xml',
-]
+filenames = glob.glob("*/*.xml")
+#    [
+#    'Common/Common/All Scripts.xml',
+#    'Common/Common/Sounds.xml',
+#    'Common/Common/EffectsResources.xml',
+#    'Common/Common/TimelineStatistics.xml',
+#    'Common/Common/UnitLists.xml',
+#    'Common/Common/ObjectClasses.xml',
+#    'Common/Common/Capturables 1.xml',
+#    'Common/Common/Capturables 2.xml',
+#    'Common/Common/New Scripts.xml',
+#    'Common/Common/New Weapons.xml',
+#    #'Common/Common/Obs Hub.xml',
+#    'Common/Common/Resources Crates.xml',
+#    'Common/Common/Species Selection for AI.xml',
+#    'Common/Common/Species Selection.xml',
+#    #'Common/Common/Subversive.xml',
+#    'Grekim/Achrons Grekim.xml',
+#    'Grekim/Cuttle.xml',
+#    'Grekim/Gargantuan.xml',
+#    'Grekim/Ghost.xml',
+#    'Grekim/Octoligo Weapons.xml',
+#    'Grekim/Octoligo.xml',
+#    'Grekim/Octopod.xml',
+#    'Grekim/Octo.xml',
+#    'Grekim/Pharoligo.xml',
+#    'Grekim/Pharopod.xml',
+#    'Grekim/Pharo.xml',
+#    'Grekim/Sepiligo.xml',
+#    'Grekim/Sepipod.xml',
+#    'Grekim/Sepi.xml',
+#    'Grekim/Corpses/Sepi wreck.xml',
+#    'Human/ATHC.xml',
+#    'Human/Beam Tank.xml',
+#    'Human/Blackbird.xml',
+#    'Human/Caltrop mine.xml',
+#    'Human/Cruiser.xml',
+#    'Human/Frigate.xml',
+#    'Human/Heavy Tank.xml',
+#    'Human/Lancer.xml',
+#    'Human/Marine.xml',
+#    'Human/MAR Tank.xml',
+#    'Human/Mech.xml',
+#    'Human/MFB.xml',
+#    'Human/SOP.xml',
+#    'Human/Super MAR.xml',
+#    'Human/Tornade.xml',
+#]
 
 def validate(dom):
     '''

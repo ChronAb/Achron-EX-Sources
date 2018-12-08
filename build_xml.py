@@ -117,17 +117,21 @@ for f in filenames:
         sys.stderr.write("file {} has extra top level element {}\n".format(f, tag))
     for element, root in elementRoots.items():
         parent = dom.find(element)
-        if parent is not None:
+        if parent is not None and len(parent) > 0:
+            root.append(etree.Comment("BEGIN {}".format(f)))
             for child in parent:
                 root.append(child)
+            root.append(etree.Comment("END {}".format(f)))
 
 # Remove extra whitespace
 for element in achron.iter():
     element.tail = None
 
-# Sort the tree for easy diffing
 tree = etree.ElementTree(achron)
-sortTree(tree)
+
+# Uncomment this sort bit to easily compare against another xml file.
+# Sort the tree for easy diffing
+#sortTree(tree)
 
 # Write out the Achron.ocs.xml file
 with open('Achron.ocs.xml', 'wb') as f:

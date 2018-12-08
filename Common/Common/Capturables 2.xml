@@ -2698,13 +2698,6 @@ Can move itself&#13;
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
-  <Step>
-    <PrimitiveAction>ACCUM_STATISTIC</PrimitiveAction>
-    <Target>SELF</Target>
-    <Type>RPsClearCom</Type>
-    <ValueEval>ONE</ValueEval>
-    <Value>1</Value>
-  </Step>
   <AIScripts/>
   <Sounds/>
   <EffectsResources/>

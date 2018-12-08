@@ -1,32 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ResequenceObjectClassSet>
-  <Animation>
-    <Identifier>ACTION_JOIN_TEAM</Identifier>
-    <AnimationNum>0</AnimationNum>
-    <Sound>Sound0</Sound>
-    <AnimationTime>0</AnimationTime>
-    <ShowProgress>0</ShowProgress>
-    <MorphFromActionParameterClass>0</MorphFromActionParameterClass>
-    <LobProjectilePath>0</LobProjectilePath>
-    <RenderModelExplode>0</RenderModelExplode>
-    <Conditions>
-      <Condition>
-        <Resource>U_ACTION</Resource>
-        <Comparison>GEQUAL</Comparison>
-        <Value>10</Value>
-      </Condition>
-      <Condition>
-        <Resource>U_ACTION</Resource>
-        <Comparison>NOT_EQUAL</Comparison>
-        <Value>15</Value>
-      </Condition>
-      <Condition>
-        <Resource>U_ACTION</Resource>
-        <Comparison>LEQUAL</Comparison>
-        <Value>24</Value>
-      </Condition>
-    </Conditions>
-  </Animation>
   <ObjectClasses>
     <ObjectClass>
       <ClassNumber>4024</ClassNumber>

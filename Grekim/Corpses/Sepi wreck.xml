@@ -413,12 +413,4 @@ Beware of antimatter core detonation</Description>
       <ControlShortcuts/>
     </ObjectClass>
   </ObjectClasses>
-  <Objectives>
-    <Objective>
-      <ObjectiveNumber>0</ObjectiveNumber>
-      <Script>Script422</Script>
-      <Name>Defend</Name>
-      <Details> \Defend current location </Details>
-    </Objective>
-  </Objectives>
 </ResequenceObjectClassSet>

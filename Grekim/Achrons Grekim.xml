@@ -2750,12 +2750,6 @@ Upgrade Specials Tech for suicide attack</Description>
       </ControlShortcuts>
     </ObjectClass>
   </ObjectClasses>
-  <Step>
-    <PrimitiveAction>CLEAR_STATUS</PrimitiveAction>
-    <Target>TARGET_UNIT</Target>
-    <Type>STATUS_COMMJAM</Type>
-    <ActionStepModifier>MFB Recover</ActionStepModifier>
-  </Step>
   <AIScripts/>
   <Sounds/>
   <EffectsResources/>

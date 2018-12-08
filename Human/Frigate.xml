@@ -1,27 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ResequenceObjectClassSet>
-  <Action>
-    <ActionNumber>28</ActionNumber>
-    <Identifier>ACTION_Attack_w1_delay</Identifier>
-    <TimeTaken>4</TimeTaken>
-    <ForceObjectAction>1</ForceObjectAction>
-    <InterruptCurrentAction>0</InterruptCurrentAction>
-    <MutexAction>0</MutexAction>
-    <FailOnInvalidTarget>0</FailOnInvalidTarget>
-    <PreserveParameter>1</PreserveParameter>
-    <AIScriptCanRun>0</AIScriptCanRun>
-    <SetParamZeroTicks>0</SetParamZeroTicks>
-    <AllowActionWhenStopped>0</AllowActionWhenStopped>
-    <LobProjectilePath>0</LobProjectilePath>
-    <Conditions>
-      <Condition>
-        <Resource>U_ACTION</Resource>
-        <Comparison>EQUAL</Comparison>
-        <Value>25</Value>
-      </Condition>
-    </Conditions>
-    <Steps/>
-  </Action>
   <AIScripts/>
   <Sounds/>
   <EffectsResources/>
